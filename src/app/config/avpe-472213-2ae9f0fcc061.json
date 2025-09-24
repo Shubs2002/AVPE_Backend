@@ -1,0 +1,13 @@
+{
+  "type": "service_account",
+  "project_id": "avpe-472213",
+  "private_key_id": "2ae9f0fcc0611701c30a8df8a1ace864d3a216fb",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEugIBADANBgkqhkiG9w0BAQEFAASCBKQwggSgAgEAAoIBAQDAittVTG6YcZpO\nkHhOXsk+x2rbGAlLued2S8XV6ByN3XNO9BYk63W4SfF26/a4gfijZK3nRSB3ODNC\n139vXdy4/x/2m59zR1UFyOrrl+HINYwqABCGCXx9uLchhaKKhNPy/9G1wBoIwsKc\nHCz0pAm+PmF/IkFHtdkfqBrYODPRM0mP+keYnN+Xd/Joix4XOu5Vg92Shkm6HQ/l\ny3CDTDTHAccx7GVF+1xUZp+433DYlRErK9P8XAAXwG5mxuVqzQhuqjfj3hqMXTQO\ntIwCB71CW3j+wLPTKOiDDUTnIroGMjiibz7gkBrwltWRDeGl3BFP7k4uQOXQslIh\nIU3b/trHAgMBAAECgf9/4evLzDoss5oDWqbf2jXgfJLnuFFK+poUAFBVmWl+v585\nn9yyRcIDMWwe0nmYZT8JmavXAAqH6tQxuls0CBMNxBMb4XrUqubutt6betG9etuV\nS+EIgG3DuB1l7J5jcs1TZtgs78VjJQChEja5LVNb1qeQE5u7uwQPp8DiX4qfsVgK\nDgttlg6KZc0tMillxwsxfc1IBqpDc3xjk5nprQowr6Xt0+XcVsy/u/TKH66D+I2h\nufG/sPVLKF0Jgpd02boLWvDYSlxImJkT+3xse5vHdXKZeKOpxUNLe9TIT1oOMeQL\nB0HpSXeFPH+rZ1+A1GkOmyBv+8lfiDHVPWeHuMECgYEA+/3Ddy8d+9qqmcf0csV0\nu8ZL96EBEAYutvvc+Kk9rYVKGZE9YX/3I0eX5gnhsSwxu1DauMtTIHTPtc5YKiee\nRHMTB6T9g5bYuxXDxfhtAmnUUVLQSZTno3B2OcXIKyIxOwrRTLGRCHf0U310CJiE\nv/OyFlNhtGD6d4szN1wDwSECgYEAw5r8vx+Y65vedhGoa97n97DY28uCGb8e88s9\nZ8SDNenJHVRxyemyaW/C7iAIjLwc23pQlC/JTXiDFgmjysHcgfGCw4qWBUQd4bzc\n4sLKhTijnTb287rkz67sFwRjoenJOAA1K5WTwEsWjk/HAAvSUvBwZQGPWb6lg7tB\ndgnq1ucCgYA8e3IY/zQhKSDdfELN8VrNXxEIxJousG0x+k3VWTm2llFsxZGH/2Dg\nFOT+j8yd68+b+BInXJX9KkxYhMhghdXU9BHTOeSnWuN2NAkjUTdI5wHQ6yGXJ6hZ\ncDrQLwqWX8SVOUl3MP9wmuoHyAq7rW/faqyJ80V2N/imDMEkPm+gQQKBgBQNzMHP\nfH8TUOBr+QduJ/wV7nXCTIlVNdgqyxXbaNRbLppKMQxRYFA8/BArypSbKJ470Q0Q\nRSQjKdVVkaxU6cWMvCpOCAlsLWAaW88Hx3mXD/crTnA4hgLg3SWS9p//9vg91TWt\ntSMuz5YxiaZwj9Se//brDQZXbGKwDQsMAz6bAoGAAtmdZWoBnSTONoRpw6mHaKcW\nIysJoRm184i76DuJA+MfAdDZqJVc/68EsekXJm7Psc3FLW3/HiWIMZTRDCzNXZhx\nOOWOLu+w5GeAfF3zht9wQCm6A0QgH6u8iwnaNWFQiLgb8n/iCdPct2U+X1pqeGFS\nZYvAkOq6W6blhFFgJmc=\n-----END PRIVATE KEY-----\n",
+  "client_email": "veo-video-generation@avpe-472213.iam.gserviceaccount.com",
+  "client_id": "105673090618140819281",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/veo-video-generation%40avpe-472213.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}

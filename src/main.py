@@ -1,0 +1,11 @@
+import os
+os.environ.setdefault("ENV", "prod")  # must come first
+
+import uvicorn
+from app.app import app
+
+def main():
+    uvicorn.run(app, host="0.0.0.0", port=8000)
+
+if __name__ == "__main__":
+    main()
