@@ -8,8 +8,13 @@ client = OpenAI(
 )
 
 def generate_story_segments(idea: str, num_segments: int = 7):
+    # For large segment counts, use chunked generation to avoid JSON parsing issues
+    if num_segments > 20:
+        return generate_story_segments_chunked(idea, num_segments)
+    
     prompt = f"""
-    You are a professional short-story writer for viral AI videos.
+    You are a professional Humanised Script-writer for viral films.
+    you can add more custom fields for generating the best results as i am gonna feed your generated output into veo3 video generation model.
 
     Task:
     - Create a story for all ages idea based on: "{idea}"
@@ -106,6 +111,7 @@ def generate_story_segments(idea: str, num_segments: int = 7):
         * If narration: Write 1-2 sentences that can be spoken in 8 seconds (approximately 20-25 words)
         * If dialogue: Write short, impactful lines using this structure:
           [{{ "character": "id", "line": "..." }}] - Total dialogue must fit in 8 seconds
+        * Narration to dialogue ratio: Aim for roughly 10/90 split across the entire story
         * Ensure clear character identification using roster ids for dialogue segments
         * Characters present (with short traits: look, personality, role)
         * Camera perspective / animation style
@@ -234,29 +240,604 @@ def generate_story_segments(idea: str, num_segments: int = 7):
       ]
     }}
     """
-
+    raw_output = None
     try:
         response = client.chat.completions.create(
-            model="openai/gpt-oss-20b:free",
+            model=settings.SCRIPT_MODEL,
             messages=[{"role": "user", "content": prompt}],
         )
 
-        raw_output = response.choices[0].message.content.strip()
+          # Validate response exists
+        if response is None:
+            raise ValueError("API returned None response")
+        
+        # Validate response structure
+        if not hasattr(response, 'choices') or not response.choices:
+            raise ValueError(f"Invalid API response structure: {response}")
+        
+        # Validate message content
+        if not hasattr(response.choices[0], 'message') or not hasattr(response.choices[0].message, 'content'):
+            raise ValueError(f"Missing message content in response: {response.choices[0]}")
+        
+        raw_output = response.choices[0].message.content
+        
+        # Validate content is not None or empty
+        if not raw_output or raw_output.strip() == "":
+            raise ValueError("API returned empty content")
+        
+        raw_output = raw_output.strip()
 
-        # 🔹 Remove ```json ... ``` wrappers if model adds them
+        # Remove code block wrappers
         if raw_output.startswith("```"):
             raw_output = raw_output.split("```json")[-1].split("```")[0].strip()
+        
+        # Validate JSON is not empty after cleanup
+        if not raw_output:
+            raise ValueError("Content became empty after removing code blocks")
 
         story_data = json.loads(raw_output)
 
+    except json.JSONDecodeError as e:
+        error_msg = f"JSON parsing failed: {e}"
+        if raw_output:
+            error_msg += f"\n\nRaw output:\n{raw_output[:500]}"  # Limit output length
+        raise ValueError(error_msg)
+    
     except Exception as e:
-        raise ValueError(f"Error generating story: {e}\n\nRaw output:\n{raw_output}")
+        error_msg = f"Error generating story content: {e}"
+        if raw_output:
+            error_msg += f"\n\nRaw output:\n{raw_output[:500]}"
+        else:
+            error_msg += "\n\nNo output received from API"
+        raise ValueError(error_msg)
 
     return story_data
 
+def generate_story_segments_chunked(idea: str, num_segments: int):
+    """
+    Generate story segments in chunks to handle large segment counts (100+)
+    This prevents JSON parsing issues with very large responses
+    """
+    print(f"🔄 Generating {num_segments} segments in chunks to avoid JSON parsing issues...")
+    
+    # Parse special requirements from the idea
+    idea_upper = idea.upper()
+    no_narrations = 'NO NARRATION' in idea_upper
+    narration_only_first = 'ONLY 1ST SEGMENT' in idea_upper or 'ONLY FIRST SEGMENT' in idea_upper
+    adult_story = 'ADULT' in idea_upper
+    
+    # Look for cliffhanger patterns
+    cliffhanger_interval = 0
+    if '150TH SEGMENT' in idea_upper or 'EVERY 150' in idea_upper:
+        cliffhanger_interval = 150
+    elif 'CLIFFHANGER' in idea_upper:
+        # Try to extract number
+        import re
+        match = re.search(r'EVERY (\d+)', idea_upper)
+        if match:
+            cliffhanger_interval = int(match.group(1))
+    
+    print(f"📋 Parsed requirements: no_narrations={no_narrations}, narration_only_first={narration_only_first}, cliffhanger_interval={cliffhanger_interval}, adult_story={adult_story}")
+    
+    # First, generate the story outline and metadata
+    outline_prompt = f"""
+    You are a professional Humanised Script-writer for viral films.
+    
+    Task: Create a story outline and metadata for: "{idea}"
+    
+    Requirements:
+    - Write a **short_summary** (2–3 sentences) giving a quick overview of the story.
+    - Create a **catchy title** (under 60 chars) designed for maximum clicks on YouTube Shorts / Instagram Reels / TikTok.
+    - Write a **viral description** (2–3 sentences). It should:
+       * Hook viewers emotionally or with curiosity
+       * Summarize the story briefly
+       * End with a call-to-action like "Follow for more" or "Watch till the end!"
+    - Generate a list of **hashtags** (7–15). Mix general trending tags (#fyp, #viral, #shorts) with niche/story-related ones.
+    - Define a **characters_roster** (2–5 characters) with DETAILED descriptions for video generation consistency
+    - Create a **story_outline** breaking the story into {num_segments} brief plot points
+    - **NARRATOR VOICE SELECTION** for story segments
+    - Parse the idea for special requirements:
+      * "NO Narrations" or "ONLY 1st segment can have narration" 
+      * "cliffhangers at every 150th segment" or similar patterns
+      * "adults story" vs family-friendly content
+    
+    Return ONLY valid JSON with this structure:
+    {{
+      "title": "...",
+      "short_summary": "...",
+      "description": "...",
+      "hashtags": ["...", "...", "..."],
+      "narrator_voice": {{
+        "voice_type": "...",
+        "age_range": "...",
+        "accent": "...",
+        "tone": "...",
+        "target_demographic": "...",
+        "speaking_pace": "...",
+        "narration_style": "...",
+        "child_friendly_level": "...",
+        "voice_pitch": "...",
+        "expressiveness": "...",
+        "voice_description": "..."
+      }},
+      "characters_roster": [
+        {{
+          "id": "...",
+          "name": "...",
+          "physical_appearance": {{
+            "gender": "...",
+            "age": "...",
+            "height": "...",
+            "body_type": "...",
+            "skin_tone": "...",
+            "hair_color": "...",
+            "hair_style": "...",
+            "eye_color": "...",
+            "eye_shape": "...",
+            "facial_features": "...",
+            "distinctive_marks": "..."
+          }},
+          "clothing_style": {{
+            "primary_outfit": "...",
+            "clothing_style": "...",
+            "colors": "...",
+            "accessories": "..."
+          }},
+          "personality": "...",
+          "role": "...",
+          "voice_mannerisms": {{
+            "speaking_style": "...",
+            "accent_or_tone": "...",
+            "typical_expressions": "..."
+          }},
+          "video_prompt_description": "..."
+        }}
+      ],
+      "story_outline": [
+        "Plot point 1: ...",
+        "Plot point 2: ...",
+        "... (continue for {num_segments} plot points)"
+      ],
+      "special_requirements": {{
+        "no_narrations": {str(no_narrations).lower()},
+        "narration_only_first": {str(narration_only_first).lower()},
+        "cliffhanger_intervals": {cliffhanger_interval},
+        "adult_story": {str(adult_story).lower()}
+      }}
+    }}
+    """
+    
+    try:
+        # Generate story outline and metadata
+        print("📋 Generating story outline and metadata...")
+        response = client.chat.completions.create(
+            model=settings.SCRIPT_MODEL,
+            messages=[{"role": "user", "content": outline_prompt}],
+        )
+        
+        raw_output = response.choices[0].message.content.strip()
+        if raw_output.startswith("```"):
+            raw_output = raw_output.split("```json")[-1].split("```")[0].strip()
+        
+        story_outline = json.loads(raw_output)
+        print(f"✅ Story outline generated: {story_outline['title']}")
+        
+        # Now generate segments in chunks
+        chunk_size = 15  # Generate 15 segments at a time
+        all_segments = []
+        
+        for chunk_start in range(0, num_segments, chunk_size):
+            chunk_end = min(chunk_start + chunk_size, num_segments)
+            chunk_segments = chunk_end - chunk_start
+            
+            print(f"🎬 Generating segments {chunk_start + 1}-{chunk_end}...")
+            
+            # Get the relevant plot points for this chunk
+            plot_points = story_outline["story_outline"][chunk_start:chunk_end]
+            
+            # Check for special requirements
+            special_reqs = story_outline.get("special_requirements", {})
+            no_narrations = special_reqs.get("no_narrations", False)
+            narration_only_first = special_reqs.get("narration_only_first", False)
+            cliffhanger_interval = special_reqs.get("cliffhanger_intervals", 0)
+            
+            # Check if any segments in this chunk should have cliffhangers
+            cliffhanger_segments = []
+            if cliffhanger_interval > 0:
+                for seg_num in range(chunk_start + 1, chunk_end + 1):
+                    if seg_num % cliffhanger_interval == 0:
+                        cliffhanger_segments.append(seg_num)
+            
+            # Build segment generation prompt
+            segment_prompt = f"""
+            Generate {chunk_segments} detailed story segments (segments {chunk_start + 1} to {chunk_end}) for the story "{story_outline['title']}".
+            
+            Story Context:
+            - Title: {story_outline['title']}
+            - Summary: {story_outline['short_summary']}
+            - Characters: {[char['name'] for char in story_outline['characters_roster']]}
+            
+            Plot Points for this chunk:
+            {chr(10).join([f"{i+chunk_start+1}. {point}" for i, point in enumerate(plot_points)])}
+            
+            Special Requirements:
+            - No narrations allowed: {no_narrations}
+            - Narration only in first segment: {narration_only_first}
+            - Add cliffhangers every {cliffhanger_interval} segments: {cliffhanger_interval > 0}
+            - Cliffhanger segments in this chunk: {cliffhanger_segments}
+            
+            Rules:
+            - Each segment must be exactly 8 seconds long
+            - Use ONLY dialogue (no narration) unless it's segment 1 and narration_only_first is true
+            - For segments {cliffhanger_segments}, end with dramatic cliffhangers that leave viewers wanting more
+            - Maintain character consistency using the established roster
+            - Each segment should advance the plot meaningfully
+            - Keep dialogue concise and impactful (max 25 words per segment)
+            
+            Return ONLY a JSON array of segments:
+            [
+              {{
+                "segment": {chunk_start + 1},
+                "scene": "...",
+                "content_type": "dialogue",
+                "dialogue": [
+                  {{ "character": "char_id", "line": "..." }}
+                ],
+                "characters_present": ["char_id1", "char_id2"],
+                "camera": "...",
+                "clip_duration": 8,
+                "word_count": "...",
+                "estimated_speech_time": "...",
+                "background_definition": {{
+                  "location": "...",
+                  "environment_type": "...",
+                  "setting_description": "...",
+                  "time_of_day": "...",
+                  "weather_conditions": "...",
+                  "lighting": "...",
+                  "atmosphere": "...",
+                  "key_visual_elements": ["..."],
+                  "color_palette": "...",
+                  "video_prompt_background": "..."
+                }}
+              }}
+            ]
+            """
+            
+            # Generate this chunk of segments
+            chunk_response = client.chat.completions.create(
+                model=settings.SCRIPT_MODEL,
+                messages=[{"role": "user", "content": segment_prompt}],
+            )
+            
+            chunk_raw = chunk_response.choices[0].message.content.strip()
+            if chunk_raw.startswith("```"):
+                chunk_raw = chunk_raw.split("```json")[-1].split("```")[0].strip()
+            
+            chunk_segments_data = json.loads(chunk_raw)
+            all_segments.extend(chunk_segments_data)
+            
+            print(f"✅ Generated segments {chunk_start + 1}-{chunk_end}")
+            
+            # Small delay to avoid rate limits
+            import time
+            time.sleep(1)
+        
+        # Combine everything into final story data
+        final_story = {
+            "title": story_outline["title"],
+            "short_summary": story_outline["short_summary"],
+            "description": story_outline["description"],
+            "hashtags": story_outline["hashtags"],
+            "narrator_voice": story_outline["narrator_voice"],
+            "characters_roster": story_outline["characters_roster"],
+            "segments": all_segments
+        }
+        
+        print(f"🎉 Successfully generated {len(all_segments)} segments for '{final_story['title']}'")
+        return final_story
+        
+    except Exception as e:
+        error_msg = f"Chunked story generation failed: {str(e)}"
+        print(f"❌ {error_msg}")
+        raise ValueError(error_msg)
+
+def generate_story_segments_in_sets(idea: str, total_segments: int, segments_per_set: int = 10, set_number: int = 1):
+    """
+    Generate story segments in sets of 10 (or specified amount) with complete metadata
+    
+    Args:
+        idea: Story idea with special requirements
+        total_segments: Total number of segments for the complete story
+        segments_per_set: Number of segments to generate per set (default: 10)
+        set_number: Which set to generate (1-based indexing)
+    
+    Returns:
+        dict: Complete story data with metadata + only the requested set of segments
+    """
+    print(f"🎬 Generating set {set_number} ({segments_per_set} segments) of {total_segments} total segments...")
+    
+    # Parse special requirements from the idea
+    idea_upper = idea.upper()
+    no_narrations = 'NO NARRATION' in idea_upper
+    narration_only_first = 'ONLY 1ST SEGMENT' in idea_upper or 'ONLY FIRST SEGMENT' in idea_upper
+    adult_story = 'ADULT' in idea_upper
+    
+    # Look for cliffhanger patterns
+    cliffhanger_interval = 0
+    if '150TH SEGMENT' in idea_upper or 'EVERY 150' in idea_upper:
+        cliffhanger_interval = 150
+    elif 'CLIFFHANGER' in idea_upper:
+        import re
+        match = re.search(r'EVERY (\d+)', idea_upper)
+        if match:
+            cliffhanger_interval = int(match.group(1))
+    
+    # Calculate segment range for this set
+    start_segment = (set_number - 1) * segments_per_set + 1
+    end_segment = min(start_segment + segments_per_set - 1, total_segments)
+    actual_segments_in_set = end_segment - start_segment + 1
+    
+    print(f"📊 Set {set_number}: Segments {start_segment}-{end_segment} ({actual_segments_in_set} segments)")
+    print(f"📋 Requirements: no_narrations={no_narrations}, narration_only_first={narration_only_first}, cliffhanger_interval={cliffhanger_interval}, adult_story={adult_story}")
+    
+    # Check if any segments in this set should have cliffhangers
+    cliffhanger_segments = []
+    if cliffhanger_interval > 0:
+        for seg_num in range(start_segment, end_segment + 1):
+            if seg_num % cliffhanger_interval == 0:
+                cliffhanger_segments.append(seg_num)
+    
+    # Generate the complete story with this specific set of segments
+    prompt = f"""
+    You are a professional Humanised Script-writer for viral films.
+    you can add more custom fields for generating the best results as i am gonna feed your generated output into veo3 video generation model.
+
+    Task:
+    - Create a story for adults based on: "{idea}"
+    - This is SET {set_number} of a {total_segments}-segment story
+    - Generate segments {start_segment} to {end_segment} ({actual_segments_in_set} segments)
+    - Write a **short_summary** (2–3 sentences) giving a quick overview of the COMPLETE story.
+    - Create a **catchy title** (under 60 chars) designed for maximum clicks on YouTube Shorts / Instagram Reels / TikTok.
+    - Write a **viral description** (2–3 sentences). It should:
+       * Hook viewers emotionally or with curiosity
+       * Summarize the story briefly
+       * End with a call-to-action like "Follow for more" or "Watch till the end!"
+    - Generate a list of **hashtags** (7–15). Mix general trending tags (#fyp, #viral, #shorts) with niche/story-related ones.
+    - **The first segment (segment 1) must always be an INTRO scene** if this is set 1:
+       * Title reveal in overlay text
+       * Main characters introduction
+       * Setting the tone 
+    - Generate a list of **hashtags** (7–15). Mix general trending tags (#fyp, #viral, #shorts) with niche/story-related ones.
+    - **Story continuity is critical**:
+        * The same main characters must appear in all segments.
+        * Each segment should logically follow the previous one.
+        * If this is the final set, provide closure or a twist.
+    - First, define a **characters_roster** (2–5 characters) with DETAILED descriptions for video generation consistency
+    - **NARRATOR VOICE SELECTION** for story segments (consistent across all sets)
+    - **CRITICAL TIMING RULE**: Each segment must fit within exactly 8 seconds of speech time.
+    - **NARRATION vs DIALOGUE RULE**: Each segment must contain EITHER narration OR dialogue, NEVER both together.
+    - **WORD COUNT LIMITS**: 
+      * Narration segments: Maximum 25 words (3 words per second × 8 seconds)
+      * Dialogue segments: Maximum 25 words total across all characters
+      * Count every word including articles (a, an, the) and conjunctions
+    - **CONTENT DISTRIBUTION**: Alternate between narration and dialogue segments for variety
+    - **SPEECH PACING**: Assume normal speaking pace of 3 words per second for timing calculations
+
+    Special Requirements for this story:
+    - No narrations allowed: {no_narrations}
+    - Narration only in first segment: {narration_only_first}
+    - Add cliffhangers at segments: {cliffhanger_segments}
+    - Adult story content: {adult_story}
+    - Total story length: {total_segments} segments
+    - Current set: {set_number} (segments {start_segment}-{end_segment})
+
+    For each segment in this set, provide:
+        * Scene description (location, atmosphere, key action)
+        * **Choose ONE storytelling method per segment**:
+          - **NARRATION SEGMENT**: Pure storytelling voice describing atmosphere, actions, emotions (8 seconds max)
+          - **DIALOGUE SEGMENT**: Characters speaking directly (8 seconds max total for all dialogue)
+        * If narration: Write 1-2 sentences that can be spoken in 8 seconds (approximately 20-25 words)
+        * If dialogue: Write short, impactful lines using this structure:
+          [{{ "character": "id", "line": "..." }}] - Total dialogue must fit in 8 seconds
+        * Ensure clear character identification using roster ids for dialogue segments
+        * Characters present (with short traits: look, personality, role)
+        * Camera perspective / animation style
+        * **Speech timing**: Count words to ensure 8-second limit (average 3 words per second)
+
+    Return ONLY valid JSON with this EXACT structure:
+    {{
+      "title": "...",
+      "short_summary": "...",
+      "description": "...",
+      "hashtags": ["...", "...", "..."],
+      "set_info": {{
+        "set_number": {set_number},
+        "segments_in_set": {actual_segments_in_set},
+        "segment_range": "{start_segment}-{end_segment}",
+        "total_segments": {total_segments},
+        "segments_per_set": {segments_per_set}
+      }},
+      "narrator_voice": {{
+        "voice_type": "...", 
+        "age_range": "...", 
+        "accent": "...", 
+        "tone": "...", 
+        "target_demographic": "...", 
+        "speaking_pace": "...", 
+        "narration_style": "...", 
+        "child_friendly_level": "...", 
+        "voice_pitch": "...", 
+        "expressiveness": "...", 
+        "voice_description": "..." 
+      }},
+      "characters_roster": [
+        {{
+          "id": "...",
+          "name": "...",
+          "physical_appearance": {{
+            "gender": "...",
+            "age": "...",
+            "height": "...",
+            "body_type": "...",
+            "skin_tone": "...",
+            "hair_color": "...",
+            "hair_style": "...",
+            "eye_color": "...",
+            "eye_shape": "...",
+            "facial_features": "...",
+            "distinctive_marks": "..."
+          }},
+          "clothing_style": {{
+            "primary_outfit": "...",
+            "clothing_style": "...",
+            "colors": "...",
+            "accessories": "..."
+          }},
+          "personality": "...",
+          "role": "...",
+          "voice_mannerisms": {{
+            "speaking_style": "...",
+            "accent_or_tone": "...",
+            "typical_expressions": "..."
+          }},
+          "video_prompt_description": "..." 
+        }}
+      ],
+      "segments": [
+        {{
+          "segment": {start_segment},
+          "scene": "...",
+          "overlay_text": "...", 
+          "overlay_text_position": "...", 
+          "overlay_text_style": "...", 
+          "overlay_text_duration": "...", 
+          "overlay_text_animation": "...", 
+          "overlay_text_color": "...", 
+          "overlay_text_font": "...", 
+          "content_type": "...", 
+          "narration": "...", 
+          "narrator_voice_for_segment": {{ 
+            "voice_type": "...", 
+            "tone_variation": "...", 
+            "pace_variation": "...", 
+            "emotion": "...", 
+            "emphasis": "...", 
+            "consistency_note": "Same narrator voice as previous segments, only tone/emotion varies"
+          }},
+          "dialogue": [
+            {{ "character": "hero1", "line": "..." }},
+            {{ "character": "villain1", "line": "..." }}
+          ], 
+          "characters_present": ["hero1", "villain1"],
+          "camera": "...",
+          "clip_duration": 8, 
+          "word_count": "...", 
+          "estimated_speech_time": "...", 
+          "background_definition": {{
+            "location": "...", 
+            "environment_type": "...", 
+            "setting_description": "...", 
+            "time_of_day": "...", 
+            "weather_conditions": "...", 
+            "lighting": "...", 
+            "atmosphere": "...", 
+            "key_visual_elements": ["..."], 
+            "color_palette": "...", 
+            "architectural_style": "...", 
+            "natural_elements": ["..."], 
+            "props_in_background": ["..."], 
+            "scale": "...", 
+            "continuity_notes": "...", 
+            "video_prompt_background": "..." 
+          }},
+          "background_music": "...", 
+          "sound_effects": ["..."], 
+          "visual_style": "...", 
+          "transitions": "...", 
+          "props": ["..."], 
+          "emotions": ["..."], 
+          "lighting": "...", 
+          "color_palette": "...", 
+          "special_effects": ["..."], 
+          "clothing": ["..."], 
+          "time_of_day": "...", 
+          "weather": "...", 
+          "cultural_elements": ["..."], 
+          "historical_context": "...", 
+          "genre": "...", 
+          "themes": ["..."], 
+          "mood": "...", 
+          "pacing": "...", 
+          "narrative_techniques": ["..."], 
+          "symbolism": ["..."], 
+          "foreshadowing": ["..."] 
+        }}
+      ]
+    }}
+    """
+    
+    raw_output = None
+    try:
+        response = client.chat.completions.create(
+            model=settings.SCRIPT_MODEL,
+            messages=[{"role": "user", "content": prompt}],
+        )
+
+        # Validate response exists
+        if response is None:
+            raise ValueError("API returned None response")
+        
+        # Validate response structure
+        if not hasattr(response, 'choices') or not response.choices:
+            raise ValueError(f"Invalid API response structure: {response}")
+        
+        # Validate message content
+        if not hasattr(response.choices[0], 'message') or not hasattr(response.choices[0].message, 'content'):
+            raise ValueError(f"Missing message content in response: {response.choices[0]}")
+        
+        raw_output = response.choices[0].message.content
+        
+        # Validate content is not None or empty
+        if not raw_output or raw_output.strip() == "":
+            raise ValueError("API returned empty content")
+        
+        raw_output = raw_output.strip()
+
+        # Remove code block wrappers
+        if raw_output.startswith("```"):
+            raw_output = raw_output.split("```json")[-1].split("```")[0].strip()
+        
+        # Validate JSON is not empty after cleanup
+        if not raw_output:
+            raise ValueError("Content became empty after removing code blocks")
+
+        story_data = json.loads(raw_output)
+        
+        print(f"✅ Successfully generated set {set_number} with {len(story_data.get('segments', []))} segments")
+        print(f"📖 Title: {story_data.get('title', 'N/A')}")
+        print(f"👥 Characters: {len(story_data.get('characters_roster', []))}")
+        
+        return story_data
+
+    except json.JSONDecodeError as e:
+        error_msg = f"JSON parsing failed for set {set_number}: {e}"
+        if raw_output:
+            error_msg += f"\n\nRaw output:\n{raw_output[:500]}"
+        raise ValueError(error_msg)
+    
+    except Exception as e:
+        error_msg = f"Error generating story set {set_number}: {e}"
+        if raw_output:
+            error_msg += f"\n\nRaw output:\n{raw_output[:500]}"
+        else:
+            error_msg += "\n\nNo output received from API"
+        raise ValueError(error_msg)
+
 def generate_meme_segments(idea: str, num_segments: int = 7):
     prompt = f"""
-    You are a professional meme creator and viral content specialist.
+    You are a professional Humanised meme creator and viral content specialist.
+    you can add more custom fields for generating the best results as i am gonna feed your generated output into veo3 video generation model.
 
     Task:
     - Create a viral meme video concept based on: "{idea}"
@@ -454,29 +1035,63 @@ def generate_meme_segments(idea: str, num_segments: int = 7):
       ]
     }}
     """
-
+    raw_output = None
     try:
         response = client.chat.completions.create(
-            model="openai/gpt-oss-20b:free",
+            model=settings.SCRIPT_MODEL,
             messages=[{"role": "user", "content": prompt}],
         )
 
-        raw_output = response.choices[0].message.content.strip()
+          # Validate response exists
+        if response is None:
+            raise ValueError("API returned None response")
+        
+        # Validate response structure
+        if not hasattr(response, 'choices') or not response.choices:
+            raise ValueError(f"Invalid API response structure: {response}")
+        
+        # Validate message content
+        if not hasattr(response.choices[0], 'message') or not hasattr(response.choices[0].message, 'content'):
+            raise ValueError(f"Missing message content in response: {response.choices[0]}")
+        
+        raw_output = response.choices[0].message.content
+        
+        # Validate content is not None or empty
+        if not raw_output or raw_output.strip() == "":
+            raise ValueError("API returned empty content")
+        
+        raw_output = raw_output.strip()
 
-        # Remove ```json ... ``` wrappers if model adds them
+        # Remove code block wrappers
         if raw_output.startswith("```"):
             raw_output = raw_output.split("```json")[-1].split("```")[0].strip()
+        
+        # Validate JSON is not empty after cleanup
+        if not raw_output:
+            raise ValueError("Content became empty after removing code blocks")
 
         meme_data = json.loads(raw_output)
 
+    except json.JSONDecodeError as e:
+        error_msg = f"JSON parsing failed: {e}"
+        if raw_output:
+            error_msg += f"\n\nRaw output:\n{raw_output[:500]}"  # Limit output length
+        raise ValueError(error_msg)
+    
     except Exception as e:
-        raise ValueError(f"Error generating meme: {e}\n\nRaw output:\n{raw_output}")
+        error_msg = f"Error generating meme content: {e}"
+        if raw_output:
+            error_msg += f"\n\nRaw output:\n{raw_output[:500]}"
+        else:
+            error_msg += "\n\nNo output received from API"
+        raise ValueError(error_msg)
 
     return meme_data
 
 def generate_free_content(idea: str, num_segments: int = 7):
     prompt = f"""
-    You are a viral content strategist and creator specializing in free, engaging content that gets millions of views.
+    You are a Humanised viral content strategist and creator specializing in free, engaging content that gets millions of views.
+    you can add more custom fields for generating the best results as i am gonna feed your generated output into veo3 video generation model.
 
     Task:
     - Create viral content based on: "{idea}"
@@ -713,23 +1328,56 @@ def generate_free_content(idea: str, num_segments: int = 7):
       ]
     }}
     """
-
+    raw_output = None
     try:
         response = client.chat.completions.create(
-            model="openai/gpt-oss-20b:free",
+            model=settings.SCRIPT_MODEL,
             messages=[{"role": "user", "content": prompt}],
         )
 
-        raw_output = response.choices[0].message.content.strip()
+         # Validate response exists
+        if response is None:
+            raise ValueError("API returned None response")
+        
+        # Validate response structure
+        if not hasattr(response, 'choices') or not response.choices:
+            raise ValueError(f"Invalid API response structure: {response}")
+        
+        # Validate message content
+        if not hasattr(response.choices[0], 'message') or not hasattr(response.choices[0].message, 'content'):
+            raise ValueError(f"Missing message content in response: {response.choices[0]}")
+        
+        raw_output = response.choices[0].message.content
+        
+        # Validate content is not None or empty
+        if not raw_output or raw_output.strip() == "":
+            raise ValueError("API returned empty content")
+        
+        raw_output = raw_output.strip()
 
-        # Remove ```json ... ``` wrappers if model adds them
+        # Remove code block wrappers
         if raw_output.startswith("```"):
             raw_output = raw_output.split("```json")[-1].split("```")[0].strip()
+        
+        # Validate JSON is not empty after cleanup
+        if not raw_output:
+            raise ValueError("Content became empty after removing code blocks")
 
         content_data = json.loads(raw_output)
 
+    except json.JSONDecodeError as e:
+        error_msg = f"JSON parsing failed: {e}"
+        if raw_output:
+            error_msg += f"\n\nRaw output:\n{raw_output[:500]}"  # Limit output length
+        raise ValueError(error_msg)
+    
     except Exception as e:
-        raise ValueError(f"Error generating free content: {e}\n\nRaw output:\n{raw_output}")
+        error_msg = f"Error generating free content: {e}"
+        if raw_output:
+            error_msg += f"\n\nRaw output:\n{raw_output[:500]}"
+        else:
+            error_msg += "\n\nNo output received from API"
+        raise ValueError(error_msg)
 
     return content_data
     
@@ -823,22 +1471,55 @@ def generate_trending_ideas(content_type: str = "all", count: int = 5):
       }}
     }}
     """
-
+    raw_output = None
     try:
         response = client.chat.completions.create(
-            model="openai/gpt-oss-20b:free",
+            model=settings.SCRIPT_MODEL,
             messages=[{"role": "user", "content": prompt}],
         )
 
-        raw_output = response.choices[0].message.content.strip()
+          # Validate response exists
+        if response is None:
+            raise ValueError("API returned None response")
+        
+        # Validate response structure
+        if not hasattr(response, 'choices') or not response.choices:
+            raise ValueError(f"Invalid API response structure: {response}")
+        
+        # Validate message content
+        if not hasattr(response.choices[0], 'message') or not hasattr(response.choices[0].message, 'content'):
+            raise ValueError(f"Missing message content in response: {response.choices[0]}")
+        
+        raw_output = response.choices[0].message.content
+        
+        # Validate content is not None or empty
+        if not raw_output or raw_output.strip() == "":
+            raise ValueError("API returned empty content")
+        
+        raw_output = raw_output.strip()
 
-        # Remove ```json ... ``` wrappers if model adds them
+        # Remove code block wrappers
         if raw_output.startswith("```"):
             raw_output = raw_output.split("```json")[-1].split("```")[0].strip()
+        
+        # Validate JSON is not empty after cleanup
+        if not raw_output:
+            raise ValueError("Content became empty after removing code blocks")
 
         ideas_data = json.loads(raw_output)
 
+    except json.JSONDecodeError as e:
+        error_msg = f"JSON parsing failed: {e}"
+        if raw_output:
+            error_msg += f"\n\nRaw output:\n{raw_output[:500]}"  # Limit output length
+        raise ValueError(error_msg)
+    
     except Exception as e:
-        raise ValueError(f"Error generating trending ideas: {e}\n\nRaw output:\n{raw_output}")
+        error_msg = f"Error generating trending ideas: {e}"
+        if raw_output:
+            error_msg += f"\n\nRaw output:\n{raw_output[:500]}"
+        else:
+            error_msg += "\n\nNo output received from API"
+        raise ValueError(error_msg)
 
     return ideas_data

@@ -3,3 +3,5 @@ thumbnails
 merged_videos
 .env
 .env.*
+__pycache__
+*.pyc

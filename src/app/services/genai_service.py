@@ -20,6 +20,10 @@ def generate_video_from_payload(payload: dict):
         # location=settings.GCP_REGION,
     )
 
+    # Retry configuration for transient service errors (503 / UNAVAILABLE)
+    max_retries = 3
+    backoff_base = 5  # seconds, exponential backoff multiplier
+
     # Extract required + optional params
     prompt = payload.get("prompt")
     if not prompt:
@@ -30,44 +34,104 @@ def generate_video_from_payload(payload: dict):
     aspect_ratio = payload.get("aspectRatio", "9:16")
     # Note: generate_audio and sample_count are not supported in GenerateVideosConfig
 
-    # Start async video generation
-    operation = client.models.generate_videos(
-        model="veo-3.0-generate-001",
-        prompt=prompt,
-        config=types.GenerateVideosConfig(
-            duration_seconds=duration,
-            resolution=resolution,
-            aspect_ratio=aspect_ratio,
-        )
-    )
+    def _is_transient_service_error(exc_or_obj) -> bool:
+        """Rudimentary check for transient service errors (503 / UNAVAILABLE)."""
+        try:
+            text = str(exc_or_obj)
+            if "UNAVAILABLE" in text or "503" in text or "service is currently unavailable" in text.lower():
+                return True
+        except Exception:
+            pass
+        return False
 
-    # Poll until completion
-    while not operation.done:
-        print("Waiting for video generation to complete...")
-        time.sleep(10)
-        operation = client.operations.get(operation)
+    last_exception = None
+    for attempt in range(max_retries):
+        try:
+            # Start async video generation
+            operation = client.models.generate_videos(
+                model=settings.VIDEO_GENERATION_MODEL,
+                # model="veo-3.0-fast-generate-preview",
+                prompt=prompt,
+                config=types.GenerateVideosConfig(
+                    duration_seconds=duration,
+                    resolution=resolution,
+                    aspect_ratio=aspect_ratio,
+                )
+            )
 
-    # Check for errors in the operation
-    if operation.error:
-        raise Exception(f"Video generation failed: {operation.error}")
+            # Poll until completion
+            while not operation.done:
+                print("Waiting for video generation to complete...")
+                time.sleep(10)
+                operation = client.operations.get(operation)
 
-    # Collect results - handle the actual response structure
+            # Check for errors in the operation
+            if operation.error:
+                # If the operation error looks transient, raise to trigger a retry
+                if _is_transient_service_error(operation.error) and attempt < max_retries - 1:
+                    wait = backoff_base * (2 ** attempt)
+                    print(f"⚠️ Transient error detected (attempt {attempt+1}/{max_retries}), retrying after {wait}s: {operation.error}")
+                    time.sleep(wait)
+                    continue
+                raise Exception(f"Video generation failed: {operation.error}")
+
+            # If we reach here, operation completed successfully (no operation.error)
+            last_exception = None
+            break
+
+        except Exception as e:
+            last_exception = e
+            # If it's a transient service error, retry (with backoff)
+            if _is_transient_service_error(e) and attempt < max_retries - 1:
+                wait = backoff_base * (2 ** attempt)
+                print(f"⚠️ Transient error during generation (attempt {attempt+1}/{max_retries}), retrying after {wait}s: {e}")
+                time.sleep(wait)
+                continue
+            # Non-retryable or exhausted retries -> re-raise after loop
+            raise
+
+    # If we exhausted retries and still have an exception, raise a clear error
+    if last_exception is not None:
+        raise Exception(f"Video generation failed after {max_retries} attempts: {last_exception}")
+
+    # Collect results - handle the actual response structure with null checking
     results = []
-    if hasattr(operation.response, 'generated_videos'):
+    
+    # Check if response exists
+    if not operation.response:
+        raise Exception("Video generation failed: No response received")
+    
+    # Try to extract generated videos
+    if hasattr(operation.response, 'generated_videos') and operation.response.generated_videos:
         for generated in operation.response.generated_videos:
-            # Extract URI from Video object - return just the URI string
-            video_uri = generated.video.uri if hasattr(generated.video, 'uri') else str(generated.video)
-            results.append(video_uri)
-    else:
-        # Handle case where response structure is different
-        print(f"Unexpected response structure: {operation.response}")
-        # Try to extract video data from the actual response
-        if hasattr(operation.response, 'videos'):
-            for video in operation.response.videos:
+            if generated and hasattr(generated, 'video') and generated.video:
+                # Extract URI from Video object - return just the URI string
+                video_uri = generated.video.uri if hasattr(generated.video, 'uri') else str(generated.video)
+                if video_uri:
+                    results.append(video_uri)
+    elif hasattr(operation.response, 'videos') and operation.response.videos:
+        # Handle alternative response structure
+        for video in operation.response.videos:
+            if video:
                 video_uri = video.uri if hasattr(video, 'uri') else str(video)
-                results.append(video_uri)
+                if video_uri:
+                    results.append(video_uri)
+    else:
+        # Log the actual response structure for debugging
+        print(f"Unexpected response structure: {operation.response}")
+        print(f"Response type: {type(operation.response)}")
+        print(f"Response attributes: {dir(operation.response)}")
+        
+        # Try to get any video data from the response
+        response_str = str(operation.response)
+        if response_str and response_str != "None":
+            results.append(response_str)
         else:
-            results.append(str(operation.response))
+            raise Exception("Video generation failed: No video data in response")
+    
+    # Ensure we have at least one result
+    if not results:
+        raise Exception("Video generation failed: No video URLs generated")
 
     return results
 
@@ -104,51 +168,81 @@ def download_video(video_url: str, filename: str = None, download_dir: str = "do
         {"X-Goog-Api-Key": settings.GOOGLE_STUDIO_API_KEY},
         {}  # No auth as fallback
     ]
-    
+
+    # Retry config for transient HTTP errors
+    max_retries = 3
+    backoff_base = 3  # seconds
+    transient_statuses = {429, 502, 503}
+
     for i, headers in enumerate(auth_methods):
-        try:
-            auth_type = "Bearer token" if "Authorization" in headers else "API Key header" if "X-Goog-Api-Key" in headers else "No authentication"
-            print(f"Attempt {i+1}: Downloading with {auth_type}...")
-            print(f"URL: {video_url}")
-            
-            # Make the GET request with streaming enabled
-            response = requests.get(video_url, headers=headers, stream=True)
-            
-            if response.status_code == 200:
-                # Success! Download the file
-                total_size = int(response.headers.get('content-length', 0))
-                downloaded = 0
-                
-                print("✅ Authentication successful, downloading...")
-                with open(filepath, 'wb') as f:
-                    for chunk in response.iter_content(chunk_size=8192):
-                        if chunk:
-                            f.write(chunk)
-                            downloaded += len(chunk)
-                            if total_size > 0:
-                                progress = (downloaded / total_size) * 100
-                                print(f"\rDownload progress: {progress:.1f}%", end="", flush=True)
-                
-                print(f"\n✅ Video downloaded successfully: {filepath}")
-                file_size_mb = os.path.getsize(filepath) / (1024 * 1024)
-                print(f"📊 File size: {file_size_mb:.2f} MB")
-                return filepath
-            else:
+        auth_type = "Bearer token" if "Authorization" in headers else "API Key header" if "X-Goog-Api-Key" in headers else "No authentication"
+        print(f"Attempt {i+1}: Downloading with {auth_type}...")
+        print(f"URL: {video_url}")
+
+        for attempt in range(max_retries):
+            try:
+                if attempt > 0:
+                    wait = backoff_base * (2 ** (attempt - 1))
+                    print(f"🔁 Transient issue, retry {attempt+1}/{max_retries} for auth '{auth_type}' after {wait}s...")
+                    time.sleep(wait)
+
+                # Make the GET request with streaming enabled
+                response = requests.get(video_url, headers=headers, stream=True, timeout=60)
+
+                if response.status_code == 200:
+                    # Success! Download the file
+                    total_size = int(response.headers.get('content-length', 0))
+                    downloaded = 0
+
+                    print("✅ Authentication successful, downloading...")
+                    with open(filepath, 'wb') as f:
+                        for chunk in response.iter_content(chunk_size=8192):
+                            if chunk:
+                                f.write(chunk)
+                                downloaded += len(chunk)
+                                if total_size > 0:
+                                    progress = (downloaded / total_size) * 100
+                                    print(f"\rDownload progress: {progress:.1f}%", end="", flush=True)
+
+                    print(f"\n✅ Video downloaded successfully: {filepath}")
+                    file_size_mb = os.path.getsize(filepath) / (1024 * 1024)
+                    print(f"📊 File size: {file_size_mb:.2f} MB")
+                    return filepath
+
+                # If response is a transient error, retry up to max_retries
+                if response.status_code in transient_statuses:
+                    # If not last attempt, retry
+                    text_snippet = response.text[:200]
+                    print(f"⚠️ Transient HTTP {response.status_code} received: {text_snippet}")
+                    if attempt < max_retries - 1:
+                        continue
+                    else:
+                        # exhausted retries for this auth method, break to next auth
+                        print(f"🔄 Exhausted retries for auth '{auth_type}' (status {response.status_code}). Trying next auth method...")
+                        break
+
+                # Non-transient non-200 response: don't retry for this auth method
                 print(f"❌ Failed with status {response.status_code}: {response.text[:200]}")
-                if i < len(auth_methods) - 1:
-                    print("🔄 Trying next authentication method...")
+                break
+
+            except requests.exceptions.RequestException as e:
+                # Treat network errors as transient and retry
+                print(f"❌ Request exception: {str(e)}")
+                if attempt < max_retries - 1:
+                    print("🔄 Retrying request due to network error...")
                     continue
-        
-        except requests.exceptions.RequestException as e:
-            print(f"❌ Request failed: {str(e)}")
-            if i < len(auth_methods) - 1:
-                print("🔄 Trying next authentication method...")
-                continue
-        except Exception as e:
-            print(f"❌ Unexpected error: {str(e)}")
-            if i < len(auth_methods) - 1:
-                print("🔄 Trying next authentication method...")
-                continue
+                else:
+                    print("🔄 Exhausted retries for network errors on this auth method. Trying next auth method...")
+                    break
+            except Exception as e:
+                print(f"❌ Unexpected error: {str(e)}")
+                # Don't retry for unknown exceptions; try next auth method
+                break
+
+        # If we reach here and didn't return, try next authentication method
+        if i < len(auth_methods) - 1:
+            print("🔄 Trying next authentication method...")
+            continue
     
     # If we get here, all methods failed
     error_msg = "All authentication methods failed. The video URL may have expired or the API key may be incorrect."
@@ -299,13 +393,13 @@ def _build_thumbnail_prompt(content_data: dict) -> str:
     
     # Build the prompt based on content type
     prompt_parts = [
-        f"Create a vibrant, eye-catching YouTube thumbnail image for a {content_type} video titled '{title}'.",
+        f"Create a vibrant, eye-catching realistic YouTube thumbnail image for a {content_type} video titled '{title}'.",
         "",
         "REQUIREMENTS:",
         "- High-quality, professional YouTube thumbnail style",
         "- Bright, saturated colors that grab attention",
-        "- 16:9 aspect ratio (1280x720 resolution)",
-        "- Eye-catching composition that encourages clicks",
+        "- 16:9 aspect ratio (1280x1080 resolution)",
+        "- Eye-catching composition that encourages clicks by people of middle age preferable teens",
         "- Leave space at the top for title text overlay",
         ""
     ]

@@ -163,7 +163,7 @@ class VideoMerger:
         try:
             # Try to import moviepy
             try:
-                from moviepy.editor import VideoFileClip, concatenate_videoclips
+                from moviepy import VideoFileClip, concatenate_videoclips
             except ImportError:
                 return {
                     "success": False,

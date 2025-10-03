@@ -1,5 +1,5 @@
 import os
-os.environ.setdefault("ENV", "prod")  # must come first
+os.environ.setdefault("ENV", "prod")
 
 import uvicorn
 from app.app import app

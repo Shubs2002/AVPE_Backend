@@ -31,6 +31,7 @@ class Settings(BaseSettings):
     # 🔑 New → OpenAI / OpenRouter
     OPENAI_API_KEY: str | None = None
     OPENROUTER_BASE_URL: str | None = None
+    SCRIPT_MODEL: str | None = None
 
     # ⚙️ New → Google Cloud Platform
     GCP_SERVICE_ACCOUNT_FILE_NAME: str | None = None
@@ -38,6 +39,7 @@ class Settings(BaseSettings):
     GCP_REGION: str | None = None
     GCP_VERTEX_API_KEY: str | None = None
     GOOGLE_STUDIO_API_KEY: str | None = None
+    VIDEO_GENERATION_MODEL: str | None = None
 
 
     # Define CORS origins for different environments

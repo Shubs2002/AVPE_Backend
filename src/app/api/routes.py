@@ -45,6 +45,12 @@ class GenerateStoryRequest(BaseModel):
     idea: str
     segments: Optional[int] = 7
 
+class GenerateStorySetRequest(BaseModel):
+    idea: str
+    total_segments: int
+    segments_per_set: Optional[int] = 10
+    set_number: Optional[int] = 1
+
 class GenerateMemeRequest(BaseModel):
     idea: Optional[str] = None  # Optional - will generate random meme if not provided
     segments: Optional[int] = 7
@@ -57,6 +63,16 @@ class GenerateFreeContentRequest(BaseModel):
 async def build_story_route(payload: GenerateStoryRequest) -> dict:
     """Generate a story outline from an idea."""
     return screenwriter_controller.build_story(payload.idea, payload.segments)
+
+@router.post("/generate-story-set")
+async def build_story_set_route(payload: GenerateStorySetRequest) -> dict:
+    """Generate a specific set of story segments (e.g., segments 1-10, 11-20, etc.) with complete metadata."""
+    return screenwriter_controller.build_story_set(
+        payload.idea, 
+        payload.total_segments, 
+        payload.segments_per_set, 
+        payload.set_number
+    )
 
 @router.post("/generate-meme-segments")
 async def build_meme_route(payload: GenerateMemeRequest) -> dict:

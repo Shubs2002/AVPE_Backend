@@ -113,23 +113,28 @@ def extract_story_segment_prompt(content_data: dict, segment: dict, segment_numb
     background_def = segment.get('background_definition', {})
     background_prompt = background_def.get('video_prompt_background', background_def.get('setting_description', ''))
     
-    # Build the main prompt
-    scene_description = segment.get('scene', '')
+    # Build the main prompt with validation
+    scene_description = segment.get('scene', '').strip()
+    if not scene_description:
+        scene_description = f"Scene from {content_data.get('title', 'story')} segment {segment_number}"
     
-    # Get content (narration or dialogue)
+    # Get content (narration or dialogue) with validation
     content_type = segment.get('content_type', 'narration')
     content_text = ""
     narrator_info = ""
     
     if content_type == 'narration':
-        content_text = segment.get('narration', '')
+        content_text = segment.get('narration', '').strip()
+        if not content_text:
+            content_text = f"Narration for segment {segment_number} of the story"
+            
         # Add narrator voice information for narration segments - ENSURE CONSISTENCY
         segment_narrator = segment.get('narrator_voice_for_segment', {})
         if segment_narrator or main_narrator_voice:
             # ALWAYS use main narrator voice type for consistency
-            voice_type = main_narrator_voice.get('voice_type', '')
-            base_tone = main_narrator_voice.get('tone', '')
-            base_pace = main_narrator_voice.get('speaking_pace', '')
+            voice_type = main_narrator_voice.get('voice_type', 'neutral')
+            base_tone = main_narrator_voice.get('tone', 'neutral')
+            base_pace = main_narrator_voice.get('speaking_pace', 'moderate')
             
             # Allow only minor variations per segment
             tone_variation = segment_narrator.get('tone_variation', base_tone)
@@ -145,10 +150,11 @@ def extract_story_segment_prompt(content_data: dict, segment: dict, segment_numb
         dialogue_lines = segment.get('dialogue', [])
         dialogue_text = []
         for line in dialogue_lines:
-            char_name = line.get('character', 'Unknown')
-            char_line = line.get('line', '')
-            dialogue_text.append(f"{char_name}: \"{char_line}\"")
-        content_text = " ".join(dialogue_text)
+            char_name = line.get('character', 'Character').strip()
+            char_line = line.get('line', '').strip()
+            if char_name and char_line:
+                dialogue_text.append(f"{char_name}: \"{char_line}\"")
+        content_text = " ".join(dialogue_text) if dialogue_text else f"Dialogue for segment {segment_number}"
     
     # Build the complete prompt
     prompt_parts = []

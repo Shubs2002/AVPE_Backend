@@ -18,6 +18,51 @@ def build_story(idea: str, segments: int = 5):
             detail=f"Story generation failed: {str(e)}"
         )
 
+def build_story_set(idea: str, total_segments: int, segments_per_set: int = 10, set_number: int = 1):
+    """Generate a specific set of story segments with complete metadata."""
+    if not idea:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Missing story idea"
+        )
+    
+    if total_segments <= 0:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Total segments must be greater than 0"
+        )
+    
+    if segments_per_set <= 0:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Segments per set must be greater than 0"
+        )
+    
+    if set_number <= 0:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Set number must be greater than 0"
+        )
+    
+    # Calculate max possible sets
+    max_sets = (total_segments + segments_per_set - 1) // segments_per_set
+    if set_number > max_sets:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Set number {set_number} exceeds maximum possible sets ({max_sets}) for {total_segments} total segments"
+        )
+    
+    try:
+        story_set = openai_service.generate_story_segments_in_sets(
+            idea, total_segments, segments_per_set, set_number
+        )
+        return {"story_set": story_set}
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Story set generation failed: {str(e)}"
+        )
+
 def build_meme(idea: str = None, segments: int = 5):
     """Generate meme segments from an idea using ChatGPT."""
     # Generate random meme idea if not provided
