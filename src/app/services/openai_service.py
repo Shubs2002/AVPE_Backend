@@ -1,15 +1,15 @@
 import json
 from openai import OpenAI
 from app.config.settings import settings
-from app.data.prompts.gen_segmented_story_prompt import (
+from app.data.prompts.generate_segmented_story_prompt import (
     get_story_segments_prompt,
     get_outline_for_story_segments_chunked,
     get_chunk_segments_prompt,
     get_story_segments_in_sets_prompt
 )
-from app.data.prompts.gen_meme_segments_prompt import get_meme_segments_prompt
-from app.data.prompts.gen_free_content_prompt import get_free_content_prompt
-from app.data.prompts.gen_trending_ideas_prompt import get_trending_ideas_prompt
+from app.data.prompts.generate_meme_segments_prompt import get_meme_segments_prompt
+from app.data.prompts.generate_free_content_prompt import get_free_content_prompt
+from app.data.prompts.generate_trending_ideas_prompt import get_trending_ideas_prompt
 from app.data.prompts.analyze_character_prompt import get_character_analysis_prompt
 
 client = OpenAI(
