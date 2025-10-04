@@ -51,6 +51,13 @@ class GenerateStorySetRequest(BaseModel):
     segments_per_set: Optional[int] = 10
     set_number: Optional[int] = 1
 
+class GenerateFullmovieAutoRequest(BaseModel):
+    idea: str
+    total_segments: Optional[int] = None  # Optional - will auto-detect if not provided
+    segments_per_set: Optional[int] = 10
+    save_to_files: Optional[bool] = True
+    output_directory: Optional[str] = "generated_movie_script"
+
 class GenerateMemeRequest(BaseModel):
     idea: Optional[str] = None  # Optional - will generate random meme if not provided
     segments: Optional[int] = 7
@@ -74,6 +81,17 @@ async def build_story_set_route(payload: GenerateStorySetRequest) -> dict:
         payload.set_number
     )
 
+@router.post("/generate-movie-auto")
+async def build_full_story_auto_route(payload: GenerateFullmovieAutoRequest) -> dict:
+    """Generate a complete story automatically in sets and save to JSON files. Specify total_segments or let it auto-detect!"""
+    return screenwriter_controller.build_full_story_auto(
+        payload.idea,
+        payload.total_segments,
+        payload.segments_per_set,
+        payload.save_to_files,
+        payload.output_directory
+    )
+
 @router.post("/generate-meme-segments")
 async def build_meme_route(payload: GenerateMemeRequest) -> dict:
     """Generate meme segments from an idea."""
@@ -90,10 +108,36 @@ class GenerateTrendingIdeasRequest(BaseModel):
     content_type: Optional[str] = "all"  # "story", "meme", "free_content", or "all"
     count: Optional[int] = 5  # Number of ideas to generate
 
+
+
 @router.post("/generate-trending-ideas")
 async def generate_trending_ideas_route(payload: GenerateTrendingIdeasRequest) -> dict:
     """Generate 5 trending, creative, and unique content ideas."""
     return screenwriter_controller.generate_trending_ideas(payload.content_type, payload.count)
+
+
+
+@router.post("/analyze-character-image-file")
+async def analyze_character_image_file_route(
+    image: UploadFile,
+    character_name: str = Form(...),
+    character_count: int = Form(1),
+    save_character: bool = Form(False)
+) -> dict:
+    """Analyze an uploaded image file to generate detailed character roster for video generation."""
+    return screenwriter_controller.analyze_character_image_file(image, character_name, character_count, save_character)
+
+
+
+@router.post("/analyze-multiple-character-images-files")
+async def analyze_multiple_character_images_files_route(
+    images: List[UploadFile],
+    character_names: str = Form(...),  # Comma-separated names
+    character_count_per_image: int = Form(1),
+    save_characters: bool = Form(False)
+) -> dict:
+    """Analyze multiple uploaded image files to generate a combined character roster."""
+    return screenwriter_controller.analyze_multiple_character_images_files(images, character_names, character_count_per_image, save_characters)
 
 
 # ---------- COMPLETE VIDEO GENERATION ----------
