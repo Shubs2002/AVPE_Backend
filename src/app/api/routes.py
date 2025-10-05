@@ -44,12 +44,14 @@ def upload_video(
 class GenerateStoryRequest(BaseModel):
     idea: str
     segments: Optional[int] = 7
+    custom_character_roster: Optional[List[dict]] = None  # User-provided main character roster
 
 class GenerateStorySetRequest(BaseModel):
     idea: str
     total_segments: int
     segments_per_set: Optional[int] = 10
     set_number: Optional[int] = 1
+    custom_character_roster: Optional[List[dict]] = None  # User-provided main character roster
 
 class GenerateFullmovieAutoRequest(BaseModel):
     idea: str
@@ -57,19 +59,22 @@ class GenerateFullmovieAutoRequest(BaseModel):
     segments_per_set: Optional[int] = 10
     save_to_files: Optional[bool] = True
     output_directory: Optional[str] = "generated_movie_script"
+    custom_character_roster: Optional[List[dict]] = None  # User-provided main character roster
 
 class GenerateMemeRequest(BaseModel):
     idea: Optional[str] = None  # Optional - will generate random meme if not provided
     segments: Optional[int] = 7
+    custom_character_roster: Optional[List[dict]] = None  # User-provided main character roster
 
 class GenerateFreeContentRequest(BaseModel):
     idea: Optional[str] = None  # Optional - will generate random content if not provided
     segments: Optional[int] = 7
+    custom_character_roster: Optional[List[dict]] = None  # User-provided main character roster
 
 @router.post("/generate-prompt-based-story")
 async def build_story_route(payload: GenerateStoryRequest) -> dict:
     """Generate a story outline from an idea."""
-    return screenwriter_controller.build_story(payload.idea, payload.segments)
+    return screenwriter_controller.build_story(payload.idea, payload.segments, payload.custom_character_roster)
 
 @router.post("/generate-story-set")
 async def build_story_set_route(payload: GenerateStorySetRequest) -> dict:
@@ -78,7 +83,8 @@ async def build_story_set_route(payload: GenerateStorySetRequest) -> dict:
         payload.idea, 
         payload.total_segments, 
         payload.segments_per_set, 
-        payload.set_number
+        payload.set_number,
+        payload.custom_character_roster
     )
 
 @router.post("/generate-movie-auto")
@@ -89,18 +95,19 @@ async def build_full_story_auto_route(payload: GenerateFullmovieAutoRequest) -> 
         payload.total_segments,
         payload.segments_per_set,
         payload.save_to_files,
-        payload.output_directory
+        payload.output_directory,
+        payload.custom_character_roster
     )
 
 @router.post("/generate-meme-segments")
 async def build_meme_route(payload: GenerateMemeRequest) -> dict:
     """Generate meme segments from an idea."""
-    return screenwriter_controller.build_meme(payload.idea, payload.segments)
+    return screenwriter_controller.build_meme(payload.idea, payload.segments, payload.custom_character_roster)
 
 @router.post("/generate-free-content")
 async def build_free_content_route(payload: GenerateFreeContentRequest) -> dict:
     """Generate viral free content segments from an idea."""
-    return screenwriter_controller.build_free_content(payload.idea, payload.segments)
+    return screenwriter_controller.build_free_content(payload.idea, payload.segments, payload.custom_character_roster)
 
 
 # ---------- TRENDING IDEAS GENERATION ----------

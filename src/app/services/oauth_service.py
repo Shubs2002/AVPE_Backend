@@ -1,11 +1,10 @@
 from app.config.settings import settings
-
 import os
 from google_auth_oauthlib.flow import Flow
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload
 
-CLIENT_SECRETS_FILE = os.path.join("src", "app", "config", settings.AVPE_FILE_NAME)
+CLIENT_SECRETS_FILE = os.path.join("src", "app", "config", settings.GCP_SERVICE_ACC_AVPE_FILE_NAME)
 SCOPES = [settings.SCOPES]
 REDIRECT_URI = settings.REDIRECT_URI
 

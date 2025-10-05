@@ -17,7 +17,7 @@ Functions:
 """
 
 
-def get_meme_segments_prompt(idea: str, num_segments: int) -> str:
+def get_meme_segments_prompt(idea: str, num_segments: int, custom_character_roster: list = None) -> str:
     """
     Generate the prompt for creating viral meme video segments.
     
@@ -31,14 +31,41 @@ def get_meme_segments_prompt(idea: str, num_segments: int) -> str:
     Args:
         idea: The meme concept/idea
         num_segments: Number of segments to generate (typically 5-10 for memes)
+        custom_character_roster: Optional user-provided character roster that MUST be used
         
     Returns:
         str: The formatted prompt for generating meme segments
     """
     
+    # Build custom character roster instruction if provided
+    custom_roster_instruction = ""
+    if custom_character_roster and len(custom_character_roster) > 0:
+        import json
+        roster_json = json.dumps(custom_character_roster, indent=2)
+        custom_roster_instruction = f"""
+    
+    **CRITICAL REQUIREMENT - MANDATORY CHARACTER ROSTER**:
+    You MUST use the following pre-defined character roster in your meme. These are the MAIN CHARACTERS that the user has specifically requested. DO NOT create new main characters - use ONLY these characters as the primary cast:
+    
+    {roster_json}
+    
+    **RULES FOR USING CUSTOM CHARACTER ROSTER**:
+    - These characters MUST appear in the meme as the main cast
+    - Use the EXACT character descriptions, names, IDs, and details provided
+    - You can add minor supporting characters if needed, but the custom roster characters are the STARS
+    - Ensure these characters drive the comedy and appear in multiple segments
+    - Maintain ALL the physical appearance, clothing, and personality details exactly as specified
+    - The meme MUST revolve around these characters - they are not optional
+    - Use their personalities and traits to enhance the comedic effect
+    """
+    
     return f"""
     You are a professional Humanised meme creator and viral content specialist.
     you can add more custom fields for generating the best results as i am gonna feed your generated output into veo3 video generation model.
+    {custom_roster_instruction}
+
+    **CRITICAL CONSISTENCY REQUIREMENT**:
+    The video generation model (Veo3) creates each segment independently. To ensure the SAME character appears identically across ALL segments, you MUST provide EXTREMELY DETAILED character descriptions covering EVERY visible feature. Even slight variations in description will result in different-looking characters between segments. Describe characters with forensic-level detail - every skin tone nuance, every facial feature measurement, every clothing item specification. Think of it as creating a police sketch that must match perfectly across 100 different artists.
 
     Task:
     - Create a viral meme video concept based on: "{idea}"
@@ -58,26 +85,141 @@ def get_meme_segments_prompt(idea: str, num_segments: int) -> str:
         * Each segment should build on the previous one
         * Escalate the humor or absurdity
         * Final segment should deliver the punchline or peak comedy
-    - Define **characters_roster** (1-4 characters) with DETAILED descriptions for video generation consistency:
+    - Define **characters_roster** (1-4 characters) with EXTREMELY DETAILED descriptions for video generation consistency:
         * id (short tag like "main", "friend1")
         * name (can be generic like "Main Character", "Best Friend")
-        * **Physical Appearance** (for video generation prompts):
-          - gender (male/female/non-binary)
-          - age (specific age or range)
-          - height (tall/medium/short with approximate measurements)
-          - body_type (slim/athletic/average/muscular/etc.)
-          - skin_tone (fair/olive/tan/dark/etc. - be specific)
-          - hair_color (exact color like "golden blonde", "dark brown", "jet black")
-          - hair_style (length, texture, style - "shoulder-length wavy", "short curly", etc.)
-          - eye_color (specific color like "emerald green", "deep brown", "bright blue")
-          - eye_shape (almond/round/narrow/wide)
-          - facial_features (distinctive features like "sharp jawline", "soft features", "prominent cheekbones")
-          - distinctive_marks (scars, tattoos, birthmarks, etc.)
-        * **Clothing & Style**:
-          - primary_outfit (detailed description for consistency)
-          - clothing_style (casual, trendy, quirky, etc.)
-          - colors (specific color palette for the character)
-          - accessories (jewelry, hats, glasses, etc.)
+        * **Physical Appearance** (CRITICAL: Describe EVERY detail for perfect video consistency):
+          - gender (male/female/non-binary - be explicit)
+          - age (exact age like "28 years old" or narrow range "25-27")
+          - height (exact measurement like "5'8\" / 173cm" or "6'2\" / 188cm")
+          - weight_build (specific like "165 lbs, athletic build" or "180 lbs, muscular")
+          - body_type (very specific: "lean athletic", "muscular mesomorph", "slim ectomorph", "curvy hourglass", etc.)
+          - **SKIN DETAILS** (CRITICAL for consistency):
+            * skin_tone (ultra-specific: "warm honey beige", "cool porcelain", "deep mahogany", "olive tan", "fair with pink undertones")
+            * skin_texture (smooth/textured/freckled/clear/etc.)
+            * skin_undertone (warm/cool/neutral - specify)
+            * complexion_details (any blemishes, freckles, beauty marks - exact locations)
+            * skin_condition (matte/dewy/oily/dry appearance)
+          - **FACE STRUCTURE** (measure every feature):
+            * face_shape (oval/round/square/heart/diamond/oblong - be precise)
+            * forehead (high/medium/low, wide/narrow, any lines)
+            * eyebrows (exact shape: "thick straight", "arched thin", "bushy natural", color, thickness)
+            * eyes_detailed (CRITICAL):
+              - eye_color (ultra-specific: "hazel with gold flecks", "steel blue-gray", "warm chocolate brown")
+              - eye_shape (almond/round/hooded/monolid/deep-set/protruding)
+              - eye_size (large/medium/small relative to face)
+              - eyelid_type (single/double/hooded)
+              - eyelashes (long/short/thick/sparse, natural/mascara)
+              - eye_spacing (close-set/wide-set/average)
+              - under_eye (bags/dark circles/smooth - describe)
+            * nose_detailed:
+              - nose_shape (straight/aquiline/button/roman/snub/bulbous)
+              - nose_size (small/medium/large relative to face)
+              - nose_bridge (high/low/wide/narrow)
+              - nostrils (flared/narrow/round)
+            * cheeks_detailed:
+              - cheekbone_prominence (high/low/prominent/subtle)
+              - cheek_fullness (full/hollow/average)
+              - dimples (yes/no, location if yes)
+            * mouth_lips_detailed:
+              - lip_shape (full/thin/bow-shaped/heart-shaped/wide)
+              - lip_size (upper and lower - be specific)
+              - lip_color (natural pink/rose/brown/red tones)
+              - mouth_width (wide/narrow/proportionate)
+              - teeth (visible/hidden, straight/gap/etc.)
+              - smile_type (wide/subtle/crooked/symmetric)
+            * jaw_chin_detailed:
+              - jawline (sharp/soft/square/rounded/defined)
+              - jaw_width (wide/narrow/proportionate)
+              - chin_shape (pointed/rounded/square/cleft)
+              - chin_prominence (receding/prominent/average)
+            * ears (if visible):
+              - ear_size (small/medium/large)
+              - ear_shape (attached/detached lobes, etc.)
+          - **HEAD & SKULL SHAPE** (CRITICAL - describe structure):
+            * head_size (large/medium/small relative to body)
+            * head_shape (round/oval/square/long/etc.)
+            * skull_prominence (flat back/rounded/prominent occipital bone)
+            * cranium_height (high/medium/low crown)
+          - **HAIR DETAILS** (CRITICAL - describe completely, including baldness):
+            * hair_presence (full head of hair/thinning/balding/completely bald)
+            * baldness_pattern (if applicable: "male pattern baldness with receding temples", "bald crown with side hair", "completely smooth bald", "thinning on top", "no baldness")
+            * hair_density (thick coverage/normal/sparse/very thin/bald patches)
+            * hair_color (ultra-specific: "ash blonde with platinum highlights", "jet black with blue undertones", "auburn with copper tones", "silver-gray", "salt and pepper", "dyed vs natural")
+            * hair_color_variations (roots showing, highlights, lowlights, gray streaks, fading)
+            * hair_length (exact: "shoulder-length", "mid-back", "chin-length bob", "buzz cut 1/4 inch", "completely shaved/bald")
+            * hair_texture (straight/wavy/curly/coily - specify curl pattern like 2A, 3B, 4C, or "no hair/bald")
+            * hair_thickness (fine/medium/thick/coarse strands, or "no hair")
+            * hair_volume (flat/voluminous/medium, or "bald/no volume")
+            * hair_style (exact description: "center-parted long layers", "side-swept bangs with ponytail", "slicked back undercut", "buzz cut", "completely bald and shaved", "bald with horseshoe pattern")
+            * hair_condition (shiny/matte/frizzy/sleek/greasy/dry, or "smooth bald scalp")
+            * hairline (straight/widow's peak/receding/high/low/completely receded/no hairline if bald)
+            * hair_part (center/side/no part/zigzag, or "no part - bald")
+            * scalp_visibility (scalp showing through hair/no scalp visible/completely visible if bald)
+            * scalp_condition (if visible or bald: smooth/textured/shiny/matte/freckled/scarred)
+            * facial_hair (if applicable - exact style: "full beard", "goatee", "mustache", "stubble", "clean shaven", length, color, coverage, thickness, grooming style)
+            * facial_hair_pattern (even/patchy/sparse/thick, exact areas covered)
+            * eyebrow_hair (already covered above but ensure consistency with head hair color)
+          - **NECK & SHOULDERS**:
+            * neck_length (long/short/average)
+            * neck_width (thin/thick/proportionate)
+            * shoulder_width (broad/narrow/average)
+            * shoulder_shape (rounded/square/sloped)
+          - **HANDS & ARMS** (if visible):
+            * arm_length (long/short/proportionate)
+            * arm_musculature (toned/soft/muscular/thin)
+            * hand_size (large/small/proportionate)
+            * finger_length (long/short/average)
+            * nails (short/long, manicured/natural, color)
+          - distinctive_marks (EXACT locations and descriptions):
+            * scars (location, size, shape, color)
+            * tattoos (exact design, location, size, colors)
+            * birthmarks (location, size, shape, color)
+            * moles/beauty marks (exact facial/body locations)
+            * piercings (type, location, jewelry description)
+            * any other unique identifiers
+        * **Clothing & Style** (ULTRA-DETAILED for perfect consistency):
+          - **PRIMARY OUTFIT** (describe every layer and piece):
+            * top_garment (exact type, fit, fabric, color, pattern, condition)
+            * bottom_garment (exact type, fit, fabric, color, pattern, length)
+            * outerwear (jacket/coat - exact style, length, color, material)
+            * footwear (exact type, color, material, condition, heel height if applicable)
+            * undergarments_visible (if any parts visible - straps, waistbands, etc.)
+          - **CLOTHING DETAILS**:
+            * fabric_type (cotton/silk/leather/denim/wool - be specific)
+            * fabric_texture (smooth/rough/shiny/matte/textured)
+            * fit_style (tight/loose/fitted/oversized/tailored)
+            * clothing_condition (new/worn/vintage/distressed/pristine)
+            * layering (describe each visible layer from inner to outer)
+            * closures (buttons/zippers/laces - describe)
+            * pockets (visible pockets, flaps, etc.)
+            * seams_stitching (visible details, decorative stitching)
+          - **COLOR PALETTE** (exact colors for each item):
+            * primary_colors (exact shades: "navy blue #001f3f", "burgundy red", "forest green")
+            * secondary_colors (accent colors, patterns)
+            * color_combinations (how colors work together)
+            * color_wear_patterns (fading, stains, variations)
+          - **ACCESSORIES** (describe each item in detail):
+            * jewelry (exact pieces: "silver chain necklace 18 inches", "gold hoop earrings 1 inch diameter")
+            * watches_timepieces (brand style, wrist, exact appearance)
+            * bags_carried (type, size, color, material, how carried)
+            * belts (width, color, buckle style, material)
+            * hats_headwear (exact style, color, how worn)
+            * scarves_neckwear (material, color, how tied/worn)
+            * glasses_eyewear (frame style, color, lens type)
+            * gloves (if worn - material, length, color)
+          - **STYLE CHARACTERISTICS**:
+            * overall_aesthetic (modern/vintage/trendy/casual/quirky/etc.)
+            * fashion_era (if period-specific - exact era and region)
+            * cultural_influences (specific cultural elements in clothing)
+            * personal_style_markers (signature pieces, unique combinations)
+            * formality_level (very formal/business/casual/athletic/etc.)
+            * weather_appropriateness (summer/winter/all-season wear)
+          - **CLOTHING CONSISTENCY NOTES**:
+            * which_items_never_change (core pieces that appear in every segment)
+            * which_items_might_vary (accessories that can change)
+            * how_clothing_moves (flow, drape, restriction of movement)
+            * clothing_sounds (rustling, jingling, creaking leather, etc.)
         * personality (comedic traits and mannerisms)
         * role (straight man, comic relief, etc.)
         * **Voice & Mannerisms** (for dialogue segments):
@@ -166,7 +308,7 @@ def get_meme_segments_prompt(idea: str, num_segments: int) -> str:
             "typical_expressions": "...",
             "comedic_timing": "..."
           }}}},
-          "video_prompt_description": "..." # Complete description for video generation
+          "video_prompt_description": "..." # ULTRA-COMPLETE description combining ALL above details in a single paragraph for video generation - must include EVERY physical feature, skin detail, facial feature, hair characteristic, and clothing item to ensure ZERO variation between segments
         }}}}
       ],
       "segments": [

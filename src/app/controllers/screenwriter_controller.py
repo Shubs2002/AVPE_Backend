@@ -2,7 +2,7 @@ from fastapi import HTTPException, status, UploadFile
 from app.services import openai_service
 import random
 
-def build_story(idea: str, segments: int = 5):
+def build_story(idea: str, segments: int = 5, custom_character_roster: list = None):
     """Generate story segments from an idea using ChatGPT."""
     if not idea:
         raise HTTPException(
@@ -10,7 +10,7 @@ def build_story(idea: str, segments: int = 5):
             detail="Missing story idea"
         )
     try:
-        story = openai_service.generate_story_segments(idea, segments)
+        story = openai_service.generate_story_segments(idea, segments, custom_character_roster)
         return {"story": story}
     except Exception as e:
         raise HTTPException(
@@ -18,7 +18,7 @@ def build_story(idea: str, segments: int = 5):
             detail=f"Story generation failed: {str(e)}"
         )
 
-def build_story_set(idea: str, total_segments: int, segments_per_set: int = 10, set_number: int = 1):
+def build_story_set(idea: str, total_segments: int, segments_per_set: int = 10, set_number: int = 1, custom_character_roster: list = None):
     """Generate a specific set of story segments with complete metadata."""
     if not idea:
         raise HTTPException(
@@ -54,7 +54,7 @@ def build_story_set(idea: str, total_segments: int, segments_per_set: int = 10, 
     
     try:
         story_set = openai_service.generate_story_segments_in_sets(
-            idea, total_segments, segments_per_set, set_number
+            idea, total_segments, segments_per_set, set_number, custom_character_roster
         )
         return {"story_set": story_set}
     except Exception as e:
@@ -63,7 +63,7 @@ def build_story_set(idea: str, total_segments: int, segments_per_set: int = 10, 
             detail=f"Story set generation failed: {str(e)}"
         )
 
-def build_full_story_auto(idea: str, total_segments: int = None, segments_per_set: int = 10, save_to_files: bool = True, output_directory: str = "generated_stories"):
+def build_full_story_auto(idea: str, total_segments: int = None, segments_per_set: int = 10, save_to_files: bool = True, output_directory: str = "generated_stories", custom_character_roster: list = None):
     """Generate a complete story automatically in sets and save to JSON files."""
     if not idea:
         raise HTTPException(
@@ -79,7 +79,7 @@ def build_full_story_auto(idea: str, total_segments: int = None, segments_per_se
     
     try:
         result = openai_service.generate_full_story_automatically(
-            idea, total_segments, segments_per_set, save_to_files, output_directory
+            idea, total_segments, segments_per_set, save_to_files, output_directory, custom_character_roster
         )
         return {"result": result}
     except Exception as e:
@@ -88,7 +88,7 @@ def build_full_story_auto(idea: str, total_segments: int = None, segments_per_se
             detail=f"Automatic story generation failed: {str(e)}"
         )
 
-def build_meme(idea: str = None, segments: int = 5):
+def build_meme(idea: str = None, segments: int = 5, custom_character_roster: list = None):
     """Generate meme segments from an idea using ChatGPT."""
     # Generate random meme idea if not provided
     if not idea:
@@ -109,7 +109,7 @@ def build_meme(idea: str = None, segments: int = 5):
         print(f"🎲 Generated random meme idea: {idea}")
     
     try:
-        meme = openai_service.generate_meme_segments(idea, segments)
+        meme = openai_service.generate_meme_segments(idea, segments, custom_character_roster)
         return {"meme": meme}
     except Exception as e:
         raise HTTPException(
@@ -117,7 +117,7 @@ def build_meme(idea: str = None, segments: int = 5):
             detail=f"Meme generation failed: {str(e)}"
         )
 
-def build_free_content(idea: str = None, segments: int = 5):
+def build_free_content(idea: str = None, segments: int = 5, custom_character_roster: list = None):
     """Generate viral free content segments from an idea using ChatGPT."""
     # Generate random content idea if not provided
     if not idea:
@@ -140,7 +140,7 @@ def build_free_content(idea: str = None, segments: int = 5):
         print(f"🎲 Generated random content idea: {idea}")
     
     try:
-        content = openai_service.generate_free_content(idea, segments)
+        content = openai_service.generate_free_content(idea, segments, custom_character_roster)
         return {"content": content}
     except Exception as e:
         raise HTTPException(

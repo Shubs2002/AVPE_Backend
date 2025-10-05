@@ -17,12 +17,12 @@ client = OpenAI(
     api_key=settings.OPENAI_API_KEY
 )
 
-def generate_story_segments(idea: str, num_segments: int = 7):
+def generate_story_segments(idea: str, num_segments: int = 7, custom_character_roster: list = None):
     # For large segment counts, use chunked generation to avoid JSON parsing issues
     if num_segments > 20:
-        return generate_story_segments_chunked(idea, num_segments)
+        return generate_story_segments_chunked(idea, num_segments, custom_character_roster)
     
-    prompt = get_story_segments_prompt(idea, num_segments)
+    prompt = get_story_segments_prompt(idea, num_segments, custom_character_roster)
     raw_output = None
     try:
         response = client.chat.completions.create(
@@ -76,12 +76,16 @@ def generate_story_segments(idea: str, num_segments: int = 7):
 
     return story_data
 
-def generate_story_segments_chunked(idea: str, num_segments: int):
+def generate_story_segments_chunked(idea: str, num_segments: int, custom_character_roster: list = None):
     """
     Generate story segments in chunks to handle large segment counts (100+)
     This prevents JSON parsing issues with very large responses
     """
     print(f"🔄 Generating {num_segments} segments in chunks to avoid JSON parsing issues...")
+    
+    # If custom roster provided, add it to the idea context
+    if custom_character_roster:
+        print(f"✅ Using custom character roster with {len(custom_character_roster)} characters")
     
     # Parse special requirements from the idea
     idea_upper = idea.upper()
@@ -103,7 +107,7 @@ def generate_story_segments_chunked(idea: str, num_segments: int):
     print(f"📋 Parsed requirements: no_narrations={no_narrations}, narration_only_first={narration_only_first}, cliffhanger_interval={cliffhanger_interval}, adult_story={adult_story}")
     
     # First, generate the story outline and metadata
-    outline_prompt = get_outline_for_story_segments_chunked(idea, num_segments, no_narrations, narration_only_first, cliffhanger_interval, adult_story)
+    outline_prompt = get_outline_for_story_segments_chunked(idea, num_segments, no_narrations, narration_only_first, cliffhanger_interval, adult_story, custom_character_roster)
     
     try:
         # Generate story outline and metadata
@@ -210,7 +214,7 @@ def generate_story_segments_chunked(idea: str, num_segments: int):
         print(f"❌ {error_msg}")
         raise ValueError(error_msg)
 
-def generate_story_segments_in_sets(idea: str, total_segments: int, segments_per_set: int = 10, set_number: int = 1):
+def generate_story_segments_in_sets(idea: str, total_segments: int, segments_per_set: int = 10, set_number: int = 1, existing_metadata: dict = None, custom_character_roster: list = None):
     """
     Generate story segments in sets of 10 (or specified amount) with complete metadata
     
@@ -219,6 +223,7 @@ def generate_story_segments_in_sets(idea: str, total_segments: int, segments_per
         total_segments: Total number of segments for the complete story
         segments_per_set: Number of segments to generate per set (default: 10)
         set_number: Which set to generate (1-based indexing)
+        existing_metadata: Optional metadata from first set to ensure consistency (title, characters, narrator_voice, etc.)
     
     Returns:
         dict: Complete story data with metadata + only the requested set of segments
@@ -268,7 +273,9 @@ def generate_story_segments_in_sets(idea: str, total_segments: int, segments_per
         no_narrations=no_narrations,
         narration_only_first=narration_only_first,
         cliffhanger_segments=cliffhanger_segments,
-        adult_story=adult_story
+        adult_story=adult_story,
+        existing_metadata=existing_metadata,
+        custom_character_roster=custom_character_roster
     )
     
     raw_output = None
@@ -343,7 +350,7 @@ def generate_story_segments_in_sets(idea: str, total_segments: int, segments_per
             error_msg += "\n\nNo output received from API"
         raise ValueError(error_msg)
 
-def generate_full_story_automatically(idea: str, total_segments: int = None, segments_per_set: int = 10, save_to_files: bool = True, output_directory: str = "generated_stories"):
+def generate_full_story_automatically(idea: str, total_segments: int = None, segments_per_set: int = 10, save_to_files: bool = True, output_directory: str = "generated_stories", custom_character_roster: list = None):
     """
     Automatically generate a complete story by:
     1. Detecting the total segments needed from the idea
@@ -386,9 +393,14 @@ def generate_full_story_automatically(idea: str, total_segments: int = None, seg
         try:
             print(f"\n🎬 Generating Set {set_number}/{total_sets}...")
             
-            # Generate this set
+            # Generate this set - pass metadata from set 1 to ensure consistency
             story_set = generate_story_segments_in_sets(
-                idea, total_segments, segments_per_set, set_number
+                idea, 
+                total_segments, 
+                segments_per_set, 
+                set_number,
+                existing_metadata=story_metadata if set_number > 1 else None,
+                custom_character_roster=custom_character_roster
             )
             
             # Store metadata from first set
@@ -409,6 +421,9 @@ def generate_full_story_automatically(idea: str, total_segments: int = None, seg
                         'idea': idea
                     }
                 }
+                print(f"✅ Stored metadata from Set 1 for consistency across all sets")
+            else:
+                print(f"♻️ Reusing metadata from Set 1 to ensure consistency")
             
             # Save to file if requested
             if save_to_files:
@@ -550,8 +565,8 @@ def detect_total_segments_from_idea(idea: str) -> int:
     else:
         return 30   # Simple idea = shorter story
 
-def generate_meme_segments(idea: str, num_segments: int = 7):
-    prompt = get_meme_segments_prompt(idea, num_segments)
+def generate_meme_segments(idea: str, num_segments: int = 7, custom_character_roster: list = None):
+    prompt = get_meme_segments_prompt(idea, num_segments, custom_character_roster)
     raw_output = None
     try:
         response = client.chat.completions.create(
@@ -605,8 +620,8 @@ def generate_meme_segments(idea: str, num_segments: int = 7):
 
     return meme_data
 
-def generate_free_content(idea: str, num_segments: int = 7):
-    prompt = get_free_content_prompt(idea, num_segments)
+def generate_free_content(idea: str, num_segments: int = 7, custom_character_roster: list = None):
+    prompt = get_free_content_prompt(idea, num_segments, custom_character_roster)
     raw_output = None
     try:
         response = client.chat.completions.create(
@@ -968,8 +983,8 @@ def save_character_to_file(character_data: dict, character_name: str = None):
             "filename": filename,
             "character_name": character_name or filename_base,
             "saved_at": save_data["metadata"]["saved_at"]
-        }
         
+        }
     except Exception as e:
         error_msg = f"Failed to save character: {str(e)}"
         print(f"❌ {error_msg}")

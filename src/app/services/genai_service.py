@@ -14,10 +14,7 @@ def generate_video_from_payload(payload: dict):
     """
 
     client = genai.Client(
-        # Optional: If you want explicit project & location setup
-        # project=settings.GCP_PROJECT_ID,
         api_key=settings.GOOGLE_STUDIO_API_KEY
-        # location=settings.GCP_REGION,
     )
 
     # Retry configuration for transient service errors (503 / UNAVAILABLE)

@@ -24,7 +24,6 @@ class Settings(BaseSettings):
     ENV: str
 
     # Existing
-    AVPE_FILE_NAME: str | None = None
     SCOPES: str | None = None
     REDIRECT_URI: str | None = None
 
@@ -34,10 +33,7 @@ class Settings(BaseSettings):
     SCRIPT_MODEL: str | None = None
 
     # ⚙️ New → Google Cloud Platform
-    GCP_SERVICE_ACCOUNT_FILE_NAME: str | None = None
-    GCP_PROJECT_ID: str | None = None
-    GCP_REGION: str | None = None
-    GCP_VERTEX_API_KEY: str | None = None
+    GCP_SERVICE_ACC_AVPE_FILE_NAME: str | None = None
     GOOGLE_STUDIO_API_KEY: str | None = None
     VIDEO_GENERATION_MODEL: str | None = None
 
