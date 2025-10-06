@@ -1,6 +1,6 @@
 import json
-from openai import OpenAI
 from app.config.settings import settings
+from app.connectors.openai_connector import get_openai_client
 from app.data.prompts.generate_segmented_story_prompt import (
     get_story_segments_prompt,
     get_outline_for_story_segments_chunked,
@@ -11,13 +11,36 @@ from app.data.prompts.generate_meme_segments_prompt import get_meme_segments_pro
 from app.data.prompts.generate_free_content_prompt import get_free_content_prompt
 from app.data.prompts.generate_trending_ideas_prompt import get_trending_ideas_prompt
 from app.data.prompts.analyze_character_prompt import get_character_analysis_prompt
+from app.utils.id_generator import generate_character_id
 
-client = OpenAI(
-    base_url=settings.OPENROUTER_BASE_URL,
-    api_key=settings.OPENAI_API_KEY
-)
+
+def ensure_character_ids(custom_character_roster: list) -> list:
+    """
+    Ensure all characters in the roster have unique IDs.
+    Generates UUIDs for characters missing IDs.
+    
+    Args:
+        custom_character_roster: List of character dictionaries
+    
+    Returns:
+        list: Character roster with guaranteed IDs
+    """
+    if not custom_character_roster:
+        return custom_character_roster
+    
+    for character in custom_character_roster:
+        if not character.get('id') or character.get('id') == 'unknown':
+            # Generate a unique ID using the centralized utility
+            character['id'] = generate_character_id()
+            print(f"🆔 Generated ID for character '{character.get('name', 'Unknown')}': {character['id']}")
+    
+    return custom_character_roster
+
 
 def generate_story_segments(idea: str, num_segments: int = 7, custom_character_roster: list = None):
+    # Ensure all characters have IDs
+    if custom_character_roster:
+        custom_character_roster = ensure_character_ids(custom_character_roster)
     # For large segment counts, use chunked generation to avoid JSON parsing issues
     if num_segments > 20:
         return generate_story_segments_chunked(idea, num_segments, custom_character_roster)
@@ -25,6 +48,7 @@ def generate_story_segments(idea: str, num_segments: int = 7, custom_character_r
     prompt = get_story_segments_prompt(idea, num_segments, custom_character_roster)
     raw_output = None
     try:
+        client = get_openai_client()
         response = client.chat.completions.create(
             model=settings.SCRIPT_MODEL,
             messages=[{"role": "user", "content": prompt}],
@@ -83,8 +107,9 @@ def generate_story_segments_chunked(idea: str, num_segments: int, custom_charact
     """
     print(f"🔄 Generating {num_segments} segments in chunks to avoid JSON parsing issues...")
     
-    # If custom roster provided, add it to the idea context
+    # Ensure all characters have IDs
     if custom_character_roster:
+        custom_character_roster = ensure_character_ids(custom_character_roster)
         print(f"✅ Using custom character roster with {len(custom_character_roster)} characters")
     
     # Parse special requirements from the idea
@@ -112,6 +137,7 @@ def generate_story_segments_chunked(idea: str, num_segments: int, custom_charact
     try:
         # Generate story outline and metadata
         print("📋 Generating story outline and metadata...")
+        client = get_openai_client()
         response = client.chat.completions.create(
             model=settings.SCRIPT_MODEL,
             messages=[{"role": "user", "content": outline_prompt}],
@@ -166,6 +192,7 @@ def generate_story_segments_chunked(idea: str, num_segments: int, custom_charact
             )
             
             # Generate this chunk of segments
+            client = get_openai_client()
             chunk_response = client.chat.completions.create(
                 model=settings.SCRIPT_MODEL,
                 messages=[{"role": "user", "content": segment_prompt}],
@@ -230,6 +257,10 @@ def generate_story_segments_in_sets(idea: str, total_segments: int, segments_per
     """
     print(f"🎬 Generating set {set_number} ({segments_per_set} segments) of {total_segments} total segments...")
     
+    # Ensure all characters have IDs
+    if custom_character_roster:
+        custom_character_roster = ensure_character_ids(custom_character_roster)
+    
     # Parse special requirements from the idea
     idea_upper = idea.upper()
     no_narrations = 'NO NARRATION' in idea_upper
@@ -280,6 +311,7 @@ def generate_story_segments_in_sets(idea: str, total_segments: int, segments_per
     
     raw_output = None
     try:
+        client = get_openai_client()
         response = client.chat.completions.create(
             model=settings.SCRIPT_MODEL,
             messages=[{"role": "user", "content": prompt}],
@@ -566,9 +598,14 @@ def detect_total_segments_from_idea(idea: str) -> int:
         return 30   # Simple idea = shorter story
 
 def generate_meme_segments(idea: str, num_segments: int = 7, custom_character_roster: list = None):
+    # Ensure all characters have IDs
+    if custom_character_roster:
+        custom_character_roster = ensure_character_ids(custom_character_roster)
+    
     prompt = get_meme_segments_prompt(idea, num_segments, custom_character_roster)
     raw_output = None
     try:
+        client = get_openai_client()
         response = client.chat.completions.create(
             model=settings.SCRIPT_MODEL,
             messages=[{"role": "user", "content": prompt}],
@@ -621,9 +658,14 @@ def generate_meme_segments(idea: str, num_segments: int = 7, custom_character_ro
     return meme_data
 
 def generate_free_content(idea: str, num_segments: int = 7, custom_character_roster: list = None):
+    # Ensure all characters have IDs
+    if custom_character_roster:
+        custom_character_roster = ensure_character_ids(custom_character_roster)
+    
     prompt = get_free_content_prompt(idea, num_segments, custom_character_roster)
     raw_output = None
     try:
+        client = get_openai_client()
         response = client.chat.completions.create(
             model=settings.SCRIPT_MODEL,
             messages=[{"role": "user", "content": prompt}],
@@ -697,6 +739,7 @@ def generate_trending_ideas(content_type: str = "all", count: int = 5):
     prompt = get_trending_ideas_prompt(content_types, ideas_per_type)
     raw_output = None
     try:
+        client = get_openai_client()
         response = client.chat.completions.create(
             model=settings.SCRIPT_MODEL,
             messages=[{"role": "user", "content": prompt}],
@@ -750,12 +793,16 @@ def generate_trending_ideas(content_type: str = "all", count: int = 5):
 
 def analyze_character_from_image(image_data: str, image_format: str = "jpeg", character_count: int = 1, character_name: str = None):
     """
-    Analyze an image to generate detailed character roster(s) for video generation
+    Analyze an image to generate detailed character roster for video generation.
+    
+    NOTE: This function is optimized for SINGLE CHARACTER analysis (character_count=1).
+    For multiple characters, use separate images with the multiple images endpoint.
     
     Args:
         image_data: Base64 encoded image data
         image_format: Image format (jpeg, png, webp, etc.)
-        character_count: Number of characters to identify in the image (default: 1)
+        character_count: Number of characters to identify (MUST be 1 for single image endpoint)
+        character_name: Name to assign to the character
     
     Returns:
         dict: Character roster with detailed descriptions for video generation
@@ -785,10 +832,17 @@ def analyze_character_from_image(image_data: str, image_format: str = "jpeg", ch
             }
         ]
         
+        client = get_openai_client()
+        
+        # Token allocation optimized for single character analysis
+        # For 1 character: 8000 tokens (sufficient for extremely detailed schema)
+        # Note: This endpoint should only be used with character_count=1
+        max_tokens = 8000 if character_count == 1 else 5000 + (character_count * 4000)
+        
         response = client.chat.completions.create(
             model=settings.SCRIPT_MODEL,  # Using Grok vision model for image analysis
             messages=messages,
-            max_tokens=2000,
+            max_tokens=max_tokens,
             temperature=0.7
         )
 
@@ -821,6 +875,13 @@ def analyze_character_from_image(image_data: str, image_format: str = "jpeg", ch
             raise ValueError("Content became empty after removing code blocks")
 
         character_data = json.loads(raw_output)
+        
+        # Generate unique IDs for characters using centralized utility
+        if 'characters_roster' in character_data:
+            for character in character_data['characters_roster']:
+                # Always generate a new UUID for character ID
+                character['id'] = generate_character_id()
+                print(f"🆔 Generated ID for character '{character.get('name', 'Unknown')}': {character['id']}")
         
         characters_found = len(character_data.get('characters_roster', []))
         print(f"✅ Successfully analyzed {characters_found} character(s) from image")
@@ -1027,3 +1088,313 @@ def save_multiple_characters_to_files(characters_list: list, character_names: li
     print(f"💾 Batch save complete: {results['successful_saves']}/{results['total_characters']} characters saved")
     
     return results
+
+
+# ==================== CHARACTER MANAGEMENT (MONGODB-BASED) ====================
+
+from app.services.character_repository import CharacterRepository
+
+# Initialize repository
+_character_repo = None
+
+def get_character_repository() -> CharacterRepository:
+    """Get or create character repository instance"""
+    global _character_repo
+    if _character_repo is None:
+        _character_repo = CharacterRepository()
+    return _character_repo
+
+def get_all_characters():
+    """
+    Get list of all saved characters
+    
+    Returns:
+        dict: List of characters with metadata
+    """
+    import os
+    import json
+    from datetime import datetime
+    
+    try:
+        save_dir = "saved_characters"
+        
+        if not os.path.exists(save_dir):
+            return {
+                "success": True,
+                "total_characters": 0,
+                "characters": []
+            }
+        
+        characters = []
+        for filename in os.listdir(save_dir):
+            if filename.endswith('.json'):
+                filepath = os.path.join(save_dir, filename)
+                try:
+                    with open(filepath, 'r', encoding='utf-8') as f:
+                        data = json.load(f)
+                    
+                    # Extract character info
+                    character_data = data.get('character_data', {})
+                    metadata = data.get('metadata', {})
+                    
+                    characters.append({
+                        "filename": filename,
+                        "filepath": filepath,
+                        "character_id": character_data.get('id', 'unknown'),
+                        "character_name": character_data.get('name', metadata.get('character_name', 'Unknown')),
+                        "saved_at": metadata.get('saved_at', 'Unknown'),
+                        "file_size_bytes": os.path.getsize(filepath),
+                        "has_image_data": 'source_image' in character_data
+                    })
+                except Exception as e:
+                    print(f"⚠️ Error reading {filename}: {e}")
+                    continue
+        
+        # Sort by saved_at (newest first)
+        characters.sort(key=lambda x: x.get('saved_at', ''), reverse=True)
+        
+        return {
+            "success": True,
+            "total_characters": len(characters),
+            "characters": characters
+        }
+    
+    except Exception as e:
+        return {
+            "success": False,
+            "error": f"Failed to list characters: {str(e)}"
+        }
+
+
+def get_character_by_filename(filename: str):
+    """
+    Get a specific character by filename
+    
+    Args:
+        filename: The filename of the saved character
+    
+    Returns:
+        dict: Character data
+    """
+    import os
+    import json
+    
+    try:
+        save_dir = "saved_characters"
+        filepath = os.path.join(save_dir, filename)
+        
+        if not os.path.exists(filepath):
+            return {
+                "success": False,
+                "error": f"Character file not found: {filename}"
+            }
+        
+        with open(filepath, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+        
+        return {
+            "success": True,
+            "filename": filename,
+            "filepath": filepath,
+            "character_data": data.get('character_data', {}),
+            "metadata": data.get('metadata', {})
+        }
+    
+    except Exception as e:
+        return {
+            "success": False,
+            "error": f"Failed to read character: {str(e)}"
+        }
+
+
+def update_character(filename: str, updated_data: dict):
+    """
+    Update a saved character
+    
+    Args:
+        filename: The filename of the character to update
+        updated_data: Updated character data
+    
+    Returns:
+        dict: Update result
+    """
+    import os
+    import json
+    from datetime import datetime
+    
+    try:
+        save_dir = "saved_characters"
+        filepath = os.path.join(save_dir, filename)
+        
+        if not os.path.exists(filepath):
+            return {
+                "success": False,
+                "error": f"Character file not found: {filename}"
+            }
+        
+        # Read existing data
+        with open(filepath, 'r', encoding='utf-8') as f:
+            existing_data = json.load(f)
+        
+        # Update character data
+        existing_data['character_data'].update(updated_data)
+        
+        # Update metadata
+        if 'metadata' not in existing_data:
+            existing_data['metadata'] = {}
+        
+        existing_data['metadata']['updated_at'] = datetime.now().isoformat()
+        existing_data['metadata']['version'] = existing_data['metadata'].get('version', '1.0')
+        
+        # Save updated data
+        with open(filepath, 'w', encoding='utf-8') as f:
+            json.dump(existing_data, f, indent=2, ensure_ascii=False)
+        
+        print(f"✏️ Character updated: {filepath}")
+        
+        return {
+            "success": True,
+            "filename": filename,
+            "filepath": filepath,
+            "updated_at": existing_data['metadata']['updated_at'],
+            "message": "Character updated successfully"
+        }
+    
+    except Exception as e:
+        return {
+            "success": False,
+            "error": f"Failed to update character: {str(e)}"
+        }
+
+
+def delete_character(filename: str):
+    """
+    Delete a saved character
+    
+    Args:
+        filename: The filename of the character to delete
+    
+    Returns:
+        dict: Delete result
+    """
+    import os
+    
+    try:
+        save_dir = "saved_characters"
+        filepath = os.path.join(save_dir, filename)
+        
+        if not os.path.exists(filepath):
+            return {
+                "success": False,
+                "error": f"Character file not found: {filename}"
+            }
+        
+        # Delete the file
+        os.remove(filepath)
+        
+        print(f"🗑️ Character deleted: {filepath}")
+        
+        return {
+            "success": True,
+            "filename": filename,
+            "message": "Character deleted successfully"
+        }
+    
+    except Exception as e:
+        return {
+            "success": False,
+            "error": f"Failed to delete character: {str(e)}"
+        }
+
+
+def search_characters(query: str = None, filters: dict = None):
+    """
+    Search characters by name or other criteria
+    
+    Args:
+        query: Search query string (searches in name)
+        filters: Additional filters (e.g., gender, age_range)
+    
+    Returns:
+        dict: Search results
+    """
+    import os
+    import json
+    
+    try:
+        save_dir = "saved_characters"
+        
+        if not os.path.exists(save_dir):
+            return {
+                "success": True,
+                "total_results": 0,
+                "characters": []
+            }
+        
+        results = []
+        
+        for filename in os.listdir(save_dir):
+            if filename.endswith('.json'):
+                filepath = os.path.join(save_dir, filename)
+                try:
+                    with open(filepath, 'r', encoding='utf-8') as f:
+                        data = json.load(f)
+                    
+                    character_data = data.get('character_data', {})
+                    metadata = data.get('metadata', {})
+                    
+                    # Apply query filter
+                    if query:
+                        character_name = character_data.get('name', '').lower()
+                        if query.lower() not in character_name:
+                            continue
+                    
+                    # Apply additional filters
+                    if filters:
+                        match = True
+                        
+                        # Filter by gender
+                        if 'gender' in filters:
+                            char_gender = character_data.get('physical_appearance', {}).get('gender', '').lower()
+                            if char_gender != filters['gender'].lower():
+                                match = False
+                        
+                        # Filter by age range
+                        if 'age_range' in filters:
+                            char_age = character_data.get('physical_appearance', {}).get('estimated_age', '')
+                            if filters['age_range'] not in char_age:
+                                match = False
+                        
+                        if not match:
+                            continue
+                    
+                    results.append({
+                        "filename": filename,
+                        "filepath": filepath,
+                        "character_id": character_data.get('id', 'unknown'),
+                        "character_name": character_data.get('name', 'Unknown'),
+                        "gender": character_data.get('physical_appearance', {}).get('gender', 'Unknown'),
+                        "age": character_data.get('physical_appearance', {}).get('estimated_age', 'Unknown'),
+                        "saved_at": metadata.get('saved_at', 'Unknown')
+                    })
+                
+                except Exception as e:
+                    print(f"⚠️ Error reading {filename}: {e}")
+                    continue
+        
+        # Sort by saved_at (newest first)
+        results.sort(key=lambda x: x.get('saved_at', ''), reverse=True)
+        
+        return {
+            "success": True,
+            "total_results": len(results),
+            "query": query,
+            "filters": filters,
+            "characters": results
+        }
+    
+    except Exception as e:
+        return {
+            "success": False,
+            "error": f"Failed to search characters: {str(e)}"
+        }

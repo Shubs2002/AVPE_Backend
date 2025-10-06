@@ -161,8 +161,12 @@ def generate_trending_ideas(content_type: str = "all", count: int = 5):
 
 
 
-def analyze_character_image_file(image: UploadFile, character_name: str, character_count: int = 1, save_character: bool = False):
-    """Analyze an uploaded image file to generate detailed character roster."""
+def analyze_character_image_file(image: UploadFile, character_name: str, save_character: bool = False):
+    """Analyze an uploaded image file to generate detailed character roster.
+    
+    NOTE: This endpoint analyzes SINGLE CHARACTER only (1 person per image).
+    For multiple characters, use /analyze-multiple-character-images-files with separate images.
+    """
     import base64
     
     # Validate file
@@ -187,35 +191,53 @@ def analyze_character_image_file(image: UploadFile, character_name: str, charact
             detail="Image file too large. Maximum size is 10MB"
         )
     
-    # Validate character count
-    if character_count <= 0:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Character count must be greater than 0"
-        )
-    
     try:
         # Read and encode the image
         image_content = image.file.read()
         image_data = base64.b64encode(image_content).decode('utf-8')
         
-        # Get image format from filename or content type
-        image_format = "jpeg"  # default
-        if image.filename:
-            file_ext = image.filename.split('.')[-1].lower()
-            if file_ext in ['jpg', 'jpeg', 'png', 'webp', 'gif', 'bmp', 'tiff', 'heic', 'heif']:
-                image_format = 'jpeg' if file_ext in ['jpg', 'heic', 'heif'] else file_ext
-        elif image.content_type:
+        # Detect image format from multiple sources
+        image_format = None
+        
+        # Try to detect from content type first
+        if image.content_type and image.content_type != 'application/octet-stream':
             if 'jpeg' in image.content_type or 'jpg' in image.content_type:
                 image_format = 'jpeg'
             elif 'png' in image.content_type:
                 image_format = 'png'
             elif 'webp' in image.content_type:
                 image_format = 'webp'
+            elif 'gif' in image.content_type:
+                image_format = 'gif'
         
-        # Analyze the image
+        # If not detected, try from filename
+        if not image_format and image.filename:
+            file_ext = image.filename.split('.')[-1].lower()
+            if file_ext in ['jpg', 'jpeg', 'heic', 'heif']:
+                image_format = 'jpeg'
+            elif file_ext in ['png', 'webp', 'gif', 'bmp']:
+                image_format = file_ext
+        
+        # If still not detected, try to detect from image content (magic bytes)
+        if not image_format:
+            # Check magic bytes
+            if image_content[:2] == b'\xff\xd8':
+                image_format = 'jpeg'
+            elif image_content[:8] == b'\x89PNG\r\n\x1a\n':
+                image_format = 'png'
+            elif image_content[:4] == b'RIFF' and image_content[8:12] == b'WEBP':
+                image_format = 'webp'
+            elif image_content[:6] in (b'GIF87a', b'GIF89a'):
+                image_format = 'gif'
+        
+        # Default to jpeg if still not detected
+        if not image_format:
+            image_format = 'jpeg'
+            print(f"⚠️ Could not detect image format, defaulting to jpeg")
+        
+        # Analyze the image (always 1 character for this endpoint)
         character_analysis = openai_service.analyze_character_from_image(
-            image_data, image_format, character_count, character_name.strip()
+            image_data, image_format, 1, character_name.strip()
         )
         
         # Update character name in the roster
@@ -230,10 +252,10 @@ def analyze_character_image_file(image: UploadFile, character_name: str, charact
             'file_size_bytes': len(image_content)
         }
         
-        # Save character if requested
+        # Save character if requested (to MongoDB)
         save_result = None
         if save_character:
-            save_result = openai_service.save_character_to_file(character_analysis, character_name.strip())
+            save_result = character_service_mongodb.save_character_to_mongodb(character_analysis, character_name.strip())
         
         response = {"character_analysis": character_analysis}
         if save_result:
@@ -247,8 +269,12 @@ def analyze_character_image_file(image: UploadFile, character_name: str, charact
             detail=f"Character image file analysis failed: {str(e)}"
         )
 
-def analyze_multiple_character_images_files(images: list, character_names: str, character_count_per_image: int = 1, save_characters: bool = False):
-    """Analyze multiple uploaded image files to generate a combined character roster."""
+def analyze_multiple_character_images_files(images: list, character_names: str, save_characters: bool = False):
+    """Analyze multiple uploaded image files to generate a combined character roster.
+    
+    NOTE: Each image should contain ONLY 1 character.
+    Provide one image per character you want to analyze.
+    """
     import base64
     
     # Validate inputs
@@ -270,12 +296,6 @@ def analyze_multiple_character_images_files(images: list, character_names: str, 
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Number of character names ({len(names_list)}) must match number of images ({len(images)})"
-        )
-    
-    if character_count_per_image <= 0:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Character count per image must be greater than 0"
         )
     
     # Check number of images (limit to 10)
@@ -304,19 +324,44 @@ def analyze_multiple_character_images_files(images: list, character_names: str, 
             image_content = image.file.read()
             image_data = base64.b64encode(image_content).decode('utf-8')
             
-            # Get image format from filename or content type
-            image_format = "jpeg"  # default
-            if image.filename:
-                file_ext = image.filename.split('.')[-1].lower()
-                if file_ext in ['jpg', 'jpeg', 'png', 'webp', 'gif', 'bmp', 'tiff', 'heic', 'heif']:
-                    image_format = 'jpeg' if file_ext in ['jpg', 'heic', 'heif'] else file_ext
-            elif image.content_type:
+            # Detect image format from multiple sources
+            image_format = None
+            
+            # Try to detect from content type first
+            if image.content_type and image.content_type != 'application/octet-stream':
                 if 'jpeg' in image.content_type or 'jpg' in image.content_type:
                     image_format = 'jpeg'
                 elif 'png' in image.content_type:
                     image_format = 'png'
                 elif 'webp' in image.content_type:
                     image_format = 'webp'
+                elif 'gif' in image.content_type:
+                    image_format = 'gif'
+            
+            # If not detected, try from filename
+            if not image_format and image.filename:
+                file_ext = image.filename.split('.')[-1].lower()
+                if file_ext in ['jpg', 'jpeg', 'heic', 'heif']:
+                    image_format = 'jpeg'
+                elif file_ext in ['png', 'webp', 'gif', 'bmp']:
+                    image_format = file_ext
+            
+            # If still not detected, try to detect from image content (magic bytes)
+            if not image_format:
+                # Check magic bytes
+                if image_content[:2] == b'\xff\xd8':
+                    image_format = 'jpeg'
+                elif image_content[:8] == b'\x89PNG\r\n\x1a\n':
+                    image_format = 'png'
+                elif image_content[:4] == b'RIFF' and image_content[8:12] == b'WEBP':
+                    image_format = 'webp'
+                elif image_content[:6] in (b'GIF87a', b'GIF89a'):
+                    image_format = 'gif'
+            
+            # Default to jpeg if still not detected
+            if not image_format:
+                image_format = 'jpeg'
+                print(f"⚠️ Image {i}: Could not detect format, defaulting to jpeg")
             
             processed_images.append({
                 'image_data': image_data,
@@ -337,16 +382,25 @@ def analyze_multiple_character_images_files(images: list, character_names: str, 
                 detail="No valid image files found"
             )
         
-        # Analyze all images
+        # Analyze all images (1 character per image)
         combined_analysis = openai_service.analyze_multiple_character_images(
-            processed_images, character_count_per_image
+            processed_images, 1
         )
         
-        # Update character names in the roster
+        # Update character names in the roster based on source_description
+        # This ensures that if an image fails, the correct name is still used
         if 'characters_roster' in combined_analysis:
-            for i, character in enumerate(combined_analysis['characters_roster']):
-                if i < len(names_list):
-                    character['name'] = names_list[i]
+            for character in combined_analysis['characters_roster']:
+                # The source_description contains the original character name
+                source_desc = character.get('source_description', '')
+                # Find the matching name from the original names_list
+                if source_desc in names_list:
+                    character['name'] = source_desc
+                else:
+                    # Fallback: try to match by source_image index
+                    source_img = character.get('source_image', 0)
+                    if source_img > 0 and source_img <= len(names_list):
+                        character['name'] = names_list[source_img - 1]
         
         # Add file info summary
         combined_analysis['files_info'] = {
@@ -355,11 +409,13 @@ def analyze_multiple_character_images_files(images: list, character_names: str, 
             'file_formats': list(set(img['image_format'] for img in processed_images))
         }
         
-        # Save characters if requested
+        # Save characters if requested (to MongoDB)
         save_results = None
         if save_characters and 'characters_roster' in combined_analysis:
-            save_results = openai_service.save_multiple_characters_to_files(
-                combined_analysis['characters_roster'], names_list
+            # Extract actual character names from the roster (only successful ones)
+            actual_names = [char.get('name', f'character_{i}') for i, char in enumerate(combined_analysis['characters_roster'], 1)]
+            save_results = character_service_mongodb.save_multiple_characters_to_mongodb(
+                combined_analysis['characters_roster'], actual_names
             )
         
         response = {"combined_character_analysis": combined_analysis}
@@ -374,4 +430,95 @@ def analyze_multiple_character_images_files(images: list, character_names: str, 
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Multiple character image files analysis failed: {str(e)}"
+        )
+
+
+# ==================== CHARACTER MANAGEMENT (MONGODB-BASED) ====================
+
+from app.services import character_service_mongodb
+
+def get_all_saved_characters(skip: int = 0, limit: int = 100):
+    """Get list of all saved characters from MongoDB"""
+    try:
+        result = character_service_mongodb.get_all_characters(skip, limit)
+        return result
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to retrieve characters: {str(e)}"
+        )
+
+
+def get_character_by_id(character_id: str):
+    """Get a specific character by MongoDB ID"""
+    try:
+        result = character_service_mongodb.get_character_by_id(character_id)
+        
+        if not result.get('success'):
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=result.get('error', 'Character not found')
+            )
+        
+        return result
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to retrieve character: {str(e)}"
+        )
+
+
+def update_saved_character(character_id: str, updated_data: dict):
+    """Update a saved character in MongoDB"""
+    try:
+        result = character_service_mongodb.update_character(character_id, updated_data)
+        
+        if not result.get('success'):
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=result.get('error', 'Character not found')
+            )
+        
+        return result
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to update character: {str(e)}"
+        )
+
+
+def delete_saved_character(character_id: str):
+    """Delete a saved character from MongoDB"""
+    try:
+        result = character_service_mongodb.delete_character(character_id)
+        
+        if not result.get('success'):
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=result.get('error', 'Character not found')
+            )
+        
+        return result
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to delete character: {str(e)}"
+        )
+
+
+def search_saved_characters(query: str = None, gender: str = None, age_range: str = None, skip: int = 0, limit: int = 100):
+    """Search characters by name or filters in MongoDB"""
+    try:
+        result = character_service_mongodb.search_characters(query, gender, age_range, skip, limit)
+        return result
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to search characters: {str(e)}"
         )

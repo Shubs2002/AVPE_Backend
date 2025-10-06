@@ -53,7 +53,6 @@ def get_character_analysis_prompt(character_count: int, character_name: str = No
     {f"- Use '{character_name}' as the character name for the main character" if character_name else ""}
     
     For each character, provide:
-    - Unique character ID (short, like "char1", "hero", "villain", etc.)
     - Character name (can be descriptive like "Mysterious Woman", "Young Warrior", etc.)
     - Complete physical appearance details
     - Clothing and style information
@@ -62,16 +61,13 @@ def get_character_analysis_prompt(character_count: int, character_name: str = No
     - Voice and mannerism suggestions
     - Complete video generation prompt description
     
-    Return ONLY valid JSON with this EXACT structure:
+    NOTE: Do NOT include an "id" field - it will be automatically generated.
+    
+    Return ONLY valid JSON with this EXACT structure (ONLY characters_roster, nothing else):
     {{{{
-      "analysis_summary": "Brief description of what you see in the image",
-      "characters_detected": {character_count},
       "characters_roster": [
         {{{{
-          "id": "char1",
           "name": "Character Name",
-          "confidence_score": 0.95,
-          "position_in_image": "center/left/right/background",
           "physical_appearance": {{{{
             "gender": "male/female/non-binary/unknown - be explicit",
             "estimated_age": "exact age like '28 years old' or narrow range '25-27'",
@@ -223,30 +219,15 @@ def get_character_analysis_prompt(character_count: int, character_name: str = No
             }}}},
             "clothing_consistency_notes": "which items never change, which might vary, how clothing moves"
           }}}},
-          "inferred_personality": {{{{
-            "primary_traits": ["confident", "mysterious", "friendly", "etc."],
-            "energy_level": "high/medium/low",
-            "approachability": "very approachable/somewhat reserved/intimidating/etc.",
-            "likely_role": "protagonist/antagonist/mentor/comic relief/etc."
-          }}}},
-          "suggested_voice_mannerisms": {{{{
+          "personality": "key personality traits inferred from appearance (e.g., 'confident, mysterious, friendly')",
+          "role": "suggested role in story (e.g., 'protagonist', 'antagonist', 'mentor', 'comic relief')",
+          "voice_mannerisms": {{{{
             "speaking_style": "confident/shy/authoritative/playful/etc.",
-            "likely_accent": "neutral/regional/foreign/etc.",
-            "speech_pace": "fast/moderate/slow",
+            "accent_or_tone": "neutral/regional/foreign/etc.",
             "typical_expressions": "facial expressions and gestures they might use"
           }}}},
-          "video_prompt_description": "ULTRA-COMPLETE description combining ALL above details in a single comprehensive paragraph for video generation - must include EVERY physical feature, skin detail, facial feature, hair characteristic, and clothing item to ensure ZERO variation between segments. This should be a complete, standalone description that can be used directly for video generation.",
-          "character_backstory_suggestions": "Brief suggestions for potential character background",
-          "scene_context": "What this character appears to be doing in the image"
+          "video_prompt_description": "ULTRA-COMPLETE description combining ALL above details in a single comprehensive paragraph for video generation - must include EVERY physical feature, skin detail, facial feature, hair characteristic, and clothing item to ensure ZERO variation between segments. This should be a complete, standalone description that can be used directly for video generation."
         }}}}
-      ],
-      "image_context": {{{{
-        "setting": "description of the background/environment",
-        "lighting": "natural/artificial/dramatic/soft/etc.",
-        "mood": "overall mood of the image",
-        "style": "photographic/artistic/cartoon/realistic/etc.",
-        "quality": "high/medium/low resolution and clarity"
-      }}}},
-      "video_generation_notes": "Additional notes for maintaining consistency in video generation"
+      ]
     }}}}
     """

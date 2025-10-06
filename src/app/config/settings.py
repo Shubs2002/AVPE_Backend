@@ -37,6 +37,9 @@ class Settings(BaseSettings):
     GOOGLE_STUDIO_API_KEY: str | None = None
     VIDEO_GENERATION_MODEL: str | None = None
 
+    # 🗄️ MongoDB Configuration
+    MONGODB_URI: str | None = None
+    MONGODB_DATABASE: str | None = None
 
     # Define CORS origins for different environments
     DEV_ORIGINS: ClassVar[list[str]] = ["*"]

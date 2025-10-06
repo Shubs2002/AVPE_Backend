@@ -128,11 +128,14 @@ async def generate_trending_ideas_route(payload: GenerateTrendingIdeasRequest) -
 async def analyze_character_image_file_route(
     image: UploadFile,
     character_name: str = Form(...),
-    character_count: int = Form(1),
     save_character: bool = Form(False)
 ) -> dict:
-    """Analyze an uploaded image file to generate detailed character roster for video generation."""
-    return screenwriter_controller.analyze_character_image_file(image, character_name, character_count, save_character)
+    """Analyze an uploaded image file to generate detailed character roster for video generation.
+    
+    NOTE: This endpoint analyzes SINGLE CHARACTER only (1 person per image).
+    For multiple characters, use /analyze-multiple-character-images-files with separate images.
+    """
+    return screenwriter_controller.analyze_character_image_file(image, character_name, save_character)
 
 
 
@@ -140,11 +143,14 @@ async def analyze_character_image_file_route(
 async def analyze_multiple_character_images_files_route(
     images: List[UploadFile],
     character_names: str = Form(...),  # Comma-separated names
-    character_count_per_image: int = Form(1),
     save_characters: bool = Form(False)
 ) -> dict:
-    """Analyze multiple uploaded image files to generate a combined character roster."""
-    return screenwriter_controller.analyze_multiple_character_images_files(images, character_names, character_count_per_image, save_characters)
+    """Analyze multiple uploaded image files to generate a combined character roster.
+    
+    NOTE: Each image should contain ONLY 1 character.
+    Provide one image per character you want to analyze.
+    """
+    return screenwriter_controller.analyze_multiple_character_images_files(images, character_names, save_characters)
 
 
 # ---------- COMPLETE VIDEO GENERATION ----------
@@ -197,3 +203,60 @@ async def check_video_merger_route() -> dict:
 async def check_ffmpeg_route() -> dict:
     """Legacy endpoint - now returns cloud-native video merger status."""
     return cinematographer_controller.handle_check_ffmpeg({})
+
+
+# ---------- CHARACTER MANAGEMENT (MONGODB-BASED) ----------
+
+@router.get("/characters")
+async def get_all_characters_route(skip: int = 0, limit: int = 100) -> dict:
+    """Get list of all saved characters from MongoDB with pagination"""
+    return screenwriter_controller.get_all_saved_characters(skip, limit)
+
+
+@router.get("/characters/{character_id}")
+async def get_character_route(character_id: str) -> dict:
+    """Get a specific character by MongoDB ID"""
+    return screenwriter_controller.get_character_by_id(character_id)
+
+
+class UpdateCharacterRequest(BaseModel):
+    updated_data: dict  # Character data to update
+
+
+@router.put("/characters/{character_id}")
+async def update_character_route(character_id: str, payload: UpdateCharacterRequest) -> dict:
+    """Update a saved character in MongoDB"""
+    return screenwriter_controller.update_saved_character(character_id, payload.updated_data)
+
+
+@router.delete("/characters/{character_id}")
+async def delete_character_route(character_id: str) -> dict:
+    """Delete a saved character from MongoDB"""
+    return screenwriter_controller.delete_saved_character(character_id)
+
+
+class SearchCharactersRequest(BaseModel):
+    query: Optional[str] = None
+    gender: Optional[str] = None
+    age_range: Optional[str] = None
+    skip: Optional[int] = 0
+    limit: Optional[int] = 100
+
+
+@router.post("/characters/search")
+async def search_characters_route(payload: SearchCharactersRequest) -> dict:
+    """Search characters by name or filters in MongoDB"""
+    return screenwriter_controller.search_saved_characters(
+        payload.query,
+        payload.gender,
+        payload.age_range,
+        payload.skip,
+        payload.limit
+    )
+
+
+@router.get("/characters/health/check")
+async def check_mongodb_connection() -> dict:
+    """Check MongoDB connection health"""
+    from app.connectors.mongodb_connector import test_mongodb_connection
+    return test_mongodb_connection()

@@ -1,11 +1,11 @@
 import time
 import requests
 import os
-from google import genai
 from google.genai import types
 from PIL import Image, ImageDraw, ImageFont
 from io import BytesIO
 from app.config.settings import settings
+from app.connectors.genai_connector import get_genai_client
 
 
 def generate_video_from_payload(payload: dict):
@@ -13,9 +13,7 @@ def generate_video_from_payload(payload: dict):
     Calls Vertex AI Veo-3 model and generates a video using google-genai client.
     """
 
-    client = genai.Client(
-        api_key=settings.GOOGLE_STUDIO_API_KEY
-    )
+    client = get_genai_client()
 
     # Retry configuration for transient service errors (503 / UNAVAILABLE)
     max_retries = 3
@@ -297,7 +295,7 @@ def generate_thumbnail_image(content_data: dict, output_filename: str = None) ->
         dict: Contains success status, thumbnail path, and generation details
     """
     try:
-        client = genai.Client(api_key=settings.GOOGLE_STUDIO_API_KEY)
+        client = get_genai_client()
         
         # Build thumbnail prompt from content data
         prompt = _build_thumbnail_prompt(content_data)
