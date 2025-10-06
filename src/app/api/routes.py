@@ -71,6 +71,10 @@ class GenerateFreeContentRequest(BaseModel):
     segments: Optional[int] = 7
     custom_character_roster: Optional[List[dict]] = None  # User-provided main character roster
 
+class RetryFailedStorySetsRequest(BaseModel):
+    previous_result: dict  # Result from previous generate_full_story_automatically call
+    max_retries: Optional[int] = 3  # Maximum retry attempts per failed set
+
 @router.post("/generate-prompt-based-story")
 async def build_story_route(payload: GenerateStoryRequest) -> dict:
     """Generate a story outline from an idea."""
@@ -108,6 +112,11 @@ async def build_meme_route(payload: GenerateMemeRequest) -> dict:
 async def build_free_content_route(payload: GenerateFreeContentRequest) -> dict:
     """Generate viral free content segments from an idea."""
     return screenwriter_controller.build_free_content(payload.idea, payload.segments, payload.custom_character_roster)
+
+@router.post("/retry-failed-story-sets")
+async def retry_failed_story_sets_route(payload: RetryFailedStorySetsRequest) -> dict:
+    """Retry failed sets from a previous story generation attempt with exponential backoff."""
+    return screenwriter_controller.retry_failed_story_sets(payload.previous_result, payload.max_retries)
 
 
 # ---------- TRENDING IDEAS GENERATION ----------

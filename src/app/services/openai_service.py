@@ -386,7 +386,7 @@ def generate_full_story_automatically(idea: str, total_segments: int = None, seg
     """
     Automatically generate a complete story by:
     1. Detecting the total segments needed from the idea
-    2. Generating all sets automatically
+    2. Generating all sets automatically with retry logic
     3. Saving each set to JSON files
     4. Returning a summary of all generated content
     """
@@ -416,24 +416,52 @@ def generate_full_story_automatically(idea: str, total_segments: int = None, seg
         os.makedirs(output_directory, exist_ok=True)
         print(f"📁 Output directory: {output_directory}")
     
-    # Step 4: Generate all sets
+    # Step 4: Generate all sets with retry logic
     all_sets = []
     story_title = None
     story_metadata = None
     
+    def generate_set_with_retry(set_number, max_retries=3):
+        """Generate a single set with retry logic and exponential backoff"""
+        for attempt in range(1, max_retries + 1):
+            try:
+                if attempt > 1:
+                    wait_time = 2 ** (attempt - 1)  # Exponential backoff: 2, 4, 8 seconds
+                    print(f"🔄 Retry attempt {attempt}/{max_retries} for Set {set_number} (waiting {wait_time}s)...")
+                    time.sleep(wait_time)
+                else:
+                    print(f"\n🎬 Generating Set {set_number}/{total_sets}...")
+                
+                # Generate this set - pass metadata from set 1 to ensure consistency
+                story_set = generate_story_segments_in_sets(
+                    idea, 
+                    total_segments, 
+                    segments_per_set, 
+                    set_number,
+                    existing_metadata=story_metadata if set_number > 1 else None,
+                    custom_character_roster=custom_character_roster
+                )
+                
+                # Success - return the generated set
+                return story_set, None
+                
+            except Exception as e:
+                error_msg = f"Attempt {attempt} failed for set {set_number}: {str(e)}"
+                print(f"⚠️ {error_msg}")
+                
+                if attempt == max_retries:
+                    # Final attempt failed
+                    final_error = f"Failed to generate set {set_number} after {max_retries} attempts: {str(e)}"
+                    print(f"❌ {final_error}")
+                    return None, final_error
+        
+        return None, "Unknown error"
+    
     for set_number in range(1, total_sets + 1):
-        try:
-            print(f"\n🎬 Generating Set {set_number}/{total_sets}...")
-            
-            # Generate this set - pass metadata from set 1 to ensure consistency
-            story_set = generate_story_segments_in_sets(
-                idea, 
-                total_segments, 
-                segments_per_set, 
-                set_number,
-                existing_metadata=story_metadata if set_number > 1 else None,
-                custom_character_roster=custom_character_roster
-            )
+        story_set, error = generate_set_with_retry(set_number)
+        
+        if story_set is not None:
+            # Success - process the generated set
             
             # Store metadata from first set
             if set_number == 1:
@@ -458,6 +486,7 @@ def generate_full_story_automatically(idea: str, total_segments: int = None, seg
                 print(f"♻️ Reusing metadata from Set 1 to ensure consistency")
             
             # Save to file if requested
+            filepath = None
             if save_to_files:
                 # Clean title for filename
                 safe_title = "".join(c for c in story_title if c.isalnum() or c in (' ', '-', '_')).rstrip()
@@ -474,24 +503,25 @@ def generate_full_story_automatically(idea: str, total_segments: int = None, seg
             all_sets.append({
                 'set_number': set_number,
                 'segments_count': len(story_set.get('segments', [])),
-                'file_path': filepath if save_to_files else None,
-                'set_data': story_set
+                'file_path': filepath,
+                'set_data': story_set,
+                'status': 'success'
             })
             
-            # Small delay to avoid rate limits
-            if set_number < total_sets:
-                print("⏳ Waiting 2 seconds to avoid rate limits...")
-                time.sleep(2)
-                
-        except Exception as e:
-            error_msg = f"Failed to generate set {set_number}: {str(e)}"
-            print(f"❌ {error_msg}")
+        else:
+            # Failed after all retries
             all_sets.append({
                 'set_number': set_number,
-                'error': error_msg,
+                'error': error,
                 'file_path': None,
-                'set_data': None
+                'set_data': None,
+                'status': 'failed'
             })
+        
+        # Small delay to avoid rate limits (only between sets, not retries)
+        if set_number < total_sets:
+            print("⏳ Waiting 2 seconds to avoid rate limits...")
+            time.sleep(2)
     
     # Step 5: Save complete story metadata
     if save_to_files and story_metadata:
@@ -507,13 +537,16 @@ def generate_full_story_automatically(idea: str, total_segments: int = None, seg
         print(f"📋 Saved story metadata: {metadata_filepath}")
     
     # Step 6: Create summary
-    successful_sets = [s for s in all_sets if s.get('set_data') is not None]
-    failed_sets = [s for s in all_sets if s.get('error') is not None]
+    successful_sets = [s for s in all_sets if s.get('status') == 'success']
+    failed_sets = [s for s in all_sets if s.get('status') == 'failed']
     
-    total_segments_generated = sum(s['segments_count'] for s in successful_sets)
+    total_segments_generated = sum(s.get('segments_count', 0) for s in successful_sets)
+    
+    # Check if we have any failed sets for retry information
+    failed_set_numbers = [s['set_number'] for s in failed_sets]
     
     summary = {
-        'success': True,
+        'success': len(failed_sets) == 0,  # Only fully successful if no failed sets
         'story_title': story_title,
         'story_metadata': story_metadata,
         'generation_summary': {
@@ -522,11 +555,17 @@ def generate_full_story_automatically(idea: str, total_segments: int = None, seg
             'total_sets_requested': total_sets,
             'successful_sets': len(successful_sets),
             'failed_sets': len(failed_sets),
-            'segments_per_set': segments_per_set
+            'segments_per_set': segments_per_set,
+            'failed_set_numbers': failed_set_numbers
         },
         'files_saved': save_to_files,
         'output_directory': output_directory if save_to_files else None,
-        'sets': all_sets
+        'sets': all_sets,
+        'retry_info': {
+            'can_retry': len(failed_sets) > 0,
+            'failed_sets': failed_set_numbers,
+            'retry_endpoint': '/retry-failed-story-sets' if len(failed_sets) > 0 else None
+        }
     }
     
     print(f"\n🎉 Story Generation Complete!")
@@ -534,11 +573,197 @@ def generate_full_story_automatically(idea: str, total_segments: int = None, seg
     print(f"✅ Successfully generated: {len(successful_sets)}/{total_sets} sets")
     print(f"📊 Total segments: {total_segments_generated}/{total_segments}")
     if failed_sets:
-        print(f"❌ Failed sets: {len(failed_sets)}")
+        print(f"❌ Failed sets: {len(failed_sets)} - {failed_set_numbers}")
+        print(f"🔄 You can retry failed sets using the retry endpoint")
     if save_to_files:
         print(f"💾 Files saved to: {output_directory}")
     
     return summary
+
+def retry_failed_story_sets(previous_result: dict, max_retries: int = 3):
+    """
+    Retry failed sets from a previous story generation attempt.
+    
+    Args:
+        previous_result: The result from generate_full_story_automatically
+        max_retries: Maximum retry attempts per failed set
+    
+    Returns:
+        Updated result with retry attempts
+    """
+    import os
+    import json
+    import time
+    from datetime import datetime
+    
+    print(f"🔄 Starting retry for failed story sets...")
+    
+    # Extract information from previous result
+    if not previous_result.get('sets'):
+        raise ValueError("No sets found in previous result")
+    
+    story_metadata = previous_result.get('story_metadata')
+    if not story_metadata:
+        raise ValueError("No story metadata found in previous result")
+    
+    # Get generation info
+    gen_info = story_metadata.get('generation_info', {})
+    idea = gen_info.get('idea')
+    total_segments = gen_info.get('total_segments')
+    segments_per_set = gen_info.get('segments_per_set', 10)
+    
+    if not idea:
+        raise ValueError("Original idea not found in metadata")
+    
+    # Find failed sets
+    failed_sets = [s for s in previous_result['sets'] if s.get('status') == 'failed']
+    if not failed_sets:
+        print("✅ No failed sets found - nothing to retry")
+        return previous_result
+    
+    print(f"🎯 Found {len(failed_sets)} failed sets to retry: {[s['set_number'] for s in failed_sets]}")
+    
+    # Get output directory and file saving settings
+    save_to_files = previous_result.get('files_saved', True)
+    output_directory = previous_result.get('output_directory', 'generated_movie_script')
+    
+    def retry_single_set(set_number, max_retries=3):
+        """Retry a single failed set with exponential backoff"""
+        for attempt in range(1, max_retries + 1):
+            try:
+                if attempt > 1:
+                    wait_time = 2 ** (attempt - 1)  # Exponential backoff: 2, 4, 8 seconds
+                    print(f"🔄 Retry attempt {attempt}/{max_retries} for Set {set_number} (waiting {wait_time}s)...")
+                    time.sleep(wait_time)
+                else:
+                    print(f"🎬 Retrying Set {set_number}...")
+                
+                # Generate this set using existing metadata for consistency
+                story_set = generate_story_segments_in_sets(
+                    idea, 
+                    total_segments, 
+                    segments_per_set, 
+                    set_number,
+                    existing_metadata=story_metadata,
+                    custom_character_roster=story_metadata.get('characters_roster')
+                )
+                
+                # Success - return the generated set
+                return story_set, None
+                
+            except Exception as e:
+                error_msg = f"Retry attempt {attempt} failed for set {set_number}: {str(e)}"
+                print(f"⚠️ {error_msg}")
+                
+                if attempt == max_retries:
+                    # Final attempt failed
+                    final_error = f"Failed to retry set {set_number} after {max_retries} attempts: {str(e)}"
+                    print(f"❌ {final_error}")
+                    return None, final_error
+        
+        return None, "Unknown error"
+    
+    # Retry each failed set
+    updated_sets = previous_result['sets'].copy()
+    retry_results = []
+    
+    for failed_set in failed_sets:
+        set_number = failed_set['set_number']
+        story_set, error = retry_single_set(set_number, max_retries)
+        
+        # Find the index of this set in the updated_sets list
+        set_index = next(i for i, s in enumerate(updated_sets) if s['set_number'] == set_number)
+        
+        if story_set is not None:
+            # Success - update the set
+            filepath = None
+            if save_to_files:
+                story_title = story_metadata.get('title', 'Untitled Story')
+                safe_title = "".join(c for c in story_title if c.isalnum() or c in (' ', '-', '_')).rstrip()
+                safe_title = safe_title.replace(' ', '_')[:50]
+                
+                filename = f"{safe_title}_set_{set_number:02d}.json"
+                filepath = os.path.join(output_directory, filename)
+                
+                with open(filepath, 'w', encoding='utf-8') as f:
+                    json.dump(story_set, f, indent=2, ensure_ascii=False)
+                
+                print(f"💾 Saved: {filepath}")
+            
+            updated_sets[set_index] = {
+                'set_number': set_number,
+                'segments_count': len(story_set.get('segments', [])),
+                'file_path': filepath,
+                'set_data': story_set,
+                'status': 'success',
+                'retry_info': {
+                    'was_retried': True,
+                    'retry_timestamp': datetime.now().isoformat()
+                }
+            }
+            
+            retry_results.append({
+                'set_number': set_number,
+                'status': 'success',
+                'segments_generated': len(story_set.get('segments', []))
+            })
+            
+        else:
+            # Still failed after retry
+            updated_sets[set_index]['retry_info'] = {
+                'was_retried': True,
+                'retry_failed': True,
+                'retry_error': error,
+                'retry_timestamp': datetime.now().isoformat()
+            }
+            
+            retry_results.append({
+                'set_number': set_number,
+                'status': 'failed',
+                'error': error
+            })
+        
+        # Small delay between retries
+        time.sleep(2)
+    
+    # Update summary
+    successful_sets = [s for s in updated_sets if s.get('status') == 'success']
+    still_failed_sets = [s for s in updated_sets if s.get('status') == 'failed']
+    
+    total_segments_generated = sum(s.get('segments_count', 0) for s in successful_sets)
+    still_failed_set_numbers = [s['set_number'] for s in still_failed_sets]
+    
+    updated_result = previous_result.copy()
+    updated_result.update({
+        'success': len(still_failed_sets) == 0,
+        'sets': updated_sets,
+        'generation_summary': {
+            **previous_result['generation_summary'],
+            'total_segments_generated': total_segments_generated,
+            'successful_sets': len(successful_sets),
+            'failed_sets': len(still_failed_sets),
+            'failed_set_numbers': still_failed_set_numbers
+        },
+        'retry_info': {
+            'retry_performed': True,
+            'retry_timestamp': datetime.now().isoformat(),
+            'retry_results': retry_results,
+            'can_retry': len(still_failed_sets) > 0,
+            'failed_sets': still_failed_set_numbers,
+            'retry_endpoint': '/retry-failed-story-sets' if len(still_failed_sets) > 0 else None
+        }
+    })
+    
+    successful_retries = [r for r in retry_results if r['status'] == 'success']
+    failed_retries = [r for r in retry_results if r['status'] == 'failed']
+    
+    print(f"\n🎉 Retry Complete!")
+    print(f"✅ Successfully retried: {len(successful_retries)} sets")
+    print(f"❌ Still failed: {len(failed_retries)} sets")
+    if still_failed_sets:
+        print(f"🔄 Failed sets: {still_failed_set_numbers} - can retry again if needed")
+    
+    return updated_result
 
 def detect_total_segments_from_idea(idea: str) -> int:
     """

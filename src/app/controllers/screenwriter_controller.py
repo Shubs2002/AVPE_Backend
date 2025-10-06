@@ -159,6 +159,34 @@ def generate_trending_ideas(content_type: str = "all", count: int = 5):
             detail=f"Trending ideas generation failed: {str(e)}"
         )
 
+def retry_failed_story_sets(previous_result: dict, max_retries: int = 3):
+    """Retry failed sets from a previous story generation attempt."""
+    if not previous_result:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Previous result is required"
+        )
+    
+    if max_retries <= 0 or max_retries > 10:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Max retries must be between 1 and 10"
+        )
+    
+    try:
+        result = openai_service.retry_failed_story_sets(previous_result, max_retries)
+        return {"result": result}
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to retry story sets: {str(e)}"
+        )
+
 
 
 def analyze_character_image_file(image: UploadFile, character_name: str, save_character: bool = False):

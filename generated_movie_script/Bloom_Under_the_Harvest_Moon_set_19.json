@@ -1,0 +1,992 @@
+{
+  "title": "Moonlit Vineyard Seduction",
+  "short_summary": "Under the Harvest Moon, a lone wanderer wanders deeper into a secret vineyard, following whispers of forbidden desires until a glass of midnight wine shatters silence.",
+  "description": "Feel the rush of forbidden sweetness as the Harvest Moon guides a lone wanderer through rows of golden grapes. Watch every heartbeat and taste the midnight bloom. Follow for more exotic nights!",
+  "hashtags": [
+    "#HarvestMoon",
+    "#BloomMystery",
+    "#NightVineyard",
+    "#AdultStory",
+    "#Fyp",
+    "#Viral",
+    "#Shorts",
+    "#TikTok",
+    "#Reels"
+  ],
+  "set_info": {
+    "set_number": 19,
+    "segments_in_set": 10,
+    "segment_range": "181-190",
+    "total_segments": 600,
+    "segments_per_set": 10
+  },
+  "narrator_voice": {
+    "voice_type": "Female Adult",
+    "age_range": "30-45",
+    "accent": "Neutral",
+    "tone": "Silky, sultry",
+    "target_demographic": "Adults",
+    "speaking_pace": "Standard (3 wps)",
+    "narration_style": "Descriptive enveloping",
+    "child_friendly_level": "None",
+    "voice_pitch": "Low mid",
+    "expressiveness": "High",
+    "voice_description": "A lush, resonant female voice that feels intimate and alluring"
+  },
+  "characters_roster": [
+    {
+      "id": "char_d5af1e5bf4b7",
+      "name": "",
+      "physical_appearance": {
+        "gender": "Female",
+        "age": "Late 20s",
+        "height": "5'6\"",
+        "body_type": "Slender",
+        "skin_tone": "Fair",
+        "hair_color": "Silvery",
+        "hair_style": "Loose waves",
+        "eye_color": "Emerald",
+        "eye_shape": "Almond",
+        "facial_features": "Soft, delicate",
+        "distinctive_marks": "None"
+      },
+      "clothing_style": {
+        "primary_outfit": "Flowing satin gown",
+        "clothing_style": "Ethereal",
+        "colors": "Deep green, midnight silver",
+        "accessories": "Crystal necklace"
+      },
+      "personality": "Seductive yet contemplative, she moves between worlds with quiet curiosity",
+      "role": "Vineyard wanderer",
+      "voice_mannerisms": {
+        "speaking_style": "Soft, melodic",
+        "accent_or_tone": "Subtle",
+        "typical_expressions": "A slight, knowing smile"
+      },
+      "video_prompt_description": "Mysterious woman in flowing satin gown strolling among moonlit vines, silver hair glinting like dew, eyes reflecting wine‑red anticipation"
+    }
+  ],
+  "segments": [
+    {
+      "segment": 181,
+      "scene": "Moonlit vineyard under the Harvest Moon, vines dripping dew, silver light glistening.",
+      "overlay_text": "",
+      "overlay_text_position": "",
+      "overlay_text_style": "",
+      "overlay_text_duration": "",
+      "overlay_text_animation": "",
+      "overlay_text_color": "",
+      "overlay_text_font": "",
+      "content_type": "NARRATION",
+      "narration": "Under the harvest moon, she glides among vines, her satin gown whispering like silk, each grape pulse echoing desire.",
+      "narrator_voice_for_segment": {
+        "voice_type": "Female Adult",
+        "tone_variation": "Silky, sultry",
+        "pace_variation": "Standard",
+        "emotion": "Descriptive",
+        "emphasis": "Soft",
+        "consistency_note": "Same narrator voice as previous segments, only tone/emotion varies"
+      },
+      "dialogue": [],
+      "characters_present": [
+        "char_d5af1e5bf4b7"
+      ],
+      "camera": "Low-angle close‑up, sweeping through vines",
+      "clip_duration": 8,
+      "word_count": "19",
+      "estimated_speech_time": "8s",
+      "background_definition": {
+        "location": "Secluded vineyard",
+        "environment_type": "Rural",
+        "setting_description": "Rows of ripe grapes dappled with moonlight",
+        "time_of_day": "Night",
+        "weather_conditions": "Clear, cool",
+        "lighting": "Soft moonlight with dew sparkle",
+        "atmosphere": "Enchanted and sensual",
+        "key_visual_elements": [
+          "Vines",
+          "Harvest Moon",
+          "Silken gown"
+        ],
+        "color_palette": "Deep green, midnight silver, pale glow",
+        "architectural_style": "Rustic",
+        "natural_elements": [
+          "Grapes",
+          "Fallen leaves"
+        ],
+        "props_in_background": [
+          "Vine trellis"
+        ],
+        "scale": "Medium",
+        "continuity_notes": "Consistent with previous vineyard shots",
+        "video_prompt_background": "Moonlit vineyard with dew glistening"
+      },
+      "background_music": "Ambient synth pad",
+      "sound_effects": [
+        "Gentle wind"
+      ],
+      "visual_style": "Soft focus, cinematic color grading",
+      "transitions": "Fade",
+      "props": [
+        "Vine leaves"
+      ],
+      "emotions": [
+        "Mystery",
+        "Desire"
+      ],
+      "lighting": "Low key",
+      "color_palette": "Deep green, midnight silver",
+      "special_effects": [
+        "Glitter dust"
+      ],
+      "clothing": [
+        "Flowing satin gown"
+      ],
+      "time_of_day": "Night",
+      "weather": "Clear",
+      "cultural_elements": [],
+      "historical_context": "",
+      "genre": "Adult romance",
+      "themes": [
+        "Forbidden desire",
+        "Moonlit allure"
+      ],
+      "mood": "Sensual",
+      "pacing": "Slow",
+      "narrative_techniques": [
+        "Descriptive narration"
+      ],
+      "symbolism": [
+        "Moonlight for temptation"
+      ],
+      "foreshadowing": []
+    },
+    {
+      "segment": 182,
+      "scene": "She forms a crescent path beneath vines, the air thick with wine aroma.",
+      "overlay_text": "",
+      "overlay_text_position": "",
+      "overlay_text_style": "",
+      "overlay_text_duration": "",
+      "overlay_text_animation": "",
+      "overlay_text_color": "",
+      "overlay_text_font": "",
+      "content_type": "DIALOGUE",
+      "narration": "",
+      "narrator_voice_for_segment": {
+        "voice_type": "Female Adult",
+        "tone_variation": "Intimate",
+        "pace_variation": "Standard",
+        "emotion": "Spoken",
+        "emphasis": "Soft",
+        "consistency_note": "Same narrator voice as previous segments, only tone/emotion varies"
+      },
+      "dialogue": [
+        {
+          "character": "char_d5af1e5bf4b7",
+          "line": "The moon bathes our vineyard, and my heart is ripe with secrets."
+        }
+      ],
+      "characters_present": [
+        "char_d5af1e5bf4b7"
+      ],
+      "camera": "Medium shot, tracking movement",
+      "clip_duration": 8,
+      "word_count": "12",
+      "estimated_speech_time": "8s",
+      "background_definition": {
+        "location": "Vineyard path",
+        "environment_type": "Rural",
+        "setting_description": "Moonlit pathway through grape clusters",
+        "time_of_day": "Night",
+        "weather_conditions": "Cool breeze",
+        "lighting": "Soft glow, moon shadows",
+        "atmosphere": "Intimate and quiet",
+        "key_visual_elements": [
+          "Starlight",
+          "Vine"
+        ],
+        "color_palette": "Midnight blue, silver glow",
+        "architectural_style": "Rustic trellis",
+        "natural_elements": [
+          "Grapes",
+          "Leaves"
+        ],
+        "props_in_background": [
+          "Vine branches"
+        ],
+        "scale": "Medium",
+        "continuity_notes": "",
+        "video_prompt_background": "Pathway in moonlit vineyard"
+      },
+      "background_music": "Soft piano",
+      "sound_effects": [
+        "Quiet wind"
+      ],
+      "visual_style": "Natural lighting, slight vignette",
+      "transitions": "Cut",
+      "props": [],
+      "emotions": [
+        "Curiosity",
+        "Yearning"
+      ],
+      "lighting": "Low key",
+      "color_palette": "Midnight blue",
+      "special_effects": [],
+      "clothing": [
+        "Satin gown"
+      ],
+      "time_of_day": "Night",
+      "weather": "Cool",
+      "cultural_elements": [],
+      "historical_context": "",
+      "genre": "Adult romance",
+      "themes": [
+        "Hidden longing"
+      ],
+      "mood": "Quiet anticipation",
+      "pacing": "Smooth",
+      "narrative_techniques": [
+        "Dialogue"
+      ],
+      "symbolism": [
+        "Moonlight for connection"
+      ],
+      "foreshadowing": []
+    },
+    {
+      "segment": 183,
+      "scene": "Close‑up of silver hair catching light, as she walks deeper into twilight.",
+      "overlay_text": "",
+      "overlay_text_position": "",
+      "overlay_text_style": "",
+      "overlay_text_duration": "",
+      "overlay_text_animation": "",
+      "overlay_text_color": "",
+      "overlay_text_font": "",
+      "content_type": "NARRATION",
+      "narration": "She tilts her head, catching glimpses of silver light on dew, tasting forbidden ripeness in the air.",
+      "narrator_voice_for_segment": {
+        "voice_type": "Female Adult",
+        "tone_variation": "Silky, sultry",
+        "pace_variation": "Standard",
+        "emotion": "Descriptive",
+        "emphasis": "Soft",
+        "consistency_note": "Same narrator voice as previous segments, only tone/emotion varies"
+      },
+      "dialogue": [],
+      "characters_present": [
+        "char_d5af1e5bf4b7"
+      ],
+      "camera": "Tilt shot, close‑up on hair",
+      "clip_duration": 8,
+      "word_count": "17",
+      "estimated_speech_time": "8s",
+      "background_definition": {
+        "location": "Darkened vineyard plot",
+        "environment_type": "Rural",
+        "setting_description": "Twilight vines, dew shining like stars",
+        "time_of_day": "Night",
+        "weather_conditions": "Clear",
+        "lighting": "Moonlit",
+        "atmosphere": "Ethereal",
+        "key_visual_elements": [
+          "Silver hair",
+          "Deer-glow dew"
+        ],
+        "color_palette": "Deep green, silver",
+        "architectural_style": "Rustic",
+        "natural_elements": [
+          "Leaves",
+          "Grasses"
+        ],
+        "props_in_background": [
+          "Vine twigs"
+        ],
+        "scale": "Medium",
+        "continuity_notes": "",
+        "video_prompt_background": "Moonlit vines with dew"
+      },
+      "background_music": "Ambient pads",
+      "sound_effects": [
+        "Soft rainfall",
+        "Dew sparkle"
+      ],
+      "visual_style": "Soft focus",
+      "transitions": "Cross dissolve",
+      "props": [],
+      "emotions": [
+        "Desire",
+        "Wonder"
+      ],
+      "lighting": "Low key",
+      "color_palette": "Silver glow",
+      "special_effects": [
+        "Glitter dust"
+      ],
+      "clothing": [
+        "Satin gown"
+      ],
+      "time_of_day": "Night",
+      "weather": "Clear",
+      "cultural_elements": [],
+      "historical_context": "",
+      "genre": "Adult romance",
+      "themes": [
+        "Magical realism"
+      ],
+      "mood": "Ethereal",
+      "pacing": "Slow",
+      "narrative_techniques": [
+        "Descriptive narration"
+      ],
+      "symbolism": [
+        "Moonlight as temptation"
+      ],
+      "foreshadowing": []
+    },
+    {
+      "segment": 184,
+      "scene": "Her voice floats among vines, accompanied by the rustle of leaves.",
+      "overlay_text": "",
+      "overlay_text_position": "",
+      "overlay_text_style": "",
+      "overlay_text_duration": "",
+      "overlay_text_animation": "",
+      "overlay_text_color": "",
+      "overlay_text_font": "",
+      "content_type": "DIALOGUE",
+      "narration": "",
+      "narrator_voice_for_segment": {
+        "voice_type": "Female Adult",
+        "tone_variation": "Intimate",
+        "pace_variation": "Standard",
+        "emotion": "Spoken",
+        "emphasis": "Soft",
+        "consistency_note": "Same narrator voice as previous segments, only tone/emotion varies"
+      },
+      "dialogue": [
+        {
+          "character": "char_d5af1e5bf4b7",
+          "line": "Let the night whisper, and I'll follow the path of longing."
+        }
+      ],
+      "characters_present": [
+        "char_d5af1e5bf4b7"
+      ],
+      "camera": "Medium close‑up, following her hand",
+      "clip_duration": 8,
+      "word_count": "11",
+      "estimated_speech_time": "8s",
+      "background_definition": {
+        "location": "Wine cluster aisle",
+        "environment_type": "Rural",
+        "setting_description": "Stretched vines under starlight",
+        "time_of_day": "Night",
+        "weather_conditions": "Cool breezes",
+        "lighting": "Soft moonlight",
+        "atmosphere": "Intimate and hushed",
+        "key_visual_elements": [
+          "Leaves",
+          "Grapes"
+        ],
+        "color_palette": "Deep blue",
+        "architectural_style": "Rustic",
+        "natural_elements": [
+          "Vines"
+        ],
+        "props_in_background": [
+          "Vine trellis"
+        ],
+        "scale": "Medium",
+        "continuity_notes": "",
+        "video_prompt_background": "Night vineyard aisle"
+      },
+      "background_music": "Low synth",
+      "sound_effects": [
+        "Wind rustle",
+        "Leaves whisper"
+      ],
+      "visual_style": "Soft focus, cinematic",
+      "transitions": "Cut",
+      "props": [],
+      "emotions": [
+        "Love",
+        "Curiosity"
+      ],
+      "lighting": "Low key",
+      "color_palette": "Deep blue",
+      "special_effects": [],
+      "clothing": [
+        "Satin gown"
+      ],
+      "time_of_day": "Night",
+      "weather": "Cool",
+      "cultural_elements": [],
+      "historical_context": "",
+      "genre": "Adult romance",
+      "themes": [
+        "Longing"
+      ],
+      "mood": "Dreamy",
+      "pacing": "Gentle",
+      "narrative_techniques": [
+        "Dialogue"
+      ],
+      "symbolism": [
+        "Whisper as invitation"
+      ],
+      "foreshadowing": []
+    },
+    {
+      "segment": 185,
+      "scene": "Camera pans as vines brush against her, scent filling the night air.",
+      "overlay_text": "",
+      "overlay_text_position": "",
+      "overlay_text_style": "",
+      "overlay_text_duration": "",
+      "overlay_text_animation": "",
+      "overlay_text_color": "",
+      "overlay_text_font": "",
+      "content_type": "NARRATION",
+      "narration": "She steps deeper, vines shadowing her, their scent swirling with promise, every footfall a subtle drumbeat.",
+      "narrator_voice_for_segment": {
+        "voice_type": "Female Adult",
+        "tone_variation": "Silky, sultry",
+        "pace_variation": "Standard",
+        "emotion": "Descriptive",
+        "emphasis": "Soft",
+        "consistency_note": "Same narrator voice as previous segments, only tone/emotion varies"
+      },
+      "dialogue": [],
+      "characters_present": [
+        "char_d5af1e5bf4b7"
+      ],
+      "camera": "Tracking shot, following feet",
+      "clip_duration": 8,
+      "word_count": "16",
+      "estimated_speech_time": "8s",
+      "background_definition": {
+        "location": "Deep vineyard bed",
+        "environment_type": "Rural",
+        "setting_description": "Vines folding around a lone heart",
+        "time_of_day": "Night",
+        "weather_conditions": "Mild",
+        "lighting": "Moonlit shadows",
+        "atmosphere": "Sensual",
+        "key_visual_elements": [
+          "Vines",
+          "Footprints"
+        ],
+        "color_palette": "Dark green, twilight blue",
+        "architectural_style": "Rustic",
+        "natural_elements": [
+          "Leaves",
+          "Grapes"
+        ],
+        "props_in_background": [
+          "Vine stems"
+        ],
+        "scale": "Medium",
+        "continuity_notes": "",
+        "video_prompt_background": "Vines in night"
+      },
+      "background_music": "Ambient strings",
+      "sound_effects": [
+        "Footsteps"
+      ],
+      "visual_style": "Soft reveal, cinematic",
+      "transitions": "Fade to black",
+      "props": [],
+      "emotions": [
+        "Desire",
+        "Hope"
+      ],
+      "lighting": "Low key",
+      "color_palette": "Dark green",
+      "special_effects": [
+        "Subtle haze"
+      ],
+      "clothing": [
+        "Satin gown"
+      ],
+      "time_of_day": "Night",
+      "weather": "Mild",
+      "cultural_elements": [],
+      "historical_context": "",
+      "genre": "Adult romance",
+      "themes": [
+        "Sensual journey"
+      ],
+      "mood": "Intimate",
+      "pacing": "Medium",
+      "narrative_techniques": [
+        "Descriptive narration"
+      ],
+      "symbolism": [
+        "Footsteps as fate"
+      ],
+      "foreshadowing": []
+    },
+    {
+      "segment": 186,
+      "scene": "Her voice grows softer; vines seem to lean in.",
+      "overlay_text": "",
+      "overlay_text_position": "",
+      "overlay_text_style": "",
+      "overlay_text_duration": "",
+      "overlay_text_animation": "",
+      "overlay_text_color": "",
+      "overlay_text_font": "",
+      "content_type": "DIALOGUE",
+      "narration": "",
+      "narrator_voice_for_segment": {
+        "voice_type": "Female Adult",
+        "tone_variation": "Intimate",
+        "pace_variation": "Standard",
+        "emotion": "Spoken",
+        "emphasis": "Soft",
+        "consistency_note": "Same narrator voice as previous segments, only tone/emotion varies"
+      },
+      "dialogue": [
+        {
+          "character": "char_d5af1e5bf4b7",
+          "line": "I feel the vines call me, their stories spun in grapes, echoing a hidden melody."
+        }
+      ],
+      "characters_present": [
+        "char_d5af1e5bf4b7"
+      ],
+      "camera": "Over‑the‑shoulder, soft focus",
+      "clip_duration": 8,
+      "word_count": "15",
+      "estimated_speech_time": "8s",
+      "background_definition": {
+        "location": "Vine cluster",
+        "environment_type": "Rural",
+        "setting_description": "Grapes hanging heavy under moon",
+        "time_of_day": "Night",
+        "weather_conditions": "Cool",
+        "lighting": "Moon glow",
+        "atmosphere": "Mysterious",
+        "key_visual_elements": [
+          "Vines",
+          "Berries"
+        ],
+        "color_palette": "Deep green, moon silver",
+        "architectural_style": "Rustic",
+        "natural_elements": [
+          "Leaves"
+        ],
+        "props_in_background": [
+          "Grapevine"
+        ],
+        "scale": "Medium",
+        "continuity_notes": "",
+        "video_prompt_background": "Cluster of vines"
+      },
+      "background_music": "Soft flute",
+      "sound_effects": [
+        "Leaves rustle"
+      ],
+      "visual_style": "Gently lit, dreamlike",
+      "transitions": "Cut",
+      "props": [],
+      "emotions": [
+        "Wonder",
+        "Yearning"
+      ],
+      "lighting": "Low key",
+      "color_palette": "Deep green",
+      "special_effects": [],
+      "clothing": [
+        "Satin gown"
+      ],
+      "time_of_day": "Night",
+      "weather": "Cool",
+      "cultural_elements": [],
+      "historical_context": "",
+      "genre": "Adult romance",
+      "themes": [
+        "Whispers of the vine"
+      ],
+      "mood": "Mysterious",
+      "pacing": "Slow",
+      "narrative_techniques": [
+        "Dialogue"
+      ],
+      "symbolism": [
+        "Vines as storytellers"
+      ],
+      "foreshadowing": []
+    },
+    {
+      "segment": 187,
+      "scene": "Moonlight streams through a canopy, turning the scene like liquid silver.",
+      "overlay_text": "",
+      "overlay_text_position": "",
+      "overlay_text_style": "",
+      "overlay_text_duration": "",
+      "overlay_text_animation": "",
+      "overlay_text_color": "",
+      "overlay_text_font": "",
+      "content_type": "NARRATION",
+      "narration": "The ceiling dark as a well of amber, lanterns flicker with liquid fire, guiding her to an altar of wine.",
+      "narrator_voice_for_segment": {
+        "voice_type": "Female Adult",
+        "tone_variation": "Silky, sultry",
+        "pace_variation": "Standard",
+        "emotion": "Descriptive",
+        "emphasis": "Soft",
+        "consistency_note": "Same narrator voice as previous segments, only tone/emotion varies"
+      },
+      "dialogue": [],
+      "characters_present": [
+        "char_d5af1e5bf4b7"
+      ],
+      "camera": "Wide shot, low angle",
+      "clip_duration": 8,
+      "word_count": "20",
+      "estimated_speech_time": "8s",
+      "background_definition": {
+        "location": "Altar of wine",
+        "environment_type": "Rural",
+        "setting_description": "Reverent display of wine bottles under lanterns",
+        "time_of_day": "Night",
+        "weather_conditions": "Clear",
+        "lighting": "Soft amber glow",
+        "atmosphere": "Mystical",
+        "key_visual_elements": [
+          "Bombardillos",
+          "Barn"
+        ],
+        "color_palette": "Amber, deep green",
+        "architectural_style": "Rustic",
+        "natural_elements": [
+          "Leaves"
+        ],
+        "props_in_background": [
+          "Vine",
+          "Wine bottles"
+        ],
+        "scale": "Large",
+        "continuity_notes": "",
+        "video_prompt_background": "Altar of wine with lanterns"
+      },
+      "background_music": "Ambient choir",
+      "sound_effects": [
+        "Fire crackling"
+      ],
+      "visual_style": "Low lighting, luminous glow",
+      "transitions": "Fade in",
+      "props": [
+        "Lanterns"
+      ],
+      "emotions": [
+        "Wonder",
+        "Elation"
+      ],
+      "lighting": "Low key",
+      "color_palette": "Amber",
+      "special_effects": [
+        "Glowing fire"
+      ],
+      "clothing": [
+        "Satin gown"
+      ],
+      "time_of_day": "Night",
+      "weather": "Clear",
+      "cultural_elements": [],
+      "historical_context": "",
+      "genre": "Adult romance",
+      "themes": [
+        "Sacred wine"
+      ],
+      "mood": "Ethereal",
+      "pacing": "Slow",
+      "narrative_techniques": [
+        "Descriptive narration"
+      ],
+      "symbolism": [
+        "Wine as offering"
+      ],
+      "foreshadowing": []
+    },
+    {
+      "segment": 188,
+      "scene": "She peers at a single bottle, its unopened label a mystery.",
+      "overlay_text": "",
+      "overlay_text_position": "",
+      "overlay_text_style": "",
+      "overlay_text_duration": "",
+      "overlay_text_animation": "",
+      "overlay_text_color": "",
+      "overlay_text_font": "",
+      "content_type": "DIALOGUE",
+      "narration": "",
+      "narrator_voice_for_segment": {
+        "voice_type": "Female Adult",
+        "tone_variation": "Intimate",
+        "pace_variation": "Standard",
+        "emotion": "Spoken",
+        "emphasis": "Soft",
+        "consistency_note": "Same narrator voice as previous segments, only tone/emotion varies"
+      },
+      "dialogue": [
+        {
+          "character": "char_d5af1e5bf4b7",
+          "line": "Behind the grape cluster, a single bottle waits—its label unmarked, its fate yours to carve."
+        }
+      ],
+      "characters_present": [
+        "char_d5af1e5bf4b7"
+      ],
+      "camera": "Medium close‑up on bottle",
+      "clip_duration": 8,
+      "word_count": "15",
+      "estimated_speech_time": "8s",
+      "background_definition": {
+        "location": "Bottle display",
+        "environment_type": "Rural",
+        "setting_description": "Scattered grapes framing an unopened bottle",
+        "time_of_day": "Night",
+        "weather_conditions": "Clear",
+        "lighting": "Soft, focused",
+        "atmosphere": "Intense",
+        "key_visual_elements": [
+          "Bottles",
+          "Grapes"
+        ],
+        "color_palette": "Deep green, silver",
+        "architectural_style": "Rustic",
+        "natural_elements": [
+          "Leaves"
+        ],
+        "props_in_background": [
+          "Bottle"
+        ],
+        "scale": "Medium",
+        "continuity_notes": "",
+        "video_prompt_background": "Bottle among grapes"
+      },
+      "background_music": "Minimal piano",
+      "sound_effects": [
+        "Silence"
+      ],
+      "visual_style": "Intense focus, subtle shadows",
+      "transitions": "Cut",
+      "props": [],
+      "emotions": [
+        "Curiosity",
+        "Anticipation"
+      ],
+      "lighting": "Low key",
+      "color_palette": "Deep green",
+      "special_effects": [],
+      "clothing": [
+        "Satin gown"
+      ],
+      "time_of_day": "Night",
+      "weather": "Clear",
+      "cultural_elements": [],
+      "historical_context": "",
+      "genre": "Adult romance",
+      "themes": [
+        "Mystery"
+      ],
+      "mood": "Suspenseful",
+      "pacing": "Medium",
+      "narrative_techniques": [
+        "Dialogue"
+      ],
+      "symbolism": [
+        "Bottle as fate"
+      ],
+      "foreshadowing": []
+    },
+    {
+      "segment": 189,
+      "scene": "Her fingers touch the glass, a ripple of silver emerges.",
+      "overlay_text": "",
+      "overlay_text_position": "",
+      "overlay_text_style": "",
+      "overlay_text_duration": "",
+      "overlay_text_animation": "",
+      "overlay_text_color": "",
+      "overlay_text_font": "",
+      "content_type": "NARRATION",
+      "narration": "Her fingers brush the scarlet glass, slick with memory; she pulls it out, shattering silence with a gasp.",
+      "narrator_voice_for_segment": {
+        "voice_type": "Female Adult",
+        "tone_variation": "Silky, sultry",
+        "pace_variation": "Standard",
+        "emotion": "Descriptive",
+        "emphasis": "Soft",
+        "consistency_note": "Same narrator voice as previous segments, only tone/emotion varies"
+      },
+      "dialogue": [],
+      "characters_present": [
+        "char_d5af1e5bf4b7"
+      ],
+      "camera": "Hand close‑up, glass shimmering",
+      "clip_duration": 8,
+      "word_count": "18",
+      "estimated_speech_time": "8s",
+      "background_definition": {
+        "location": "Glass bottle",
+        "environment_type": "Rural",
+        "setting_description": "Scarlet glass catching moonlight",
+        "time_of_day": "Night",
+        "weather_conditions": "Clear",
+        "lighting": "Soft moon hit",
+        "atmosphere": "Tense",
+        "key_visual_elements": [
+          "Glass",
+          "Moonlight"
+        ],
+        "color_palette": "Scarlet, silver",
+        "architectural_style": "Rustic",
+        "natural_elements": [
+          "Leaves"
+        ],
+        "props_in_background": [
+          "Bottle"
+        ],
+        "scale": "Medium",
+        "continuity_notes": "",
+        "video_prompt_background": "Bottle under moon"
+      },
+      "background_music": "Low strings",
+      "sound_effects": [
+        "Glass shatter"
+      ],
+      "visual_style": "Sharp focus, dramatic",
+      "transitions": "Cross dissolve",
+      "props": [],
+      "emotions": [
+        "Tension",
+        "Wonder"
+      ],
+      "lighting": "Low key",
+      "color_palette": "Scarlet",
+      "special_effects": [
+        "Light burst"
+      ],
+      "clothing": [
+        "Satin gown"
+      ],
+      "time_of_day": "Night",
+      "weather": "Clear",
+      "cultural_elements": [],
+      "historical_context": "",
+      "genre": "Adult romance",
+      "themes": [
+        "Breaking silence"
+      ],
+      "mood": "Intense",
+      "pacing": "Fast",
+      "narrative_techniques": [
+        "Descriptive narration"
+      ],
+      "symbolism": [
+        "Glass as barrier"
+      ],
+      "foreshadowing": []
+    },
+    {
+      "segment": 190,
+      "scene": "Moonlight pours into the wine, infrared ruby swirling.",
+      "overlay_text": "",
+      "overlay_text_position": "",
+      "overlay_text_style": "",
+      "overlay_text_duration": "",
+      "overlay_text_animation": "",
+      "overlay_text_color": "",
+      "overlay_text_font": "",
+      "content_type": "DIALOGUE",
+      "narration": "",
+      "narrator_voice_for_segment": {
+        "voice_type": "Female Adult",
+        "tone_variation": "Intimate",
+        "pace_variation": "Standard",
+        "emotion": "Spoken",
+        "emphasis": "Soft",
+        "consistency_note": "Same narrator voice as previous segments, only tone/emotion varies"
+      },
+      "dialogue": [
+        {
+          "character": "char_d5af1e5bf4b7",
+          "line": "The bottle cracks, releasing moonlight, and I taste eternity."
+        }
+      ],
+      "characters_present": [
+        "char_d5af1e5bf4b7"
+      ],
+      "camera": "Wide shot, wine bottle exploding with light",
+      "clip_duration": 8,
+      "word_count": "9",
+      "estimated_speech_time": "8s",
+      "background_definition": {
+        "location": "Wine spill",
+        "environment_type": "Rural",
+        "setting_description": "Moonlit wine swirling in glass",
+        "time_of_day": "Night",
+        "weather_conditions": "Clear",
+        "lighting": "Moon glow",
+        "atmosphere": "Transcendent",
+        "key_visual_elements": [
+          "Wine",
+          "Moonlight"
+        ],
+        "color_palette": "Ruby, silver",
+        "architectural_style": "Rustic",
+        "natural_elements": [
+          "Leaves"
+        ],
+        "props_in_background": [
+          "Bottle"
+        ],
+        "scale": "Medium",
+        "continuity_notes": "",
+        "video_prompt_background": "Wine spilling"
+      },
+      "background_music": "Uplifting choir",
+      "sound_effects": [
+        "Glass crack",
+        "Light chime"
+      ],
+      "visual_style": "Cinematic, glowing",
+      "transitions": "Fade out",
+      "props": [],
+      "emotions": [
+        "Awe",
+        "Euphoria"
+      ],
+      "lighting": "Low key",
+      "color_palette": "Ruby",
+      "special_effects": [
+        "Light burst"
+      ],
+      "clothing": [
+        "Satin gown"
+      ],
+      "time_of_day": "Night",
+      "weather": "Clear",
+      "cultural_elements": [],
+      "historical_context": "",
+      "genre": "Adult romance",
+      "themes": [
+        "Infinite tasting"
+      ],
+      "mood": "Ecstatic",
+      "pacing": "Fast",
+      "narrative_techniques": [
+        "Dialogue"
+      ],
+      "symbolism": [
+        "Wine as time"
+      ],
+      "foreshadowing": []
+    }
+  ]
+}
