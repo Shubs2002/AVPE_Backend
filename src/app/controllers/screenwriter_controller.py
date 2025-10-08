@@ -63,7 +63,7 @@ def build_story_set(idea: str, total_segments: int, segments_per_set: int = 10, 
             detail=f"Story set generation failed: {str(e)}"
         )
 
-def build_full_story_auto(idea: str, total_segments: int = None, segments_per_set: int = 10, save_to_files: bool = True, output_directory: str = "generated_stories", custom_character_roster: list = None):
+def build_full_story_auto(idea: str, total_segments: int = None, segments_per_set: int = 10, save_to_files: bool = True, output_directory: str = "generated_stories", custom_character_roster: list = None, no_narration: bool = False, narration_only_first: bool = False, cliffhanger_interval: int = 0, content_rating: str = "U"):
     """Generate a complete story automatically in sets and save to JSON files."""
     if not idea:
         raise HTTPException(
@@ -77,9 +77,18 @@ def build_full_story_auto(idea: str, total_segments: int = None, segments_per_se
             detail="Segments per set must be greater than 0"
         )
     
+    # Validate content rating
+    valid_ratings = ["U", "U/A", "A"]
+    if content_rating not in valid_ratings:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Invalid content_rating. Must be one of: {', '.join(valid_ratings)}"
+        )
+    
     try:
         result = openai_service.generate_full_story_automatically(
-            idea, total_segments, segments_per_set, save_to_files, output_directory, custom_character_roster
+            idea, total_segments, segments_per_set, save_to_files, output_directory, custom_character_roster,
+            no_narration, narration_only_first, cliffhanger_interval, content_rating
         )
         return {"result": result}
     except Exception as e:
@@ -148,6 +157,23 @@ def build_free_content(idea: str = None, segments: int = 5, custom_character_ros
             detail=f"Free content generation failed: {str(e)}"
         )
         
+def build_whatsapp_story(idea: str, segments: int = 7, custom_character_roster: list = None):
+    """Generate WhatsApp AI story with beautiful sceneries and moments."""
+    if not idea:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Missing story idea"
+        )
+    
+    try:
+        story = openai_service.generate_whatsapp_story(idea, segments, custom_character_roster)
+        return {"whatsapp_story": story}
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"WhatsApp story generation failed: {str(e)}"
+        )
+
 def generate_trending_ideas(content_type: str = "all", count: int = 5):
     """Generate trending, creative, and unique content ideas."""
     try:

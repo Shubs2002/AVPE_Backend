@@ -45,8 +45,8 @@ def extract_video_prompt_from_segment(story_data: dict, segment_number: int) -> 
         character_descriptions = []
         
         for char_id in characters_present:
-            # Find character in roster
-            character = next((c for c in characters_roster if c['id'] == char_id), None)
+            # Find character in roster by ID
+            character = next((c for c in characters_roster if c.get('id') == char_id), None)
             if character:
                 char_desc = character.get('video_prompt_description', '')
                 if char_desc:
@@ -321,7 +321,7 @@ def create_consistent_video_request(prompt_data: dict, characters_roster: list, 
     # Build detailed character descriptions
     character_details = []
     for char_id in characters_present:
-        character = next((c for c in characters_roster if c['id'] == char_id), None)
+        character = next((c for c in characters_roster if c.get('id') == char_id), None)
         if character:
             # Get detailed description
             video_desc = character.get('video_prompt_description', '')

@@ -1,0 +1,68 @@
+{
+  "title": "The Forgotten Glimmer",
+  "short_summary": "Alex wakes in a dim office, haunted by surreal memories. Each revelation unfolds like a puzzle, guiding him toward an unexpected truth.",
+  "description": "A breath‑taking journey through strange memories and eerie whispers—every second pulls you deeper in. Stick around for the moment that breaks it all, then follow for more mind‑bending tales!",
+  "hashtags": [
+    "#fyp",
+    "#viral",
+    "#shorts",
+    "#mystery",
+    "#storytime",
+    "#tiktokshorts",
+    "#quickstory",
+    "#shortfilm"
+  ],
+  "narrator_voice": {
+    "voice_type": "Adult Female",
+    "age_range": "30-40",
+    "accent": "General American",
+    "tone": "Mysterious, calm",
+    "target_demographic": "18-35",
+    "speaking_pace": "Slow, 3 wps",
+    "narration_style": "Descriptive",
+    "child_friendly_level": "None",
+    "voice_pitch": "Mid",
+    "expressiveness": "Soft intensity",
+    "voice_description": "A soothing yet slightly hushed voice that matches the eerie atmosphere."
+  },
+  "characters_roster": [
+    {
+      "id": "char_06d8fa3e03be",
+      "name": "Alex",
+      "physical_appearance": {
+        "gender": "Male",
+        "age": "late 20s",
+        "height": "5'11\"",
+        "body_type": "slim",
+        "skin_tone": "olive",
+        "hair_color": "black",
+        "hair_style": "short, messy",
+        "eye_color": "gray",
+        "eye_shape": "almond",
+        "facial_features": "angular cheekbones, faint scar across right eyebrow",
+        "distinctive_marks": "thin scar, faded tattoo of a compass on left wrist"
+      },
+      "clothing_style": {
+        "primary_outfit": "jeans, charcoal hoodie, worn sneakers",
+        "clothing_style": "casual, urban",
+        "colors": "dark tones, subtle blue accents",
+        "accessories": "watch, compass tattoo visible"
+      },
+      "personality": "Introspective, curious, slightly restless, with a quiet intensity.",
+      "role": "Protagonist, memory detective.",
+      "voice_mannerisms": {
+        "speaking_style": "soft, clipped",
+        "accent_or_tone": "American",
+        "typical_expressions": "hesitates, searches gaze"
+      },
+      "video_prompt_description": "An urban teen with a compass tattoo, wearing a hoodie, standing in a dim office, looking around bewildered."
+    }
+  ],
+  "generation_info": {
+    "total_segments": 10,
+    "segments_per_set": 10,
+    "total_sets": 1,
+    "generated_at": "2025-10-08T14:31:39.593885",
+    "idea": "string"
+  }
+}

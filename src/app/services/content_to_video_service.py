@@ -103,7 +103,7 @@ def extract_story_segment_prompt(content_data: dict, segment: dict, segment_numb
     character_descriptions = []
     
     for char_id in characters_present:
-        character = next((c for c in characters_roster if c['id'] == char_id), None)
+        character = next((c for c in characters_roster if c.get('id') == char_id), None)
         if character:
             char_desc = character.get('video_prompt_description', '')
             if char_desc:
@@ -250,7 +250,7 @@ def extract_meme_segment_prompt(content_data: dict, segment: dict, segment_numbe
     character_descriptions = []
     
     for char_id in characters_present:
-        character = next((c for c in characters_roster if c['id'] == char_id), None)
+        character = next((c for c in characters_roster if c.get('id') == char_id), None)
         if character:
             char_desc = character.get('video_prompt_description', '')
             if char_desc:

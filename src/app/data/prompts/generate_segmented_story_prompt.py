@@ -25,7 +25,7 @@ The prompts are organized by their use case:
    - Different from chunked: Each set is self-contained with metadata
 """
 
-def get_story_segments_prompt(idea: str, num_segments: int, custom_character_roster: list = None) -> str:
+def get_story_segments_prompt(idea: str, num_segments: int, custom_character_roster: list = None, content_type: str = "short_film") -> str:
     """
     Generate the prompt for creating story segments
     
@@ -33,6 +33,7 @@ def get_story_segments_prompt(idea: str, num_segments: int, custom_character_ros
         idea: The story idea/concept
         num_segments: Number of segments to generate
         custom_character_roster: Optional user-provided character roster that MUST be used
+        content_type: Type of content - "short_film" or "movie" (default: "short_film")
         
     Returns:
         str: The formatted prompt
@@ -58,8 +59,11 @@ def get_story_segments_prompt(idea: str, num_segments: int, custom_character_ros
     - The story MUST revolve around these characters - they are not optional
     """
     
+    # Determine the content type description
+    content_description = "Short Films" if content_type == "short_film" else "viral Movies"
+    
     return f"""
-    You are a professional Humanised Script-writer for viral films.
+    You are a professional Humanised Script-writer for {content_description}.
     you can add more custom fields for generating the best results as i am gonna feed your generated output into veo3 video generation model.
     {custom_roster_instruction}
 
@@ -407,9 +411,12 @@ def get_story_segments_prompt(idea: str, num_segments: int, custom_character_ros
     }}}}
     """
 
-def get_outline_for_story_segments_chunked(idea: str, num_segments: int, no_narrations: bool, narration_only_first: bool, cliffhanger_interval: int, adult_story: bool, custom_character_roster: list = None) -> str:
+def get_outline_for_story_segments_chunked(idea: str, num_segments: int, no_narrations: bool, narration_only_first: bool, cliffhanger_interval: int, adult_story: bool, custom_character_roster: list = None, content_type: str = "movie") -> str:
     """
     Generate the prompt for creating a story outline and metadata for chunked segment generation.
+    
+    Args:
+        content_type: Type of content - "short_film" or "movie" (default: "movie")
     This is the first step in the chunked generation process for large stories (100+ segments).
     
     Args:
@@ -446,9 +453,30 @@ def get_outline_for_story_segments_chunked(idea: str, num_segments: int, no_narr
     - The story MUST revolve around these characters - they are not optional
     """
     
+    # Determine the content type description
+    content_description = "Short Films" if content_type == "short_film" else "viral Movies"
+    
+    # Add cinematic camera instructions for movies
+    camera_instruction = ""
+    if content_type == "movie":
+        camera_instruction = """
+      
+      **CRITICAL CINEMATIC CAMERA REQUIREMENT FOR MOVIES**:
+      ALL camera movements and angles MUST be CINEMATIC and PROFESSIONAL. Use:
+      - Cinematic movements: dolly, tracking, crane, steadicam, orbital shots
+      - Professional angles: Dutch, low/high angles, over-the-shoulder
+      - Dynamic shots: whip pans, rack focus, push-in, pull-out
+      - Establishing shots: wide, aerial, sweeping panoramas
+      - Intimate moments: close-ups with shallow depth of field
+      - Action sequences: handheld, slow-motion, varied angles
+      
+      Make every camera movement CINEMATIC and PURPOSEFUL, not just "medium shot" or "close-up".
+      """
+    
     return f"""
-      You are a professional Humanised Script-writer for viral films.
+      You are a professional Humanised Script-writer for {content_description}.
       {custom_roster_instruction}
+      {camera_instruction}
       
       Task: Create a story outline and metadata for: "{idea}"
       
@@ -640,7 +668,8 @@ def get_story_segments_in_sets_prompt(
     cliffhanger_segments: list,
     adult_story: bool,
     existing_metadata: dict = None,
-    custom_character_roster: list = None
+    custom_character_roster: list = None,
+    content_type: str = "movie"
 ) -> str:
     """
     Generate the prompt for creating a specific set of story segments with complete metadata.
@@ -654,6 +683,7 @@ def get_story_segments_in_sets_prompt(
     Args:
         idea: The story idea/concept
         set_number: Which set is being generated (1-based)
+        content_type: Type of content - "short_film" or "movie" (default: "movie")
         total_segments: Total number of segments in the complete story
         segments_per_set: Number of segments per set
         actual_segments_in_set: Actual number of segments in this specific set
@@ -713,10 +743,40 @@ def get_story_segments_in_sets_prompt(
     else:
         metadata_instruction = ""
     
+    # Determine the content type description
+    content_description = "Short Films" if content_type == "short_film" else "viral Movies"
+    
+    # Add cinematic camera instructions for movies
+    camera_instruction = ""
+    if content_type == "movie":
+        camera_instruction = """
+    
+    **CRITICAL CINEMATIC CAMERA REQUIREMENT FOR MOVIES**:
+    ALL camera movements and angles MUST be CINEMATIC and PROFESSIONAL. Use:
+    - **Cinematic Movements**: Slow dolly in/out, smooth tracking shots, crane shots, steadicam follows, orbital shots
+    - **Professional Angles**: Dutch angles, low angles for power, high angles for vulnerability, over-the-shoulder for dialogue
+    - **Dynamic Shots**: Whip pans for energy, rack focus for emphasis, push-in for intensity, pull-out for revelation
+    - **Establishing Shots**: Wide establishing shots, aerial views, sweeping panoramas
+    - **Intimate Moments**: Close-ups with shallow depth of field, extreme close-ups for emotion
+    - **Action Sequences**: Handheld for intensity, slow-motion for impact, quick cuts with varied angles
+    
+    Examples of CINEMATIC camera descriptions:
+    - "Slow dolly in on character's face as realization dawns, shallow depth of field"
+    - "Sweeping crane shot rising from ground level to reveal the vast landscape"
+    - "Steadicam tracking shot following character through crowded street"
+    - "Low angle shot looking up at character, emphasizing power and dominance"
+    - "Orbital shot circling the couple as they embrace, golden hour lighting"
+    - "Extreme close-up of eyes with rack focus to background action"
+    - "Wide establishing shot with slow pan across the cityscape at sunset"
+    
+    DO NOT use simple descriptions like "medium shot" or "close-up" - make every camera movement CINEMATIC and PURPOSEFUL.
+    """
+    
     return f"""
-    You are a professional Humanised Script-writer for viral films.
+    You are a professional Humanised Script-writer for {content_description}.
     you can add more custom fields for generating the best results as i am gonna feed your generated output into veo3 video generation model.
 {custom_roster_instruction}
+{camera_instruction}
 {metadata_instruction}
     Task:
     - Create a story for adults based on: "{idea}"

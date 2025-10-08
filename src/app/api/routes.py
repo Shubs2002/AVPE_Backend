@@ -60,6 +60,10 @@ class GenerateFullmovieAutoRequest(BaseModel):
     save_to_files: Optional[bool] = True
     output_directory: Optional[str] = "generated_movie_script"
     custom_character_roster: Optional[List[dict]] = None  # User-provided main character roster
+    no_narration: Optional[bool] = False  # If true, no narration in any segment
+    narration_only_first: Optional[bool] = False  # If true, narration only in first segment
+    cliffhanger_interval: Optional[int] = 0  # Add cliffhangers every N segments (0 = no cliffhangers)
+    content_rating: Optional[str] = "U"  # Content rating: "U" (Universal), "U/A" (Parental Guidance), "A" (Adult)
 
 class GenerateMemeRequest(BaseModel):
     idea: Optional[str] = None  # Optional - will generate random meme if not provided
@@ -69,6 +73,11 @@ class GenerateMemeRequest(BaseModel):
 class GenerateFreeContentRequest(BaseModel):
     idea: Optional[str] = None  # Optional - will generate random content if not provided
     segments: Optional[int] = 7
+    custom_character_roster: Optional[List[dict]] = None  # User-provided main character roster
+
+class GenerateWhatsAppStoryRequest(BaseModel):
+    idea: str  # Story idea for WhatsApp AI story
+    segments: Optional[int] = 7  # Number of segments (default: 7 for WhatsApp stories)
     custom_character_roster: Optional[List[dict]] = None  # User-provided main character roster
 
 class RetryFailedStorySetsRequest(BaseModel):
@@ -100,7 +109,11 @@ async def build_full_story_auto_route(payload: GenerateFullmovieAutoRequest) -> 
         payload.segments_per_set,
         payload.save_to_files,
         payload.output_directory,
-        payload.custom_character_roster
+        payload.custom_character_roster,
+        payload.no_narration,
+        payload.narration_only_first,
+        payload.cliffhanger_interval,
+        payload.content_rating
     )
 
 @router.post("/generate-meme-segments")
@@ -112,6 +125,11 @@ async def build_meme_route(payload: GenerateMemeRequest) -> dict:
 async def build_free_content_route(payload: GenerateFreeContentRequest) -> dict:
     """Generate viral free content segments from an idea."""
     return screenwriter_controller.build_free_content(payload.idea, payload.segments, payload.custom_character_roster)
+
+@router.post("/generate-whatsapp-story")
+async def build_whatsapp_story_route(payload: GenerateWhatsAppStoryRequest) -> dict:
+    """Generate WhatsApp AI story with beautiful sceneries and moments animated by AI."""
+    return screenwriter_controller.build_whatsapp_story(payload.idea, payload.segments, payload.custom_character_roster)
 
 @router.post("/retry-failed-story-sets")
 async def retry_failed_story_sets_route(payload: RetryFailedStorySetsRequest) -> dict:
@@ -193,6 +211,11 @@ class RetryFailedSegmentsRequest(BaseModel):
     aspectRatio: Optional[str] = "9:16"
     download: Optional[bool] = False
 
+class DownloadVideoRequest(BaseModel):
+    video_url: str  # The video URL to download
+    filename: Optional[str] = None  # Optional custom filename
+    download_dir: Optional[str] = "downloads"  # Directory to save the video
+
 @router.post("/merge-content-videos")
 async def merge_content_videos_route(payload: MergeContentVideosRequest) -> dict:
     """Merge all content video segments into a complete final video. Set server_side=true for actual file merging."""
@@ -212,6 +235,11 @@ async def check_video_merger_route() -> dict:
 async def check_ffmpeg_route() -> dict:
     """Legacy endpoint - now returns cloud-native video merger status."""
     return cinematographer_controller.handle_check_ffmpeg({})
+
+@router.post("/download-video")
+async def download_video_route(payload: DownloadVideoRequest) -> dict:
+    """Download a video from a URL using the same download logic as video generation."""
+    return cinematographer_controller.handle_download_video(payload.dict())
 
 
 # ---------- CHARACTER MANAGEMENT (MONGODB-BASED) ----------

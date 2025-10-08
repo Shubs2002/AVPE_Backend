@@ -9,6 +9,7 @@ from app.data.prompts.generate_segmented_story_prompt import (
 )
 from app.data.prompts.generate_meme_segments_prompt import get_meme_segments_prompt
 from app.data.prompts.generate_free_content_prompt import get_free_content_prompt
+from app.data.prompts.generate_whatsapp_story_prompt import get_whatsapp_story_prompt
 from app.data.prompts.generate_trending_ideas_prompt import get_trending_ideas_prompt
 from app.data.prompts.analyze_character_prompt import get_character_analysis_prompt
 from app.utils.id_generator import generate_character_id
@@ -17,22 +18,26 @@ from app.utils.id_generator import generate_character_id
 def ensure_character_ids(custom_character_roster: list) -> list:
     """
     Ensure all characters in the roster have unique IDs.
-    Generates UUIDs for characters missing IDs.
+    ONLY generates IDs for characters that don't already have them.
+    If user provides IDs, they are preserved.
     
     Args:
         custom_character_roster: List of character dictionaries
     
     Returns:
-        list: Character roster with guaranteed IDs
+        list: Character roster with IDs (user-provided or auto-generated)
     """
     if not custom_character_roster:
         return custom_character_roster
     
     for character in custom_character_roster:
+        # Only generate ID if character doesn't have one or has 'unknown'
         if not character.get('id') or character.get('id') == 'unknown':
-            # Generate a unique ID using the centralized utility
             character['id'] = generate_character_id()
-            print(f"🆔 Generated ID for character '{character.get('name', 'Unknown')}': {character['id']}")
+            print(f"🆔 Auto-generated ID for character '{character.get('name', 'Unknown')}': {character['id']}")
+        else:
+            # User provided an ID, keep it
+            print(f"✅ Using user-provided ID for character '{character.get('name', 'Unknown')}': {character['id']}")
     
     return custom_character_roster
 
@@ -45,7 +50,7 @@ def generate_story_segments(idea: str, num_segments: int = 7, custom_character_r
     if num_segments > 20:
         return generate_story_segments_chunked(idea, num_segments, custom_character_roster)
     
-    prompt = get_story_segments_prompt(idea, num_segments, custom_character_roster)
+    prompt = get_story_segments_prompt(idea, num_segments, custom_character_roster, content_type="short_film")
     raw_output = None
     try:
         client = get_openai_client()
@@ -132,7 +137,7 @@ def generate_story_segments_chunked(idea: str, num_segments: int, custom_charact
     print(f"📋 Parsed requirements: no_narrations={no_narrations}, narration_only_first={narration_only_first}, cliffhanger_interval={cliffhanger_interval}, adult_story={adult_story}")
     
     # First, generate the story outline and metadata
-    outline_prompt = get_outline_for_story_segments_chunked(idea, num_segments, no_narrations, narration_only_first, cliffhanger_interval, adult_story, custom_character_roster)
+    outline_prompt = get_outline_for_story_segments_chunked(idea, num_segments, no_narrations, narration_only_first, cliffhanger_interval, adult_story, custom_character_roster, content_type="movie")
     
     try:
         # Generate story outline and metadata
@@ -241,7 +246,7 @@ def generate_story_segments_chunked(idea: str, num_segments: int, custom_charact
         print(f"❌ {error_msg}")
         raise ValueError(error_msg)
 
-def generate_story_segments_in_sets(idea: str, total_segments: int, segments_per_set: int = 10, set_number: int = 1, existing_metadata: dict = None, custom_character_roster: list = None):
+def generate_story_segments_in_sets(idea: str, total_segments: int, segments_per_set: int = 10, set_number: int = 1, existing_metadata: dict = None, custom_character_roster: list = None, no_narration: bool = False, narration_only_first: bool = False, cliffhanger_interval: int = 0, content_rating: str = "U"):
     """
     Generate story segments in sets of 10 (or specified amount) with complete metadata
     
@@ -251,31 +256,25 @@ def generate_story_segments_in_sets(idea: str, total_segments: int, segments_per
         segments_per_set: Number of segments to generate per set (default: 10)
         set_number: Which set to generate (1-based indexing)
         existing_metadata: Optional metadata from first set to ensure consistency (title, characters, narrator_voice, etc.)
+        custom_character_roster: User-provided character roster
+        no_narration: If True, no narration in any segment
+        narration_only_first: If True, narration only in first segment
+        cliffhanger_interval: Add cliffhangers every N segments (0 = no cliffhangers)
+        content_rating: Content rating - "U" (Universal), "U/A" (Parental Guidance), "A" (Adult)
     
     Returns:
         dict: Complete story data with metadata + only the requested set of segments
     """
     print(f"🎬 Generating set {set_number} ({segments_per_set} segments) of {total_segments} total segments...")
+    print(f"📋 Settings: no_narration={no_narration}, narration_only_first={narration_only_first}, cliffhanger_interval={cliffhanger_interval}, content_rating={content_rating}")
     
     # Ensure all characters have IDs
     if custom_character_roster:
         custom_character_roster = ensure_character_ids(custom_character_roster)
     
-    # Parse special requirements from the idea
-    idea_upper = idea.upper()
-    no_narrations = 'NO NARRATION' in idea_upper
-    narration_only_first = 'ONLY 1ST SEGMENT' in idea_upper or 'ONLY FIRST SEGMENT' in idea_upper
-    adult_story = 'ADULT' in idea_upper
-    
-    # Look for cliffhanger patterns
-    cliffhanger_interval = 0
-    if '150TH SEGMENT' in idea_upper or 'EVERY 150' in idea_upper:
-        cliffhanger_interval = 150
-    elif 'CLIFFHANGER' in idea_upper:
-        import re
-        match = re.search(r'EVERY (\d+)', idea_upper)
-        if match:
-            cliffhanger_interval = int(match.group(1))
+    # Use provided parameters instead of parsing from idea
+    no_narrations = no_narration
+    adult_story = (content_rating == "A")  # Adult content only if rating is "A"
     
     # Calculate segment range for this set
     start_segment = (set_number - 1) * segments_per_set + 1
@@ -306,7 +305,8 @@ def generate_story_segments_in_sets(idea: str, total_segments: int, segments_per
         cliffhanger_segments=cliffhanger_segments,
         adult_story=adult_story,
         existing_metadata=existing_metadata,
-        custom_character_roster=custom_character_roster
+        custom_character_roster=custom_character_roster,
+        content_type="movie"
     )
     
     raw_output = None
@@ -382,13 +382,19 @@ def generate_story_segments_in_sets(idea: str, total_segments: int, segments_per
             error_msg += "\n\nNo output received from API"
         raise ValueError(error_msg)
 
-def generate_full_story_automatically(idea: str, total_segments: int = None, segments_per_set: int = 10, save_to_files: bool = True, output_directory: str = "generated_stories", custom_character_roster: list = None):
+def generate_full_story_automatically(idea: str, total_segments: int = None, segments_per_set: int = 10, save_to_files: bool = True, output_directory: str = "generated_stories", custom_character_roster: list = None, no_narration: bool = False, narration_only_first: bool = False, cliffhanger_interval: int = 0, content_rating: str = "U"):
     """
     Automatically generate a complete story by:
     1. Detecting the total segments needed from the idea
     2. Generating all sets automatically with retry logic
     3. Saving each set to JSON files
     4. Returning a summary of all generated content
+    
+    Args:
+        no_narration: If True, no narration in any segment
+        narration_only_first: If True, narration only in first segment
+        cliffhanger_interval: Add cliffhangers every N segments (0 = no cliffhangers)
+        content_rating: Content rating - "U" (Universal), "U/A" (Parental Guidance), "A" (Adult)
     """
     import os
     import json
@@ -439,7 +445,11 @@ def generate_full_story_automatically(idea: str, total_segments: int = None, seg
                     segments_per_set, 
                     set_number,
                     existing_metadata=story_metadata if set_number > 1 else None,
-                    custom_character_roster=custom_character_roster
+                    custom_character_roster=custom_character_roster,
+                    no_narration=no_narration,
+                    narration_only_first=narration_only_first,
+                    cliffhanger_interval=cliffhanger_interval,
+                    content_rating=content_rating
                 )
                 
                 # Success - return the generated set
@@ -478,7 +488,11 @@ def generate_full_story_automatically(idea: str, total_segments: int = None, seg
                         'segments_per_set': segments_per_set,
                         'total_sets': total_sets,
                         'generated_at': datetime.now().isoformat(),
-                        'idea': idea
+                        'idea': idea,
+                        'no_narration': no_narration,
+                        'narration_only_first': narration_only_first,
+                        'cliffhanger_interval': cliffhanger_interval,
+                        'content_rating': content_rating
                     }
                 }
                 print(f"✅ Stored metadata from Set 1 for consistency across all sets")
@@ -611,6 +625,10 @@ def retry_failed_story_sets(previous_result: dict, max_retries: int = 3):
     idea = gen_info.get('idea')
     total_segments = gen_info.get('total_segments')
     segments_per_set = gen_info.get('segments_per_set', 10)
+    no_narration = gen_info.get('no_narration', False)
+    narration_only_first = gen_info.get('narration_only_first', False)
+    cliffhanger_interval = gen_info.get('cliffhanger_interval', 0)
+    content_rating = gen_info.get('content_rating', 'U')
     
     if not idea:
         raise ValueError("Original idea not found in metadata")
@@ -645,7 +663,11 @@ def retry_failed_story_sets(previous_result: dict, max_retries: int = 3):
                     segments_per_set, 
                     set_number,
                     existing_metadata=story_metadata,
-                    custom_character_roster=story_metadata.get('characters_roster')
+                    custom_character_roster=story_metadata.get('characters_roster'),
+                    no_narration=no_narration,
+                    narration_only_first=narration_only_first,
+                    cliffhanger_interval=cliffhanger_interval,
+                    content_rating=content_rating
                 )
                 
                 # Success - return the generated set
@@ -941,6 +963,79 @@ def generate_free_content(idea: str, num_segments: int = 7, custom_character_ros
         raise ValueError(error_msg)
 
     return content_data
+
+def generate_whatsapp_story(idea: str, num_segments: int = 7, custom_character_roster: list = None):
+    """
+    Generate WhatsApp AI story with beautiful sceneries and moments
+    
+    Args:
+        idea: Story idea/concept
+        num_segments: Number of segments (default 7 for WhatsApp stories)
+        custom_character_roster: Optional user-provided character roster
+    
+    Returns:
+        dict: WhatsApp story data with segments
+    """
+    # Ensure all characters have IDs
+    if custom_character_roster:
+        custom_character_roster = ensure_character_ids(custom_character_roster)
+    
+    prompt = get_whatsapp_story_prompt(idea, num_segments, custom_character_roster)
+    raw_output = None
+    try:
+        client = get_openai_client()
+        response = client.chat.completions.create(
+            model=settings.SCRIPT_MODEL,
+            messages=[{"role": "user", "content": prompt}],
+        )
+
+        # Validate response exists
+        if response is None:
+            raise ValueError("API returned None response")
+        
+        # Validate response structure
+        if not hasattr(response, 'choices') or not response.choices:
+            raise ValueError(f"Invalid API response structure: {response}")
+        
+        # Validate message content
+        if not hasattr(response.choices[0], 'message') or not hasattr(response.choices[0].message, 'content'):
+            raise ValueError(f"Missing message content in response: {response.choices[0]}")
+        
+        raw_output = response.choices[0].message.content
+        
+        # Validate content is not None or empty
+        if not raw_output or raw_output.strip() == "":
+            raise ValueError("API returned empty content")
+        
+        raw_output = raw_output.strip()
+
+        # Remove code block wrappers
+        if raw_output.startswith("```"):
+            raw_output = raw_output.split("```json")[-1].split("```")[0].strip()
+        
+        # Validate JSON is not empty after cleanup
+        if not raw_output:
+            raise ValueError("Content became empty after removing code blocks")
+
+        whatsapp_story_data = json.loads(raw_output)
+        
+        print(f"✅ Successfully generated WhatsApp story with {len(whatsapp_story_data.get('segments', []))} segments")
+
+    except json.JSONDecodeError as e:
+        error_msg = f"JSON parsing failed for WhatsApp story: {e}"
+        if raw_output:
+            error_msg += f"\n\nRaw output:\n{raw_output[:500]}"
+        raise ValueError(error_msg)
+    
+    except Exception as e:
+        error_msg = f"Error generating WhatsApp story: {e}"
+        if raw_output:
+            error_msg += f"\n\nRaw output:\n{raw_output[:500]}"
+        else:
+            error_msg += "\n\nNo output received from API"
+        raise ValueError(error_msg)
+
+    return whatsapp_story_data
     
 def generate_trending_ideas(content_type: str = "all", count: int = 5):
     """
@@ -1101,12 +1196,8 @@ def analyze_character_from_image(image_data: str, image_format: str = "jpeg", ch
 
         character_data = json.loads(raw_output)
         
-        # Generate unique IDs for characters using centralized utility
-        if 'characters_roster' in character_data:
-            for character in character_data['characters_roster']:
-                # Always generate a new UUID for character ID
-                character['id'] = generate_character_id()
-                print(f"🆔 Generated ID for character '{character.get('name', 'Unknown')}': {character['id']}")
+        # Character IDs are no longer auto-generated
+        # Characters will use their names or client-provided IDs if needed
         
         characters_found = len(character_data.get('characters_roster', []))
         print(f"✅ Successfully analyzed {characters_found} character(s) from image")
