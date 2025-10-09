@@ -10,6 +10,7 @@ from app.data.prompts.generate_segmented_story_prompt import (
 from app.data.prompts.generate_meme_segments_prompt import get_meme_segments_prompt
 from app.data.prompts.generate_free_content_prompt import get_free_content_prompt
 from app.data.prompts.generate_whatsapp_story_prompt import get_whatsapp_story_prompt
+from app.data.prompts.generate_music_video_prompt import get_music_video_prompt
 from app.data.prompts.generate_trending_ideas_prompt import get_trending_ideas_prompt
 from app.data.prompts.analyze_character_prompt import get_character_analysis_prompt
 from app.utils.id_generator import generate_character_id
@@ -1036,6 +1037,93 @@ def generate_whatsapp_story(idea: str, num_segments: int = 7, custom_character_r
         raise ValueError(error_msg)
 
     return whatsapp_story_data
+
+def generate_music_video(song_lyrics: str, song_length: int, background_voice_needed: bool = False, additional_dialogues: list = None, custom_character_roster: list = None, music_genre: str = None, visual_theme: str = None):
+    """
+    Generate AI music video prompts from song lyrics
+    
+    Args:
+        song_lyrics: The complete song lyrics
+        song_length: Song length in seconds
+        background_voice_needed: Whether background narration is needed
+        additional_dialogues: Optional dialogues to add
+        custom_character_roster: Optional character roster
+        music_genre: Optional music genre
+        visual_theme: Optional visual theme
+    
+    Returns:
+        dict: Music video data with segments
+    """
+    # Ensure all characters have IDs
+    if custom_character_roster:
+        custom_character_roster = ensure_character_ids(custom_character_roster)
+    
+    prompt = get_music_video_prompt(
+        song_lyrics, 
+        song_length, 
+        background_voice_needed, 
+        additional_dialogues, 
+        custom_character_roster,
+        music_genre,
+        visual_theme
+    )
+    
+    raw_output = None
+    try:
+        client = get_openai_client()
+        response = client.chat.completions.create(
+            model=settings.SCRIPT_MODEL,
+            messages=[{"role": "user", "content": prompt}],
+        )
+
+        # Validate response exists
+        if response is None:
+            raise ValueError("API returned None response")
+        
+        # Validate response structure
+        if not hasattr(response, 'choices') or not response.choices:
+            raise ValueError(f"Invalid API response structure: {response}")
+        
+        # Validate message content
+        if not hasattr(response.choices[0], 'message') or not hasattr(response.choices[0].message, 'content'):
+            raise ValueError(f"Missing message content in response: {response.choices[0]}")
+        
+        raw_output = response.choices[0].message.content
+        
+        # Validate content is not None or empty
+        if not raw_output or raw_output.strip() == "":
+            raise ValueError("API returned empty content")
+        
+        raw_output = raw_output.strip()
+
+        # Remove code block wrappers
+        if raw_output.startswith("```"):
+            raw_output = raw_output.split("```json")[-1].split("```")[0].strip()
+        
+        # Validate JSON is not empty after cleanup
+        if not raw_output:
+            raise ValueError("Content became empty after removing code blocks")
+
+        music_video_data = json.loads(raw_output)
+        
+        print(f"✅ Successfully generated music video with {len(music_video_data.get('segments', []))} segments")
+        print(f"🎵 Song length: {song_length}s, Total segments: {music_video_data.get('total_segments', 'N/A')}")
+
+    except json.JSONDecodeError as e:
+        error_msg = f"JSON parsing failed for music video: {e}"
+        if raw_output:
+            error_msg += f"\n\nRaw output:\n{raw_output[:500]}"
+        raise ValueError(error_msg)
+    
+    except Exception as e:
+        error_msg = f"Error generating music video: {e}"
+        if raw_output:
+            error_msg += f"\n\nRaw output:\n{raw_output[:500]}"
+        else:
+            error_msg += "\n\nNo output received from API"
+        raise ValueError(error_msg)
+
+    return music_video_data
     
 def generate_trending_ideas(content_type: str = "all", count: int = 5):
     """

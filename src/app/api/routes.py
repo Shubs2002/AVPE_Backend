@@ -80,6 +80,15 @@ class GenerateWhatsAppStoryRequest(BaseModel):
     segments: Optional[int] = 7  # Number of segments (default: 7 for WhatsApp stories)
     custom_character_roster: Optional[List[dict]] = None  # User-provided main character roster
 
+class GenerateMusicVideoRequest(BaseModel):
+    song_lyrics: str  # The complete song lyrics
+    song_length: int  # Song length in seconds
+    background_voice_needed: Optional[bool] = False  # Whether background narration/voice is needed
+    additional_dialogues: Optional[List[dict]] = None  # Optional dialogues to add between verses [{"timestamp": 30, "character": "char_id", "line": "text"}]
+    custom_character_roster: Optional[List[dict]] = None  # User-provided character roster for the music video
+    music_genre: Optional[str] = None  # Optional music genre (pop, rock, hip-hop, etc.)
+    visual_theme: Optional[str] = None  # Optional visual theme/concept for the video
+
 class RetryFailedStorySetsRequest(BaseModel):
     previous_result: dict  # Result from previous generate_full_story_automatically call
     max_retries: Optional[int] = 3  # Maximum retry attempts per failed set
@@ -130,6 +139,19 @@ async def build_free_content_route(payload: GenerateFreeContentRequest) -> dict:
 async def build_whatsapp_story_route(payload: GenerateWhatsAppStoryRequest) -> dict:
     """Generate WhatsApp AI story with beautiful sceneries and moments animated by AI."""
     return screenwriter_controller.build_whatsapp_story(payload.idea, payload.segments, payload.custom_character_roster)
+
+@router.post("/generate-music-video")
+async def build_music_video_route(payload: GenerateMusicVideoRequest) -> dict:
+    """Generate AI music video prompts from song lyrics for Veo3 video generation."""
+    return screenwriter_controller.build_music_video(
+        payload.song_lyrics,
+        payload.song_length,
+        payload.background_voice_needed,
+        payload.additional_dialogues,
+        payload.custom_character_roster,
+        payload.music_genre,
+        payload.visual_theme
+    )
 
 @router.post("/retry-failed-story-sets")
 async def retry_failed_story_sets_route(payload: RetryFailedStorySetsRequest) -> dict:

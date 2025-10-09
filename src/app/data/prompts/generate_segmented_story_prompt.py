@@ -67,8 +67,44 @@ def get_story_segments_prompt(idea: str, num_segments: int, custom_character_ros
     you can add more custom fields for generating the best results as i am gonna feed your generated output into veo3 video generation model.
     {custom_roster_instruction}
 
-    **CRITICAL CONSISTENCY REQUIREMENT**:
-    The video generation model (Veo3) creates each segment independently. To ensure the SAME character appears identically across ALL segments, you MUST provide EXTREMELY DETAILED character descriptions covering EVERY visible feature. Even slight variations in description will result in different-looking characters between segments. Describe characters with forensic-level detail - every skin tone nuance, every facial feature measurement, every clothing item specification. Think of it as creating a police sketch that must match perfectly across 100 different artists.
+    **CRITICAL CONSISTENCY REQUIREMENT - ULTRA-DETAILED CHARACTER DESCRIPTIONS**:
+    The video generation model (Veo3) creates each segment independently. To ensure the SAME character appears identically across ALL segments, you MUST provide EXTREMELY DETAILED character descriptions covering EVERY visible feature.
+    
+    **MANDATORY CHARACTER DETAIL REQUIREMENTS**:
+    
+    **SKIN**: Exact skin tone with undertones (e.g., "Fair skin with warm peachy undertones", "Deep brown with rich mahogany undertones"), skin texture (smooth/textured/porous), any skin features (freckles, moles, dimples, laugh lines)
+    
+    **FACE STRUCTURE**: Exact face shape (oval/round/square/heart/diamond), forehead height and width, cheekbone prominence, jawline definition (strong/soft/angular), chin shape (pointed/rounded/square/cleft)
+    
+    **HAIR - COMPLETE DETAILS**: 
+    - Exact color with undertones and highlights
+    - Precise length (e.g., "shoulder-length", "3mm buzz cut", "waist-length")
+    - Texture (thick/fine/coarse/silky, straight/wavy/curly type)
+    - Style (how it's worn, parting, layers)
+    - Hairline (straight/widow's peak/receding)
+    - **BALDNESS STAGE** if applicable: Use Norwood Scale (e.g., "No baldness", "Norwood 2 - slight temple recession", "Norwood 4 - crown thinning", "Completely bald", "Thinning at crown")
+    - Facial hair: exact style, length, grooming (clean-shaven/stubble/beard/goatee/mustache)
+    
+    **EYES - FORENSIC DETAIL**:
+    - Exact color with any flecks or rings (e.g., "Deep brown with amber flecks", "Blue with gray outer ring")
+    - Shape (almond/round/hooded/monolid/upturned/downturned)
+    - Size (large/medium/small), spacing (wide-set/close-set)
+    - Eyelashes (long/short/thick/sparse/curled)
+    - Eyebrows (thick/thin/arched/straight/bushy, exact color)
+    
+    **NOSE**: Complete description - bridge height (high/low), width (narrow/wide), tip shape (pointed/rounded/bulbous), nostril size and flare
+    
+    **LIPS**: Fullness (thin/medium/full), cupid's bow definition, natural color, smile width
+    
+    **OTHER FACIAL FEATURES**: Ears (size, protrusion), neck (long/short/thick/slender), Adam's apple visibility
+    
+    **BODY**: Height (exact), body type (detailed), weight/build, posture
+    
+    **DISTINCTIVE MARKS**: Every scar, birthmark, tattoo, piercing, mole - exact location and description
+    
+    **AGE INDICATORS**: Wrinkles, crow's feet, laugh lines, gray hair, skin elasticity
+    
+    Think of it as creating a police sketch that must match perfectly across 100 different artists. EVERY detail matters for AI consistency.
 
     Task:
     - Create a story for all ages idea based on: "{idea}"

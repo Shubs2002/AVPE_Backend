@@ -174,6 +174,37 @@ def build_whatsapp_story(idea: str, segments: int = 7, custom_character_roster: 
             detail=f"WhatsApp story generation failed: {str(e)}"
         )
 
+def build_music_video(song_lyrics: str, song_length: int, background_voice_needed: bool = False, additional_dialogues: list = None, custom_character_roster: list = None, music_genre: str = None, visual_theme: str = None):
+    """Generate AI music video prompts from song lyrics."""
+    if not song_lyrics:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Missing song lyrics"
+        )
+    
+    if song_length <= 0:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Song length must be greater than 0 seconds"
+        )
+    
+    try:
+        music_video = openai_service.generate_music_video(
+            song_lyrics, 
+            song_length, 
+            background_voice_needed, 
+            additional_dialogues, 
+            custom_character_roster,
+            music_genre,
+            visual_theme
+        )
+        return {"music_video": music_video}
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Music video generation failed: {str(e)}"
+        )
+
 def generate_trending_ideas(content_type: str = "all", count: int = 5):
     """Generate trending, creative, and unique content ideas."""
     try:

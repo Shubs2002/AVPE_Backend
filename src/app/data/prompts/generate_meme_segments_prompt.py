@@ -64,8 +64,36 @@ def get_meme_segments_prompt(idea: str, num_segments: int, custom_character_rost
     you can add more custom fields for generating the best results as i am gonna feed your generated output into veo3 video generation model.
     {custom_roster_instruction}
 
-    **CRITICAL CONSISTENCY REQUIREMENT**:
-    The video generation model (Veo3) creates each segment independently. To ensure the SAME character appears identically across ALL segments, you MUST provide EXTREMELY DETAILED character descriptions covering EVERY visible feature. Even slight variations in description will result in different-looking characters between segments. Describe characters with forensic-level detail - every skin tone nuance, every facial feature measurement, every clothing item specification. Think of it as creating a police sketch that must match perfectly across 100 different artists.
+    **CRITICAL CONSISTENCY REQUIREMENT - ULTRA-DETAILED CHARACTER DESCRIPTIONS**:
+    The video generation model (Veo3) creates each segment independently. To ensure the SAME character appears identically across ALL segments, you MUST provide EXTREMELY DETAILED character descriptions covering EVERY visible feature.
+    
+    **MANDATORY CHARACTER DETAIL REQUIREMENTS FOR MEMES**:
+    
+    **SKIN**: Exact skin tone with undertones, texture, features (freckles, moles, dimples, laugh lines)
+    
+    **FACE**: Exact face shape, forehead, cheekbones, jawline, chin shape
+    
+    **HAIR - COMPLETE DETAILS**: 
+    - Exact color with undertones/highlights
+    - Precise length and style
+    - Texture (thick/fine/coarse/silky, straight/wavy/curly)
+    - Hairline description
+    - **BALDNESS STAGE**: Norwood Scale if applicable (e.g., "No baldness", "Norwood 2 - temple recession", "Norwood 4 - crown thinning", "Completely bald", "Thinning at crown")
+    - Facial hair: exact style, length, grooming
+    
+    **EYES**: Exact color with flecks/rings, shape, size, spacing, eyelashes, eyebrows (thickness, arch, color)
+    
+    **NOSE**: Bridge height, width, tip shape, nostril details
+    
+    **LIPS**: Fullness, cupid's bow, natural color, smile width
+    
+    **OTHER**: Ears, neck, body type, height, posture
+    
+    **DISTINCTIVE MARKS**: Every scar, birthmark, tattoo, piercing, mole with exact location
+    
+    **AGE INDICATORS**: Wrinkles, gray hair, skin elasticity
+    
+    For memes, facial expressions are CRITICAL - describe how features change during reactions (eyes widen, eyebrows raise, mouth opens, etc.)
 
     Task:
     - Create a viral meme video concept based on: "{idea}"

@@ -74,16 +74,36 @@ def get_whatsapp_story_prompt(idea: str, num_segments: int, custom_character_ros
     5. **Emotional Moments**: Create visually stunning emotional beats
     6. **AI-Ready Descriptions**: Detailed enough for AI video generation (Veo3)
     
-    **CHARACTER CONSISTENCY** (CRITICAL):
-    For AI video generation, characters MUST look identical across all segments. Provide EXTREMELY DETAILED descriptions:
-    - Exact skin tone (e.g., "warm olive skin with golden undertones")
-    - Precise facial features (eye shape, nose, lips, face structure)
-    - Hair details (color, style, length, texture)
-    - Clothing specifics (colors, patterns, style, fit)
-    - Body type and height
-    - Distinctive features (freckles, dimples, etc.)
+    **CHARACTER CONSISTENCY** (CRITICAL) - ULTRA-DETAILED REQUIREMENTS:
+    For AI video generation, characters MUST look identical across all segments. Provide FORENSIC-LEVEL DETAILED descriptions:
     
-    Think of it as creating a reference sheet that must match perfectly across all segments.
+    **SKIN**: Exact skin tone with undertones (e.g., "warm olive skin with golden undertones"), texture, any features (freckles, moles, dimples, laugh lines)
+    
+    **FACE**: Exact face shape (oval/round/square/heart), forehead, cheekbones, jawline, chin shape
+    
+    **HAIR - COMPLETE DETAILS**:
+    - Exact color with undertones/highlights
+    - Precise length and style
+    - Texture (thick/fine/coarse/silky, straight/wavy/curly)
+    - Hairline description
+    - **BALDNESS STAGE**: If applicable - Norwood Scale (e.g., "No baldness", "Norwood 2 - temple recession", "Completely bald", "Thinning at crown")
+    - Facial hair: exact style, length, grooming
+    
+    **EYES**: Exact color with flecks/rings, shape, size, spacing, eyelashes, eyebrows (thickness, arch, color)
+    
+    **NOSE**: Bridge height, width, tip shape, nostril details
+    
+    **LIPS**: Fullness, cupid's bow, natural color, smile width
+    
+    **OTHER**: Ears, neck, body type (detailed), height (exact), posture
+    
+    **CLOTHING**: Every item with colors, patterns, style, fit, fabric
+    
+    **DISTINCTIVE MARKS**: Every scar, birthmark, tattoo, piercing, mole with exact location
+    
+    **AGE INDICATORS**: Wrinkles, gray hair, skin elasticity
+    
+    Think of it as creating a police sketch that must match perfectly across all segments.
     
     **OUTPUT FORMAT** (JSON):
     {{

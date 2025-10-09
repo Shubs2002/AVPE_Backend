@@ -65,8 +65,37 @@ def get_free_content_prompt(idea: str, num_segments: int, custom_character_roste
     you can add more custom fields for generating the best results as i am gonna feed your generated output into veo3 video generation model.
     {custom_roster_instruction}
 
-    **CRITICAL CONSISTENCY REQUIREMENT**:
-    The video generation model (Veo3) creates each segment independently. To ensure the SAME character appears identically across ALL segments, you MUST provide EXTREMELY DETAILED character descriptions covering EVERY visible feature. Even slight variations in description will result in different-looking characters between segments. Describe characters with forensic-level detail - every skin tone nuance, every facial feature measurement, every clothing item specification. Think of it as creating a police sketch that must match perfectly across 100 different artists.
+    **CRITICAL CONSISTENCY REQUIREMENT - ULTRA-DETAILED CHARACTER DESCRIPTIONS**:
+    The video generation model (Veo3) creates each segment independently. To ensure the SAME character appears identically across ALL segments, you MUST provide EXTREMELY DETAILED character descriptions covering EVERY visible feature.
+    
+    **MANDATORY CHARACTER DETAIL REQUIREMENTS FOR FREE CONTENT**:
+    
+    **SKIN**: Exact skin tone with undertones (e.g., "Fair with warm peachy undertones", "Deep brown with mahogany undertones"), texture, features (freckles, moles, dimples)
+    
+    **FACE**: Exact face shape (oval/round/square/heart), forehead height, cheekbone prominence, jawline definition, chin shape
+    
+    **HAIR - COMPLETE DETAILS**: 
+    - Exact color with undertones and highlights
+    - Precise length (e.g., "shoulder-length", "buzz cut 3mm", "waist-length")
+    - Texture (thick/fine/coarse/silky, straight/wavy/curly type)
+    - Style (how worn, parting, layers)
+    - Hairline (straight/widow's peak/receding)
+    - **BALDNESS STAGE**: Norwood Scale if applicable (e.g., "No baldness", "Norwood 2 - slight temple recession", "Norwood 4 - crown thinning", "Completely bald by choice", "Thinning at crown")
+    - Facial hair: exact style, length, grooming (clean-shaven/stubble/beard/goatee/mustache with measurements)
+    
+    **EYES**: Exact color with flecks or rings (e.g., "Deep brown with amber flecks"), shape (almond/round/hooded/monolid), size, spacing, eyelashes (long/short/thick/sparse), eyebrows (thick/thin/arched/straight, exact color)
+    
+    **NOSE**: Bridge height (high/low), width (narrow/wide), tip shape (pointed/rounded/bulbous), nostril size and flare
+    
+    **LIPS**: Fullness (thin/medium/full), cupid's bow definition, natural color, smile width
+    
+    **OTHER FEATURES**: Ears (size, protrusion), neck (long/short/thick/slender), body type (detailed), height (exact), posture
+    
+    **DISTINCTIVE MARKS**: Every scar, birthmark, tattoo, piercing, mole - exact location and size
+    
+    **AGE INDICATORS**: Wrinkles, crow's feet, laugh lines, gray hair placement, skin elasticity
+    
+    For presenters/hosts, describe how they look while explaining (friendly expression, engaged eyes, natural smile, etc.)
 
     Task:
     - Create viral content based on: "{idea}"
