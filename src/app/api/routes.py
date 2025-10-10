@@ -9,6 +9,11 @@ from app.controllers import (
     screenwriter_controller,
     cinematographer_controller,
 )
+from app.utils.story_retry_helper import (
+    get_retry_info_by_title,
+    construct_retry_payload
+)
+from app.utils.file_storage_manager import storage_manager, ContentType
 
 router = APIRouter()
 
@@ -93,6 +98,11 @@ class RetryFailedStorySetsRequest(BaseModel):
     previous_result: dict  # Result from previous generate_full_story_automatically call
     max_retries: Optional[int] = 3  # Maximum retry attempts per failed set
 
+class RetryStoryByTitleRequest(BaseModel):
+    title: str  # Story title (e.g., "Midnight Protocol")
+    max_retries: Optional[int] = 3  # Maximum retry attempts per failed set
+    base_dir: Optional[str] = "generated_movie_script"  # Directory where stories are saved
+
 @router.post("/generate-prompt-based-story")
 async def build_story_route(payload: GenerateStoryRequest) -> dict:
     """Generate a story outline from an idea."""
@@ -157,6 +167,77 @@ async def build_music_video_route(payload: GenerateMusicVideoRequest) -> dict:
 async def retry_failed_story_sets_route(payload: RetryFailedStorySetsRequest) -> dict:
     """Retry failed sets from a previous story generation attempt with exponential backoff."""
     return screenwriter_controller.retry_failed_story_sets(payload.previous_result, payload.max_retries)
+
+
+@router.get("/story-status/{title}")
+async def get_story_status_route(title: str, base_dir: str = "generated_movie_script") -> dict:
+    """
+    Check the status of a story generation - see which sets succeeded and which failed.
+    
+    Example:
+        GET /api/story-status/Midnight Protocol
+    """
+    return get_retry_info_by_title(title, base_dir)
+
+
+@router.post("/retry-story-by-title")
+async def retry_story_by_title_route(payload: RetryStoryByTitleRequest) -> dict:
+    """
+    Retry failed sets for a story by providing just the title.
+    Automatically finds the metadata and determines which sets failed.
+    
+    Example:
+        POST /api/retry-story-by-title
+        {
+            "title": "Midnight Protocol",
+            "max_retries": 3
+        }
+    """
+    # Get story info and failed sets
+    retry_info = get_retry_info_by_title(payload.title, payload.base_dir)
+    
+    if not retry_info["success"]:
+        return {
+            "success": False,
+            "error": retry_info["error"],
+            "title": payload.title
+        }
+    
+    # Check if there are any failed sets
+    if not retry_info["failed_sets"]:
+        return {
+            "success": True,
+            "message": retry_info["message"],
+            "title": payload.title,
+            "total_sets": retry_info["total_sets"],
+            "all_completed": True
+        }
+    
+    # Construct retry payload
+    retry_payload_data = construct_retry_payload(
+        title=payload.title,
+        metadata=retry_info["metadata"],
+        failed_sets=retry_info["failed_sets"],
+        max_retries=payload.max_retries,
+        base_dir=payload.base_dir
+    )
+    
+    # Call the existing retry function
+    controller_result = screenwriter_controller.retry_failed_story_sets(
+        retry_payload_data["previous_result"],
+        retry_payload_data["max_retries"]
+    )
+    
+    # Extract the actual result (controller wraps it in {"result": ...})
+    actual_result = controller_result.get("result", controller_result)
+    
+    # Add context info to result
+    return {
+        "success": True,
+        "story_result": actual_result,
+        "original_failed_sets": retry_info["failed_sets"],
+        "original_failed_count": retry_info["failed_count"]
+    }
 
 
 # ---------- TRENDING IDEAS GENERATION ----------
@@ -319,3 +400,133 @@ async def check_mongodb_connection() -> dict:
     """Check MongoDB connection health"""
     from app.connectors.mongodb_connector import test_mongodb_connection
     return test_mongodb_connection()
+
+
+# ---------- FILE STORAGE MANAGEMENT ----------
+class MigrateContentRequest(BaseModel):
+    old_directory: str  # Old directory path (e.g., "generated_movie_script")
+    content_type: str  # Type of content (movies, stories, memes, etc.)
+
+@router.get("/storage/content-types")
+async def get_content_types_route() -> dict:
+    """Get list of all supported content types."""
+    return {
+        "content_types": ContentType.all_types(),
+        "descriptions": {
+            ContentType.MOVIE: "Full-length movies with multiple sets",
+            ContentType.STORY: "Story segments",
+            ContentType.MEME: "Meme content",
+            ContentType.FREE_CONTENT: "Free-form content",
+            ContentType.MUSIC_VIDEO: "Music video segments",
+            ContentType.WHATSAPP_STORY: "WhatsApp story format"
+        }
+    }
+
+@router.get("/storage/list/{content_type}")
+async def list_content_route(content_type: str) -> dict:
+    """
+    List all content items of a specific type.
+    
+    Example:
+        GET /api/storage/list/movies
+    """
+    try:
+        content_list = storage_manager.list_content(content_type)
+        return {
+            "success": True,
+            "content_type": content_type,
+            "count": len(content_list),
+            "items": content_list
+        }
+    except ValueError as e:
+        return {
+            "success": False,
+            "error": str(e)
+        }
+
+@router.get("/storage/info/{content_type}/{title}")
+async def get_content_info_route(content_type: str, title: str) -> dict:
+    """
+    Get detailed information about a specific content item.
+    
+    Example:
+        GET /api/storage/info/movies/Midnight Protocol
+    """
+    try:
+        info = storage_manager.get_content_info(content_type, title)
+        return {
+            "success": True,
+            **info
+        }
+    except Exception as e:
+        return {
+            "success": False,
+            "error": str(e)
+        }
+
+@router.delete("/storage/delete/{content_type}/{title}")
+async def delete_content_route(content_type: str, title: str) -> dict:
+    """
+    Delete all files for a content item.
+    
+    Example:
+        DELETE /api/storage/delete/movies/Midnight Protocol
+    """
+    try:
+        deleted = storage_manager.delete_content(content_type, title)
+        if deleted:
+            return {
+                "success": True,
+                "message": f"Deleted {content_type}/{title}"
+            }
+        else:
+            return {
+                "success": False,
+                "error": "Content not found"
+            }
+    except Exception as e:
+        return {
+            "success": False,
+            "error": str(e)
+        }
+
+@router.post("/storage/migrate")
+async def migrate_content_route(payload: MigrateContentRequest) -> dict:
+    """
+    Migrate content from old directory structure to new organized structure.
+    
+    Example:
+        POST /api/storage/migrate
+        {
+            "old_directory": "generated_movie_script",
+            "content_type": "movies"
+        }
+    """
+    try:
+        result = storage_manager.migrate_old_files(payload.old_directory, payload.content_type)
+        return result
+    except Exception as e:
+        return {
+            "success": False,
+            "error": str(e)
+        }
+
+@router.get("/storage/stats")
+async def get_storage_stats_route() -> dict:
+    """Get statistics about all stored content."""
+    stats = {}
+    total_items = 0
+    
+    for content_type in ContentType.all_types():
+        items = storage_manager.list_content(content_type)
+        stats[content_type] = {
+            "count": len(items),
+            "items": items
+        }
+        total_items += len(items)
+    
+    return {
+        "success": True,
+        "total_items": total_items,
+        "by_type": stats
+    }

@@ -1,0 +1,1074 @@
+{
+  "title": "Midnight Protocol",
+  "short_summary": "When Eliot Hart uncovers a covert experiment threatening reality, he races against time to stop an unseen collapse beneath London’s streets.",
+  "description": "Follow Eliot Hart, a lone engineer, as he dives into a high‑stakes techno‑thriller set in modern London. Will he save humanity or watch everyone vanish?",
+  "hashtags": [
+    "#fyp",
+    "#viral",
+    "#shorts",
+    "#sci-fi",
+    "#London",
+    "#futuretech",
+    "#thriller",
+    "#AI",
+    "#action",
+    "#cinematic"
+  ],
+  "set_info": {
+    "set_number": 20,
+    "segments_in_set": 10,
+    "segment_range": "191-200",
+    "total_segments": 300,
+    "segments_per_set": 10
+  },
+  "narrator_voice": {
+    "voice_type": "professional narration",
+    "age_range": "35-50",
+    "accent": "neutral UK",
+    "tone": "moody, urgent",
+    "target_demographic": "adults 18-45",
+    "speaking_pace": "medium",
+    "narration_style": "descriptive cinematic",
+    "child_friendly_level": "none",
+    "voice_pitch": "low-mid",
+    "expressiveness": "high intensity",
+    "voice_description": "Deep, resonant voice with subtle Brit accent, delivering crisp cinematic narration."
+  },
+  "characters_roster": [
+    {
+      "name": "Eliot Hart",
+      "physical_appearance": {
+        "gender": "male",
+        "estimated_age": "32 years old",
+        "height": "5'11\" / 180cm",
+        "weight_build": "170 lbs, lean athletic",
+        "body_type": "lean athletic",
+        "skin_details": {
+          "skin_tone": "warm honey beige",
+          "skin_texture": "smooth",
+          "skin_undertone": "warm",
+          "complexion_details": "no visible blemishes",
+          "skin_condition": "dewy"
+        },
+        "face_structure": {
+          "face_shape": "oval",
+          "forehead": "medium, straight",
+          "eyebrows": "bushy, dark brown, moderate thickness",
+          "eyes_detailed": {
+            "eye_color": "steel blue-gray",
+            "eye_shape": "almond",
+            "eye_size": "medium",
+            "eyelid_type": "single",
+            "eyelashes": "short, natural",
+            "eye_spacing": "average",
+            "under_eye": "smooth"
+          },
+          "nose_detailed": {
+            "nose_shape": "straight",
+            "nose_size": "medium",
+            "nose_bridge": "moderate",
+            "nostrils": "slightly flared"
+          },
+          "cheeks_detailed": {
+            "cheekbone_prominence": "subtle",
+            "cheek_fullness": "average",
+            "dimples": "no"
+          },
+          "mouth_lips_detailed": {
+            "lip_shape": "thin",
+            "lip_size": "slightly narrow",
+            "lip_color": "natural pink",
+            "mouth_width": "average",
+            "teeth": "visible, straight",
+            "smile_type": "sharp"
+          },
+          "jaw_chin_detailed": {
+            "jawline": "clean",
+            "jaw_width": "average",
+            "chin_shape": "pointed",
+            "chin_prominence": "average"
+          },
+          "ears": {
+            "ear_size": "average",
+            "ear_shape": "attached"
+          }
+        },
+        "head_skull_shape": {
+          "head_size": "medium",
+          "head_shape": "oval",
+          "skull_prominence": "flat back",
+          "cranium_height": "medium"
+        },
+        "hair_details": {
+          "hair_presence": "full head of hair",
+          "baldness_pattern": "none",
+          "hair_density": "normal",
+          "hair_color": "dark brown",
+          "hair_color_variations": "none",
+          "hair_length": "mid-length, 14 inches",
+          "hair_texture": "straight",
+          "hair_thickness": "medium",
+          "hair_volume": "medium",
+          "hair_style": "short crew cut with slight texture at the top",
+          "hair_condition": "shiny, healthy",
+          "hairline": "flat",
+          "hair_part": "none",
+          "scalp_visibility": "none",
+          "scalp_condition": "none",
+          "facial_hair": "clean shaven",
+          "facial_hair_pattern": "none",
+          "eyebrow_hair": "matches hair color"
+        },
+        "neck_shoulders": {
+          "neck_length": "short",
+          "neck_width": "average",
+          "shoulder_width": "average",
+          "shoulder_shape": "sloped"
+        },
+        "hands_arms": {
+          "arm_length": "proportional",
+          "arm_musculature": "toned",
+          "hand_size": "average",
+          "finger_length": "medium",
+          "nails": "short, natural"
+        },
+        "distinctive_marks": {
+          "scars": "none",
+          "tattoos": "none",
+          "birthmarks": "none",
+          "moles_beauty_marks": "none",
+          "piercings": "none",
+          "other_identifiers": "none"
+        },
+        "facial_expression": "focused, slight tension",
+        "pose_and_posture": "upright, confident"
+      },
+      "clothing_style": {
+        "primary_outfit": {
+          "top_garment": "black fitted henley, soft cotton",
+          "bottom_garment": "dark charcoal chinos, tailored fit",
+          "outerwear": "no outerwear (weather warm)",
+          "footwear": "black leather boots, worn but polished",
+          "undergarments_visible": "none"
+        },
+        "clothing_details": {
+          "fabric_type": "cotton",
+          "fabric_texture": "smooth",
+          "fit_style": "tight",
+          "clothing_condition": "pristine",
+          "layering": "top over no outerwear",
+          "closures": "none",
+          "pockets": "small front pockets",
+          "seams_stitching": "brightly stitched"
+        },
+        "color_palette": {
+          "primary_colors": "black, charcoal gray",
+          "secondary_colors": "none",
+          "color_combinations": "monochrome",
+          "color_wear_patterns": "none"
+        },
+        "accessories": {
+          "jewelry": "none",
+          "watches_timepieces": "silver minimalist",
+          "bags_carried": "black messenger bag, leather",
+          "belts": "black leather belt",
+          "hats_headwear": "none",
+          "scarves_neckwear": "none",
+          "glasses_eyewear": "none",
+          "gloves": "none",
+          "weapons_tools": "none"
+        },
+        "style_characteristics": {
+          "overall_aesthetic": "modern utilitarian",
+          "fashion_era": "contemporary",
+          "cultural_influences": "Western minimalism",
+          "personal_style_markers": "tight black henley",
+          "formality_level": "casual",
+          "weather_appropriateness": "all season"
+        },
+        "clothing_consistency_notes": "black henley and charcoal chinos remain constant; messenger bag is always present"
+      },
+      "personality": "intelligent, cautious, fiercely determined and introspective, tends to speak in measured tones.",
+      "role": "protagonist",
+      "voice_mannerisms": {
+        "speaking_style": "calm, deliberate",
+        "accent_or_tone": "neutral UK",
+        "typical_expressions": "wide-eyed focus, subtle nods"
+      },
+      "video_prompt_description": "Eliot Hart, 32-year-old male, 5'11\" and 170 lbs lean athletic build, warm honey beige smooth dewy skin, oval face with steel blue-gray almond eyes, short crew cut dark brown hair, clean shaven, wearing a black fitted henley, charcoal chinos, black leather boots and a black leather messenger bag, clear, professional demeanor, standing upright in calm focused expression."
+    }
+  ],
+  "segments": [
+    {
+      "segment": 191,
+      "scene": "Underground lab in Southwark; dim fluorescents flicker over humming servers.",
+      "overlay_text": "Midnight Protocol",
+      "overlay_text_position": "center",
+      "overlay_text_style": "bold serif",
+      "overlay_text_duration": "8s",
+      "overlay_text_animation": "fade in",
+      "overlay_text_color": "#FFFFFF",
+      "overlay_text_font": "Playfair Display",
+      "content_type": "narration",
+      "narration": "Tonight, the city hides a silent experiment. Eliot Hart finds the code, and with it, the fate of tomorrow.",
+      "narrator_voice_for_segment": {
+        "voice_type": "professional narration",
+        "tone_variation": "intense",
+        "pace_variation": "medium",
+        "emotion": "urgent",
+        "emphasis": "high",
+        "consistency_note": "Same narrator voice as previous segments, only tone/emotion varies"
+      },
+      "dialogue": [],
+      "characters_present": [
+        "hero1"
+      ],
+      "camera": "Slow dolly in on Eliot's face, shallow depth of field, cinematic focus shift to monitor.",
+      "clip_duration": 8,
+      "word_count": "19",
+      "estimated_speech_time": "8",
+      "background_definition": {
+        "location": "Subway maintenance shaft",
+        "environment_type": "industrial",
+        "setting_description": "Pipes, cables, and neon diagnostic panels.",
+        "time_of_day": "midnight",
+        "weather_conditions": "indoors, stale air",
+        "lighting": "soft blue hues, harsh fluorescents",
+        "atmosphere": "tense, electric",
+        "key_visual_elements": [
+          "holographic overlays",
+          "pixelated code"
+        ],
+        "color_palette": "cool blues, greys",
+        "architectural_style": "futuristic",
+        "natural_elements": [],
+        "props_in_background": [
+          "server racks",
+          "LED boards"
+        ],
+        "scale": "immersive",
+        "continuity_notes": "Uniform lighting across shots",
+        "video_prompt_background": "luminescent underground lab"
+      },
+      "background_music": "low steady synth",
+      "sound_effects": [
+        "server hum",
+        "flickering lights"
+      ],
+      "visual_style": "high contrast, matte finish",
+      "transitions": "hard cut",
+      "props": [
+        "LED monitor",
+        "wire harness"
+      ],
+      "emotions": [
+        "curiosity",
+        "tension"
+      ],
+      "lighting": "neon blue, sharp shadows",
+      "color_palette": "cool blues, greys",
+      "special_effects": [
+        "glow on monitor"
+      ],
+      "clothing": [
+        "black henley",
+        "charcoal chinos",
+        "black boots"
+      ],
+      "time_of_day": "night",
+      "weather": "indoors",
+      "cultural_elements": [],
+      "historical_context": "present-day London",
+      "genre": "sci‑fi thriller",
+      "themes": [
+        "science vs. ethics",
+        "time",
+        "technology"
+      ],
+      "mood": "mysterious",
+      "pacing": "medium",
+      "narrative_techniques": [
+        "montage",
+        "flashback hint"
+      ],
+      "symbolism": [
+        "keyboard as key"
+      ],
+      "foreshadowing": [
+        "circuit map"
+      ]
+    },
+    {
+      "segment": 192,
+      "scene": "Eliot leans over the console, fingers trembling.",
+      "overlay_text": "",
+      "overlay_text_position": "",
+      "overlay_text_style": "",
+      "overlay_text_duration": "",
+      "overlay_text_animation": "",
+      "overlay_text_color": "",
+      "overlay_text_font": "",
+      "content_type": "dialogue",
+      "narration": "",
+      "dialogue": [
+        {
+          "character": "hero1",
+          "line": "I didn't expect this to be real."
+        }
+      ],
+      "characters_present": [
+        "hero1"
+      ],
+      "camera": "Pull‑out to reveal the endless monitor array.",
+      "clip_duration": 8,
+      "word_count": "11",
+      "estimated_speech_time": "8",
+      "background_definition": {
+        "location": "Subway maintenance shaft",
+        "environment_type": "industrial",
+        "setting_description": "Hollow corridors, humming machinery.",
+        "time_of_day": "midnight",
+        "weather_conditions": "indoors, stifling",
+        "lighting": "cool blue diagnostics",
+        "atmosphere": "intense focus",
+        "key_visual_elements": [
+          "monitor glow"
+        ],
+        "color_palette": "cool blues, greys",
+        "architectural_style": "futuristic",
+        "natural_elements": [],
+        "props_in_background": [
+          "LED boards",
+          "maintenance tools"
+        ],
+        "scale": "intimate",
+        "continuity_notes": "",
+        "video_prompt_background": "dimly lit subterranean lab"
+      },
+      "background_music": "ambient",
+      "sound_effects": [
+        "typing",
+        "soft beep"
+      ],
+      "visual_style": "shallow focus, high shadow",
+      "transitions": "no cut",
+      "props": [
+        "keyboard",
+        "monitor"
+      ],
+      "emotions": [
+        "fear",
+        "determination"
+      ],
+      "lighting": "blue glow",
+      "color_palette": "cool blue, grey",
+      "special_effects": [],
+      "clothing": [
+        "black henley",
+        "charcoal chinos",
+        "black boots"
+      ],
+      "time_of_day": "night",
+      "weather": "indoors",
+      "cultural_elements": [],
+      "historical_context": "present",
+      "genre": "sci‑fi thriller",
+      "themes": [
+        "reality",
+        "session"
+      ],
+      "mood": "tense",
+      "pacing": "medium",
+      "narrative_techniques": [
+        "first‑person dialogue"
+      ],
+      "symbolism": [],
+      "foreshadowing": []
+    },
+    {
+      "segment": 193,
+      "scene": "Eliot pulls a lever, lights flash.",
+      "overlay_text": "",
+      "overlay_text_position": "",
+      "overlay_text_style": "",
+      "overlay_text_duration": "",
+      "overlay_text_animation": "",
+      "overlay_text_color": "",
+      "overlay_text_font": "",
+      "content_type": "dialogue",
+      "narration": "",
+      "dialogue": [
+        {
+          "character": "hero1",
+          "line": "No more."
+        }
+      ],
+      "characters_present": [
+        "hero1"
+      ],
+      "camera": "Rapid whip‑pan to reveal a hidden panel.",
+      "clip_duration": 8,
+      "word_count": "3",
+      "estimated_speech_time": "8",
+      "background_definition": {
+        "location": "Subway shaft",
+        "environment_type": "industrial",
+        "setting_description": "Mysterious panel sparks.",
+        "time_of_day": "midnight",
+        "weather_conditions": "indoors",
+        "lighting": "strobe",
+        "atmosphere": "shock",
+        "key_visual_elements": [
+          "panel illumination"
+        ],
+        "color_palette": "blue, white",
+        "architectural_style": "futuristic",
+        "natural_elements": [],
+        "props_in_background": [
+          "panel",
+          "wireage"
+        ],
+        "scale": "tight",
+        "continuity_notes": "",
+        "video_prompt_background": "underway panel reveal"
+      },
+      "background_music": "sharp staccato",
+      "sound_effects": [
+        "electric spark"
+      ],
+      "visual_style": "high contrast, dramatic",
+      "transitions": "whip‑pan",
+      "props": [
+        "lever",
+        "panel"
+      ],
+      "emotions": [
+        "surprise"
+      ],
+      "lighting": "strobe",
+      "color_palette": "electric blue",
+      "special_effects": [],
+      "clothing": [
+        "black henley",
+        "charcoal chinos",
+        "black boots"
+      ],
+      "time_of_day": "night",
+      "weather": "indoors",
+      "cultural_elements": [],
+      "historical_context": "present",
+      "genre": "sci‑fi thriller",
+      "themes": [
+        "disruption"
+      ],
+      "mood": "shocking",
+      "pacing": "fast",
+      "narrative_techniques": [
+        "whip‑pan"
+      ],
+      "symbolism": [],
+      "foreshadowing": []
+    },
+    {
+      "segment": 194,
+      "scene": "Eliot brushes a finger across the panel, reading schematic.",
+      "overlay_text": "",
+      "overlay_text_position": "",
+      "overlay_text_style": "",
+      "overlay_text_duration": "",
+      "overlay_text_animation": "",
+      "overlay_text_color": "",
+      "overlay_text_font": "",
+      "content_type": "dialogue",
+      "narration": "",
+      "dialogue": [
+        {
+          "character": "hero1",
+          "line": "The blueprints aren't just plans. They're a living pulse."
+        }
+      ],
+      "characters_present": [
+        "hero1"
+      ],
+      "camera": "Extreme close‑up on finger tracing code, subtle rack focus to background.",
+      "clip_duration": 8,
+      "word_count": "9",
+      "estimated_speech_time": "8",
+      "background_definition": {
+        "location": "Subway maintenance shaft",
+        "environment_type": "industrial",
+        "setting_description": "Code glows on panel.",
+        "time_of_day": "midnight",
+        "weather_conditions": "indoors",
+        "lighting": "blue diagnostics",
+        "atmosphere": "intense",
+        "key_visual_elements": [
+          "hovering code"
+        ],
+        "color_palette": "blue, grey",
+        "architectural_style": "futuristic",
+        "natural_elements": [],
+        "props_in_background": [
+          "panel",
+          "cables"
+        ],
+        "scale": "intimate",
+        "continuity_notes": "",
+        "video_prompt_background": "platform with glowing data"
+      },
+      "background_music": "low synth",
+      "sound_effects": [
+        "digital chirp"
+      ],
+      "visual_style": "high detail, shallow focus",
+      "transitions": "none",
+      "props": [
+        "panel",
+        "data board"
+      ],
+      "emotions": [
+        "wonder"
+      ],
+      "lighting": "digital blue",
+      "color_palette": "cool blue",
+      "special_effects": [
+        "glow"
+      ],
+      "clothing": [
+        "black henley",
+        "charcoal chinos",
+        "black boots"
+      ],
+      "time_of_day": "night",
+      "weather": "indoors",
+      "cultural_elements": [],
+      "historical_context": "present",
+      "genre": "sci‑fi thriller",
+      "themes": [
+        "technology"
+      ],
+      "mood": "curious",
+      "pacing": "slow",
+      "narrative_techniques": [
+        "rack focus"
+      ],
+      "symbolism": [],
+      "foreshadowing": []
+    },
+    {
+      "segment": 195,
+      "scene": "Eliot swallows, forced to act. The tunnel’s faint hum grows louder.",
+      "overlay_text": "",
+      "overlay_text_position": "",
+      "overlay_text_style": "",
+      "overlay_text_duration": "",
+      "overlay_text_animation": "",
+      "overlay_text_color": "",
+      "overlay_text_font": "",
+      "content_type": "dialogue",
+      "narration": "",
+      "dialogue": [
+        {
+          "character": "hero1",
+          "line": "Time is slipping, and if we don't act—"
+        }
+      ],
+      "characters_present": [
+        "hero1"
+      ],
+      "camera": "Pull‑out to reveal entire tunnel, dynamic shift to clock ticks.",
+      "clip_duration": 8,
+      "word_count": "12",
+      "estimated_speech_time": "8",
+      "background_definition": {
+        "location": "Subway maintenance shaft",
+        "environment_type": "industrial",
+        "setting_description": "Tunnel racing forward.",
+        "time_of_day": "night",
+        "weather_conditions": "indoors",
+        "lighting": "soft blue",
+        "atmosphere": "urgent",
+        "key_visual_elements": [
+          "clock",
+          "hum"
+        ],
+        "color_palette": "blue, grey",
+        "architectural_style": "futuristic",
+        "natural_elements": [],
+        "props_in_background": [
+          "cables"
+        ],
+        "scale": "wide",
+        "continuity_notes": "",
+        "video_prompt_background": "long tunnel corridor"
+      },
+      "background_music": "build‑up",
+      "sound_effects": [
+        "clock tick",
+        "engine hum"
+      ],
+      "visual_style": "medium depth, cinematic pull‑out",
+      "transitions": "none",
+      "props": [
+        "clock",
+        "cables"
+      ],
+      "emotions": [
+        "anxiety",
+        "determination"
+      ],
+      "lighting": "soft blue",
+      "color_palette": "cool blue",
+      "special_effects": [],
+      "clothing": [
+        "black henley",
+        "charcoal chinos",
+        "black boots"
+      ],
+      "time_of_day": "night",
+      "weather": "indoors",
+      "cultural_elements": [],
+      "historical_context": "present",
+      "genre": "sci‑fi thriller",
+      "themes": [
+        "race against time"
+      ],
+      "mood": "tension",
+      "pacing": "medium",
+      "narrative_techniques": [
+        "pull‑out"
+      ],
+      "symbolism": [],
+      "foreshadowing": []
+    },
+    {
+      "segment": 196,
+      "scene": "Nova whispers, guiding Eliot to the silent rail tunnels.",
+      "overlay_text": "",
+      "overlay_text_position": "",
+      "overlay_text_style": "",
+      "overlay_text_duration": "",
+      "overlay_text_animation": "",
+      "overlay_text_color": "",
+      "overlay_text_font": "",
+      "content_type": "dialogue",
+      "narration": "",
+      "dialogue": [
+        {
+          "character": "hero1",
+          "line": "They're building something in the subway tunnels, Nova, hear me."
+        },
+        {
+          "character": "villain1",
+          "line": "Nova whispers, her fingers brushing unseen wires."
+        }
+      ],
+      "characters_present": [
+        "hero1",
+        "villain1"
+      ],
+      "camera": "Steadicam following Eliot, orbiting the tunnel ceiling, revealing cable maze.",
+      "clip_duration": 8,
+      "word_count": "14",
+      "estimated_speech_time": "8",
+      "background_definition": {
+        "location": "Subway rail tunnel",
+        "environment_type": "industrial",
+        "setting_description": "Complex wire network.",
+        "time_of_day": "night",
+        "weather_conditions": "indoors",
+        "lighting": "dim blue",
+        "atmosphere": "secretive",
+        "key_visual_elements": [
+          "hidden wires"
+        ],
+        "color_palette": "blue, grey",
+        "architectural_style": "futuristic",
+        "natural_elements": [],
+        "props_in_background": [
+          "cables",
+          "conduits"
+        ],
+        "scale": "intimate",
+        "continuity_notes": "",
+        "video_prompt_background": "tunnel with hidden cables"
+      },
+      "background_music": "low hum",
+      "sound_effects": [
+        "wire hiss",
+        "low hum"
+      ],
+      "visual_style": "tight tracking, cinematic orbit",
+      "transitions": "none",
+      "props": [
+        "cables",
+        "wire mesh"
+      ],
+      "emotions": [
+        "scare",
+        "urgency"
+      ],
+      "lighting": "blue glow",
+      "color_palette": "cool blue",
+      "special_effects": [],
+      "clothing": [
+        "black henley",
+        "charcoal chinos",
+        "black boots"
+      ],
+      "time_of_day": "night",
+      "weather": "indoors",
+      "cultural_elements": [],
+      "historical_context": "present",
+      "genre": "sci‑fi thriller",
+      "themes": [
+        "hidden danger"
+      ],
+      "mood": "intense",
+      "pacing": "medium",
+      "narrative_techniques": [
+        "steadycam"
+      ],
+      "symbolism": [],
+      "foreshadowing": []
+    },
+    {
+      "segment": 197,
+      "scene": "Nova warns, the building can’t handle one human mistake.",
+      "overlay_text": "",
+      "overlay_text_position": "",
+      "overlay_text_style": "",
+      "overlay_text_duration": "",
+      "overlay_text_animation": "",
+      "overlay_text_color": "",
+      "overlay_text_font": "",
+      "content_type": "dialogue",
+      "narration": "",
+      "dialogue": [
+        {
+          "character": "villain1",
+          "line": "The system can't handle a single human error."
+        }
+      ],
+      "characters_present": [
+        "villain1"
+      ],
+      "camera": "Close‑up on Nova’s face, pulling focus to a distant mechanism.",
+      "clip_duration": 8,
+      "word_count": "10",
+      "estimated_speech_time": "8",
+      "background_definition": {
+        "location": "Subway control panel",
+        "environment_type": "industrial",
+        "setting_description": "Rustic panel glow.",
+        "time_of_day": "night",
+        "weather_conditions": "indoors",
+        "lighting": "dim",
+        "atmosphere": "deadly calm",
+        "key_visual_elements": [
+          "panel light"
+        ],
+        "color_palette": "blue, grey",
+        "architectural_style": "futuristic",
+        "natural_elements": [],
+        "props_in_background": [
+          "control panel",
+          "buttons"
+        ],
+        "scale": "medium",
+        "continuity_notes": "",
+        "video_prompt_background": "control board"
+      },
+      "background_music": "tense",
+      "sound_effects": [
+        "panel click"
+      ],
+      "visual_style": "soft focus, sharp detail",
+      "transitions": "none",
+      "props": [
+        "control panel",
+        "buttons"
+      ],
+      "emotions": [
+        "alert"
+      ],
+      "lighting": "soft blue",
+      "color_palette": "cool blue",
+      "special_effects": [],
+      "clothing": [
+        "black henley",
+        "charcoal chinos",
+        "black boots"
+      ],
+      "time_of_day": "night",
+      "weather": "indoors",
+      "cultural_elements": [],
+      "historical_context": "present",
+      "genre": "sci‑fi thriller",
+      "themes": [
+        "error danger"
+      ],
+      "mood": "tense",
+      "pacing": "medium",
+      "narrative_techniques": [
+        "rack focus"
+      ],
+      "symbolism": [],
+      "foreshadowing": []
+    },
+    {
+      "segment": 198,
+      "scene": "Eliot whispers, triggering reserve, locking fail‑safes.",
+      "overlay_text": "",
+      "overlay_text_position": "",
+      "overlay_text_style": "",
+      "overlay_text_duration": "",
+      "overlay_text_animation": "",
+      "overlay_text_color": "",
+      "overlay_text_font": "",
+      "content_type": "dialogue",
+      "narration": "",
+      "dialogue": [
+        {
+          "character": "hero1",
+          "line": "All right, let's trigger the reserve. I'll lock the fail‑safes."
+        }
+      ],
+      "characters_present": [
+        "hero1"
+      ],
+      "camera": "Steadicam following Eliot's hand, orbiting the reserve system, slow pull‑out to reveal full interface.",
+      "clip_duration": 8,
+      "word_count": "14",
+      "estimated_speech_time": "8",
+      "background_definition": {
+        "location": "Reserve control station",
+        "environment_type": "industrial",
+        "setting_description": "Neon interface panels.",
+        "time_of_day": "night",
+        "weather_conditions": "indoors",
+        "lighting": "blue glow",
+        "atmosphere": "urgent",
+        "key_visual_elements": [
+          "interfacing codes"
+        ],
+        "color_palette": "cool blue",
+        "architectural_style": "futuristic",
+        "natural_elements": [],
+        "props_in_background": [
+          "control panel",
+          "LEDs"
+        ],
+        "scale": "intimate",
+        "continuity_notes": "",
+        "video_prompt_background": "control panel glow"
+      },
+      "background_music": "intense",
+      "sound_effects": [
+        "click",
+        "beep"
+      ],
+      "visual_style": "cinematic, steadycam",
+      "transitions": "none",
+      "props": [
+        "control panel",
+        "LED interface"
+      ],
+      "emotions": [
+        "focus",
+        "resolve"
+      ],
+      "lighting": "blue glow",
+      "color_palette": "cool blue",
+      "special_effects": [],
+      "clothing": [
+        "black henley",
+        "charcoal chinos",
+        "black boots"
+      ],
+      "time_of_day": "night",
+      "weather": "indoors",
+      "cultural_elements": [],
+      "historical_context": "present",
+      "genre": "sci‑fi thriller",
+      "themes": [
+        "tech action"
+      ],
+      "mood": "determined",
+      "pacing": "medium",
+      "narrative_techniques": [
+        "steadycam"
+      ],
+      "symbolism": [],
+      "foreshadowing": []
+    },
+    {
+      "segment": 199,
+      "scene": "Nova confirms, no cascade will happen if fail‑safes hold.",
+      "overlay_text": "",
+      "overlay_text_position": "",
+      "overlay_text_style": "",
+      "overlay_text_duration": "",
+      "overlay_text_animation": "",
+      "overlay_text_color": "",
+      "overlay_text_font": "",
+      "content_type": "dialogue",
+      "narration": "",
+      "dialogue": [
+        {
+          "character": "villain1",
+          "line": "We must not let it cascade."
+        }
+      ],
+      "characters_present": [
+        "villain1"
+      ],
+      "camera": "Pull‑back to show whole panel, then zoom to Nova's focused eyes.",
+      "clip_duration": 8,
+      "word_count": "13",
+      "estimated_speech_time": "8",
+      "background_definition": {
+        "location": "Reserve control station",
+        "environment_type": "industrial",
+        "setting_description": "Panel perspective.",
+        "time_of_day": "night",
+        "weather_conditions": "indoors",
+        "lighting": "cool blue",
+        "atmosphere": "contingent",
+        "key_visual_elements": [
+          "monitor display"
+        ],
+        "color_palette": "blue, grey",
+        "architectural_style": "futuristic",
+        "natural_elements": [],
+        "props_in_background": [
+          "monitor",
+          "cables"
+        ],
+        "scale": "medium",
+        "continuity_notes": "",
+        "video_prompt_background": "control station"
+      },
+      "background_music": "steady",
+      "sound_effects": [
+        "monitor buzz"
+      ],
+      "visual_style": "medium tilt‑shift, focus pull",
+      "transitions": "none",
+      "props": [
+        "monitor",
+        "cables"
+      ],
+      "emotions": [
+        "relief"
+      ],
+      "lighting": "cool blue",
+      "color_palette": "cool blue",
+      "special_effects": [],
+      "clothing": [
+        "black henley",
+        "charcoal chinos",
+        "black boots"
+      ],
+      "time_of_day": "night",
+      "weather": "indoors",
+      "cultural_elements": [],
+      "historical_context": "present",
+      "genre": "sci‑fi thriller",
+      "themes": [
+        "hope"
+      ],
+      "mood": "suspense",
+      "pacing": "medium",
+      "narrative_techniques": [
+        "camera pull"
+      ],
+      "symbolism": [],
+      "foreshadowing": []
+    },
+    {
+      "segment": 200,
+      "scene": "Eliot warns: if anything goes wrong, they'll be neutralized.",
+      "overlay_text": "",
+      "overlay_text_position": "",
+      "overlay_text_style": "",
+      "overlay_text_duration": "",
+      "overlay_text_animation": "",
+      "overlay_text_color": "",
+      "overlay_text_font": "",
+      "content_type": "dialogue",
+      "narration": "",
+      "dialogue": [
+        {
+          "character": "hero1",
+          "line": "If anything goes wrong, we’ll be neutralized."
+        }
+      ],
+      "characters_present": [
+        "hero1"
+      ],
+      "camera": "Close‑up on Eliot's jaw, slow push‑in, revealing the gravity of the stakes.",
+      "clip_duration": 8,
+      "word_count": "11",
+      "estimated_speech_time": "8",
+      "background_definition": {
+        "location": "Control centre",
+        "environment_type": "industrial",
+        "setting_description": "Final threshold.",
+        "time_of_day": "midnight",
+        "weather_conditions": "indoors",
+        "lighting": "dim blue",
+        "atmosphere": "heavy",
+        "key_visual_elements": [
+          "alarm lights"
+        ],
+        "color_palette": "cool blue",
+        "architectural_style": "futuristic",
+        "natural_elements": [],
+        "props_in_background": [
+          "alarm",
+          "controls"
+        ],
+        "scale": "intimate",
+        "continuity_notes": "",
+        "video_prompt_background": "control room lights"
+      },
+      "background_music": "crescendo",
+      "sound_effects": [
+        "alarm beep"
+      ],
+      "visual_style": "intense close‑up, cinematic push‑in",
+      "transitions": "none",
+      "props": [
+        "alarm timer"
+      ],
+      "emotions": [
+        "grim"
+      ],
+      "lighting": "blue dim",
+      "color_palette": "cool blue",
+      "special_effects": [],
+      "clothing": [
+        "black henley",
+        "charcoal chinos",
+        "black boots"
+      ],
+      "time_of_day": "night",
+      "weather": "indoors",
+      "cultural_elements": [],
+      "historical_context": "present",
+      "genre": "sci‑fi thriller",
+      "themes": [
+        "risk",
+        "choice"
+      ],
+      "mood": "late",
+      "pacing": "slow",
+      "narrative_techniques": [
+        "push‑in"
+      ],
+      "symbolism": [],
+      "foreshadowing": []
+    }
+  ]
+}

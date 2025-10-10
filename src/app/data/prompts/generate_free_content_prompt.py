@@ -321,6 +321,7 @@ def get_free_content_prompt(idea: str, num_segments: int, custom_character_roste
       "engagement_strategy": "...",
       "viral_potential": "...", # 1-10 rating
       "narrator_voice": {{{{
+        "voice_id":"...",
         "voice_type": "...", # sweet_teacher_female, enthusiastic_kids_educator, cool_teen_educator, deep_authoritative_male, energetic_trustworthy_male, warm_calming_female, etc.
         "age_range": "...", # 25-35, 25-40, 30-45, 35-50, etc.
         "accent": "...", # educational_tv_american, clear_teacher, professional_american, neutral_clear, authoritative_british, etc.
@@ -337,35 +338,166 @@ def get_free_content_prompt(idea: str, num_segments: int, custom_character_roste
       }}}},
       "characters_roster": [
         {{{{
-          "id": "...",
-          "name": "...",
+          "name": "Character Name",
           "physical_appearance": {{{{
-            "gender": "...",
-            "age": "...",
-            "height": "...",
-            "body_type": "...",
-            "skin_tone": "...",
-            "hair_color": "...",
-            "hair_style": "...",
-            "eye_color": "...",
-            "eye_shape": "...",
-            "facial_features": "...",
-            "distinctive_marks": "..."
+            "gender": "male/female/non-binary/unknown - be explicit",
+            "estimated_age": "exact age like '28 years old' or narrow range '25-27'",
+            "height": "exact measurement like '5\\'8\\\" / 173cm' or '6\\'2\\\" / 188cm'",
+            "weight_build": "specific like '165 lbs, athletic build' or '180 lbs, muscular'",
+            "body_type": "very specific: 'lean athletic', 'muscular mesomorph', 'slim ectomorph', 'curvy hourglass', etc.",
+            "skin_details": {{{{
+              "skin_tone": "ultra-specific: 'warm honey beige', 'cool porcelain', 'deep mahogany', 'olive tan', 'fair with pink undertones'",
+              "skin_texture": "smooth/textured/freckled/clear/etc.",
+              "skin_undertone": "warm/cool/neutral - specify",
+              "complexion_details": "any blemishes, freckles, beauty marks - exact locations",
+              "skin_condition": "matte/dewy/oily/dry appearance"
+            }}}},
+            "face_structure": {{{{
+              "face_shape": "oval/round/square/heart/diamond/oblong - be precise",
+              "forehead": "high/medium/low, wide/narrow, any lines",
+              "eyebrows": "exact shape: 'thick straight', 'arched thin', 'bushy natural', color, thickness",
+              "eyes_detailed": {{{{
+                "eye_color": "ultra-specific: 'hazel with gold flecks', 'steel blue-gray', 'warm chocolate brown'",
+                "eye_shape": "almond/round/hooded/monolid/deep-set/protruding",
+                "eye_size": "large/medium/small relative to face",
+                "eyelid_type": "single/double/hooded",
+                "eyelashes": "long/short/thick/sparse, natural/mascara",
+                "eye_spacing": "close-set/wide-set/average",
+                "under_eye": "bags/dark circles/smooth - describe"
+              }}}},
+              "nose_detailed": {{{{
+                "nose_shape": "straight/aquiline/button/roman/snub/bulbous",
+                "nose_size": "small/medium/large relative to face",
+                "nose_bridge": "high/low/wide/narrow",
+                "nostrils": "flared/narrow/round"
+              }}}},
+              "cheeks_detailed": {{{{
+                "cheekbone_prominence": "high/low/prominent/subtle",
+                "cheek_fullness": "full/hollow/average",
+                "dimples": "yes/no, location if yes"
+              }}}},
+              "mouth_lips_detailed": {{{{
+                "lip_shape": "full/thin/bow-shaped/heart-shaped/wide",
+                "lip_size": "upper and lower - be specific",
+                "lip_color": "natural pink/rose/brown/red tones",
+                "mouth_width": "wide/narrow/proportionate",
+                "teeth": "visible/hidden, straight/gap/etc.",
+                "smile_type": "wide/subtle/crooked/symmetric"
+              }}}},
+              "jaw_chin_detailed": {{{{
+                "jawline": "sharp/soft/square/rounded/defined",
+                "jaw_width": "wide/narrow/proportionate",
+                "chin_shape": "pointed/rounded/square/cleft",
+                "chin_prominence": "receding/prominent/average"
+              }}}},
+              "ears": {{{{
+                "ear_size": "small/medium/large",
+                "ear_shape": "attached/detached lobes, etc."
+              }}}}
+            }}}},
+            "head_skull_shape": {{{{
+              "head_size": "large/medium/small relative to body",
+              "head_shape": "round/oval/square/long/etc.",
+              "skull_prominence": "flat back/rounded/prominent occipital bone",
+              "cranium_height": "high/medium/low crown"
+            }}}},
+            "hair_details": {{{{
+              "hair_presence": "full head of hair/thinning/balding/completely bald",
+              "baldness_pattern": "if applicable: 'male pattern baldness with receding temples', 'bald crown with side hair', 'completely smooth bald', 'thinning on top', 'no baldness'",
+              "hair_density": "thick coverage/normal/sparse/very thin/bald patches",
+              "hair_color": "ultra-specific: 'ash blonde with platinum highlights', 'jet black with blue undertones', 'auburn with copper tones', 'silver-gray', 'salt and pepper', 'dyed vs natural'",
+              "hair_color_variations": "roots showing, highlights, lowlights, gray streaks, fading",
+              "hair_length": "exact: 'shoulder-length', 'mid-back', 'chin-length bob', 'buzz cut 1/4 inch', 'completely shaved/bald'",
+              "hair_texture": "straight/wavy/curly/coily - specify curl pattern like 2A, 3B, 4C, or 'no hair/bald'",
+              "hair_thickness": "fine/medium/thick/coarse strands, or 'no hair'",
+              "hair_volume": "flat/voluminous/medium, or 'bald/no volume'",
+              "hair_style": "exact description: 'center-parted long layers', 'side-swept bangs with ponytail', 'slicked back undercut', 'buzz cut', 'completely bald and shaved', 'bald with horseshoe pattern'",
+              "hair_condition": "shiny/matte/frizzy/sleek/greasy/dry, or 'smooth bald scalp'",
+              "hairline": "straight/widow\\'s peak/receding/high/low/completely receded/no hairline if bald",
+              "hair_part": "center/side/no part/zigzag, or 'no part - bald'",
+              "scalp_visibility": "scalp showing through hair/no scalp visible/completely visible if bald",
+              "scalp_condition": "if visible or bald: smooth/textured/shiny/matte/freckled/scarred",
+              "facial_hair": "if applicable - exact style: 'full beard', 'goatee', 'mustache', 'stubble', 'clean shaven', length, color, coverage, thickness, grooming style",
+              "facial_hair_pattern": "even/patchy/sparse/thick, exact areas covered",
+              "eyebrow_hair": "ensure consistency with head hair color"
+            }}}},
+            "neck_shoulders": {{{{
+              "neck_length": "long/short/average",
+              "neck_width": "thin/thick/proportionate",
+              "shoulder_width": "broad/narrow/average",
+              "shoulder_shape": "rounded/square/sloped"
+            }}}},
+            "hands_arms": {{{{
+              "arm_length": "long/short/proportionate",
+              "arm_musculature": "toned/soft/muscular/thin",
+              "hand_size": "large/small/proportionate",
+              "finger_length": "long/short/average",
+              "nails": "short/long, manicured/natural, color"
+            }}}},
+            "distinctive_marks": {{{{
+              "scars": "location, size, shape, color",
+              "tattoos": "exact design, location, size, colors",
+              "birthmarks": "location, size, shape, color",
+              "moles_beauty_marks": "exact facial/body locations",
+              "piercings": "type, location, jewelry description",
+              "other_identifiers": "any other unique features"
+            }}}},
+            "facial_expression": "current expression in the image - be very specific",
+            "pose_and_posture": "how they're positioned/standing/sitting - exact description"
           }}}},
           "clothing_style": {{{{
-            "primary_outfit": "...",
-            "clothing_style": "...",
-            "colors": "...",
-            "accessories": "..."
+            "primary_outfit": {{{{
+              "top_garment": "exact type, fit, fabric, color, pattern, condition",
+              "bottom_garment": "exact type, fit, fabric, color, pattern, length",
+              "outerwear": "jacket/coat - exact style, length, color, material",
+              "footwear": "exact type, color, material, condition, heel height if applicable",
+              "undergarments_visible": "if any parts visible - straps, waistbands, etc."
+            }}}},
+            "clothing_details": {{{{
+              "fabric_type": "cotton/silk/leather/denim/wool - be specific",
+              "fabric_texture": "smooth/rough/shiny/matte/textured",
+              "fit_style": "tight/loose/fitted/oversized/tailored",
+              "clothing_condition": "new/worn/vintage/distressed/pristine",
+              "layering": "describe each visible layer from inner to outer",
+              "closures": "buttons/zippers/laces - describe",
+              "pockets": "visible pockets, flaps, etc.",
+              "seams_stitching": "visible details, decorative stitching"
+            }}}},
+            "color_palette": {{{{
+              "primary_colors": "exact shades: 'navy blue #001f3f', 'burgundy red', 'forest green'",
+              "secondary_colors": "accent colors, patterns",
+              "color_combinations": "how colors work together",
+              "color_wear_patterns": "fading, stains, variations"
+            }}}},
+            "accessories": {{{{
+              "jewelry": "exact pieces: 'silver chain necklace 18 inches', 'gold hoop earrings 1 inch diameter'",
+              "watches_timepieces": "brand style, wrist, exact appearance",
+              "bags_carried": "type, size, color, material, how carried",
+              "belts": "width, color, buckle style, material",
+              "hats_headwear": "exact style, color, how worn",
+              "scarves_neckwear": "material, color, how tied/worn",
+              "glasses_eyewear": "frame style, color, lens type",
+              "gloves": "if worn - material, length, color",
+              "weapons_tools": "exact type, how carried/worn, condition"
+            }}}},
+            "style_characteristics": {{{{
+              "overall_aesthetic": "modern/vintage/fantasy/professional/casual/etc.",
+              "fashion_era": "if period-specific - exact era and region",
+              "cultural_influences": "specific cultural elements in clothing",
+              "personal_style_markers": "signature pieces, unique combinations",
+              "formality_level": "very formal/business/casual/athletic/etc.",
+              "weather_appropriateness": "summer/winter/all-season wear"
+            }}}},
+            "clothing_consistency_notes": "which items never change, which might vary, how clothing moves"
           }}}},
-          "personality": "...",
-          "role": "...",
+          "personality": "key personality traits inferred from appearance (e.g., 'confident, mysterious, friendly')",
+          "role": "suggested role in story (e.g., 'protagonist', 'antagonist', 'mentor', 'comic relief')",
           "voice_mannerisms": {{{{
-            "speaking_style": "...",
-            "accent_or_tone": "...",
-            "typical_expressions": "..."
+            "speaking_style": "confident/shy/authoritative/playful/etc.",
+            "accent_or_tone": "neutral/regional/foreign/etc.",
+            "typical_expressions": "facial expressions and gestures they might use"
           }}}},
-          "video_prompt_description": "..." # ULTRA-COMPLETE description combining ALL above details in a single paragraph for video generation - must include EVERY physical feature, skin detail, facial feature, hair characteristic, and clothing item to ensure ZERO variation between segments
+          "video_prompt_description": "ULTRA-COMPLETE description combining ALL above details in a single comprehensive paragraph for video generation - must include EVERY physical feature, skin detail, facial feature, hair characteristic, and clothing item to ensure ZERO variation between segments. This should be a complete, standalone description that can be used directly for video generation."
         }}}}
       ],
       "content_elements": {{{{
@@ -396,7 +528,7 @@ def get_free_content_prompt(idea: str, num_segments: int, custom_character_roste
           "visual_demonstration": "...", # what to show visually
           "engagement_hook": "...", # question, challenge, CTA
           "narrator_voice_for_segment": {{{{  # for educational narration
-            "voice_type": "...", # MUST be same as main narrator_voice selection
+            "voice_id": "...", # MUST be same as main narrator_voice selection
             "tone_variation": "...", # slight tone adjustment (more_encouraging, extra_professional, warmer, etc.)
             "pace_variation": "...", # slight pace adjustment (slightly_slower_for_complex_info, normal, etc.)
             "emphasis_style": "...", # how to emphasize key points in this segment
@@ -425,8 +557,27 @@ def get_free_content_prompt(idea: str, num_segments: int, custom_character_roste
             "video_prompt_background": "..." # Complete background description for video generation
           }}}},
           "transitions": "...", # how to transition to next segment
-          "background_music": "...", # upbeat, trending sounds
-          "sound_effects": ["..."], # emphasis sounds
+          "background_music":  {
+          "present": true,
+          "track_type": "suspenseful strings",
+          "start_time": "0s",
+          "end_time": "continuous/6s/4s/2s",
+          "fade_in": "1s",
+          "fade_out": "none/time in seconds",
+          "volume": "low/high/medium",
+          "mood": "tense, peace, etc",
+          "continues_to_next_segment": true/false
+          }, 
+          "sound_effects": [
+            {
+            "sound_effect_id":"..."
+            "type": "footsteps, thunder,etc",
+            "start_time": "time in seconds",
+            "duration": "time in seconds or continuos",
+            "volume": "low/medium/high",
+            "description": "echoing footsteps in hallway, thunder in mountains,etc"
+            }
+          ],
           "visual_effects": ["..."], # text animations, highlights
           "props_needed": ["..."], # any items to demonstrate with
           "lighting": "...", # bright, natural, dramatic

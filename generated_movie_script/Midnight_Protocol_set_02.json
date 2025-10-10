@@ -1,0 +1,1239 @@
+{
+  "title": "Midnight Protocol",
+  "short_summary": "A London engineer digests a hidden quantum experiment that could rewrite reality, racing against time to shield humanity from an invisible AI threat.",
+  "description": "Follow the pulse of a techno‑sci‑thriller set in modern London, where one man’s discovery leads to a race against time. Stay tuned—every frame counts.",
+  "hashtags": [
+    "#fyp",
+    "#viral",
+    "#shorts",
+    "#sci-fi",
+    "#London",
+    "#futuretech",
+    "#thriller",
+    "#AI",
+    "#action",
+    "#cinematic"
+  ],
+  "set_info": {
+    "set_number": 2,
+    "segments_in_set": 10,
+    "segment_range": "11-20",
+    "total_segments": 300,
+    "segments_per_set": 10
+  },
+  "narrator_voice": {
+    "voice_type": "professional narration",
+    "age_range": "35-50",
+    "accent": "neutral UK",
+    "tone": "moody, urgent",
+    "target_demographic": "adults 18-45",
+    "speaking_pace": "medium",
+    "narration_style": "descriptive cinematic",
+    "child_friendly_level": "none",
+    "voice_pitch": "low-mid",
+    "expressiveness": "high intensity",
+    "voice_description": "Deep, resonant voice with subtle Brit accent, delivering crisp cinematic narration."
+  },
+  "characters_roster": [
+    {
+      "name": "Eliot Hart",
+      "physical_appearance": {
+        "gender": "male",
+        "estimated_age": "32 years old",
+        "height": "5'11\" / 180cm",
+        "weight_build": "170 lbs, lean athletic",
+        "body_type": "lean athletic",
+        "skin_details": {
+          "skin_tone": "warm honey beige",
+          "skin_texture": "smooth",
+          "skin_undertone": "warm",
+          "complexion_details": "no visible blemishes",
+          "skin_condition": "dewy"
+        },
+        "face_structure": {
+          "face_shape": "oval",
+          "forehead": "medium, straight",
+          "eyebrows": "bushy, dark brown, moderate thickness",
+          "eyes_detailed": {
+            "eye_color": "steel blue-gray",
+            "eye_shape": "almond",
+            "eye_size": "medium",
+            "eyelid_type": "single",
+            "eyelashes": "short, natural",
+            "eye_spacing": "average",
+            "under_eye": "smooth"
+          },
+          "nose_detailed": {
+            "nose_shape": "straight",
+            "nose_size": "medium",
+            "nose_bridge": "moderate",
+            "nostrils": "slightly flared"
+          },
+          "cheeks_detailed": {
+            "cheekbone_prominence": "subtle",
+            "cheek_fullness": "average",
+            "dimples": "no"
+          },
+          "mouth_lips_detailed": {
+            "lip_shape": "thin",
+            "lip_size": "slightly narrow",
+            "lip_color": "natural pink",
+            "mouth_width": "average",
+            "teeth": "visible, straight",
+            "smile_type": "sharp"
+          },
+          "jaw_chin_detailed": {
+            "jawline": "clean",
+            "jaw_width": "average",
+            "chin_shape": "pointed",
+            "chin_prominence": "average"
+          },
+          "ears": {
+            "ear_size": "average",
+            "ear_shape": "attached"
+          }
+        },
+        "head_skull_shape": {
+          "head_size": "medium",
+          "head_shape": "oval",
+          "skull_prominence": "flat back",
+          "cranium_height": "medium"
+        },
+        "hair_details": {
+          "hair_presence": "full head of hair",
+          "baldness_pattern": "none",
+          "hair_density": "normal",
+          "hair_color": "dark brown",
+          "hair_color_variations": "none",
+          "hair_length": "mid-length, 14 inches",
+          "hair_texture": "straight",
+          "hair_thickness": "medium",
+          "hair_volume": "medium",
+          "hair_style": "short crew cut with slight texture at the top",
+          "hair_condition": "shiny, healthy",
+          "hairline": "flat",
+          "hair_part": "none",
+          "scalp_visibility": "none",
+          "scalp_condition": "none",
+          "facial_hair": "clean shaven",
+          "facial_hair_pattern": "none",
+          "eyebrow_hair": "matches hair color"
+        },
+        "neck_shoulders": {
+          "neck_length": "short",
+          "neck_width": "average",
+          "shoulder_width": "average",
+          "shoulder_shape": "sloped"
+        },
+        "hands_arms": {
+          "arm_length": "proportional",
+          "arm_musculature": "toned",
+          "hand_size": "average",
+          "finger_length": "medium",
+          "nails": "short, natural"
+        },
+        "distinctive_marks": {
+          "scars": "none",
+          "tattoos": "none",
+          "birthmarks": "none",
+          "moles_beauty_marks": "none",
+          "piercings": "none",
+          "other_identifiers": "none"
+        },
+        "facial_expression": "focused, slight tension",
+        "pose_and_posture": "upright, confident"
+      },
+      "clothing_style": {
+        "primary_outfit": {
+          "top_garment": "black fitted henley, soft cotton",
+          "bottom_garment": "dark charcoal chinos, tailored fit",
+          "outerwear": "no outerwear (weather warm)",
+          "footwear": "black leather boots, worn but polished",
+          "undergarments_visible": "none"
+        },
+        "clothing_details": {
+          "fabric_type": "cotton",
+          "fabric_texture": "smooth",
+          "fit_style": "tight",
+          "clothing_condition": "pristine",
+          "layering": "top over no outerwear",
+          "closures": "none",
+          "pockets": "small front pockets",
+          "seams_stitching": "brightly stitched"
+        },
+        "color_palette": {
+          "primary_colors": "black, charcoal gray",
+          "secondary_colors": "none",
+          "color_combinations": "monochrome",
+          "color_wear_patterns": "none"
+        },
+        "accessories": {
+          "jewelry": "none",
+          "watches_timepieces": "silver minimalist",
+          "bags_carried": "black messenger bag, leather",
+          "belts": "black leather belt",
+          "hats_headwear": "none",
+          "scarves_neckwear": "none",
+          "glasses_eyewear": "none",
+          "gloves": "none",
+          "weapons_tools": "none"
+        },
+        "style_characteristics": {
+          "overall_aesthetic": "modern utilitarian",
+          "fashion_era": "contemporary",
+          "cultural_influences": "Western minimalism",
+          "personal_style_markers": "tight black henley",
+          "formality_level": "casual",
+          "weather_appropriateness": "all season"
+        },
+        "clothing_consistency_notes": "black henley and charcoal chinos remain constant; messenger bag is always present"
+      },
+      "personality": "intelligent, cautious, fiercely determined and introspective, tends to speak in measured tones.",
+      "role": "protagonist",
+      "voice_mannerisms": {
+        "speaking_style": "calm, deliberate",
+        "accent_or_tone": "neutral UK",
+        "typical_expressions": "wide-eyed focus, subtle nods"
+      },
+      "video_prompt_description": "Eliot Hart, 32-year-old male, 5'11\" / 180cm and 170 lbs lean athletic build, warm honey beige smooth dewy skin, oval face with steel blue-gray almond eyes, short crew cut dark brown hair, clean shaven, wearing a black fitted henley, charcoal chinos, black leather boots and a black leather messenger bag, clear, professional demeanor, standing upright in calm focused expression."
+    }
+  ],
+  "segments": [
+    {
+      "segment": 11,
+      "scene": "London Underground Platform 5 under dim lighting, humming servers in the backdrop.",
+      "overlay_text": "",
+      "overlay_text_position": "",
+      "overlay_text_style": "",
+      "overlay_text_duration": "",
+      "overlay_text_animation": "",
+      "overlay_text_color": "",
+      "overlay_text_font": "",
+      "content_type": "dialogue",
+      "narration": "",
+      "narrator_voice_for_segment": {
+        "voice_type": "professional narration",
+        "tone_variation": "neutral",
+        "pace_variation": "medium",
+        "emotion": "none",
+        "emphasis": "none",
+        "consistency_note": "Same narrator voice as previous segments, only tone/emotion varies"
+      },
+      "dialogue": [
+        {
+          "character": "hero1",
+          "line": "The corridor is empty, but the hum of servers still humming."
+        },
+        {
+          "character": "hero1",
+          "line": "We need to finish the trial, now."
+        }
+      ],
+      "characters_present": [
+        "hero1"
+      ],
+      "camera": "Steadicam tracking through crowd of commuters, focus on Eliot's face.",
+      "clip_duration": 8,
+      "word_count": "18",
+      "estimated_speech_time": "6",
+      "background_definition": {
+        "location": "London Underground Platform",
+        "environment_type": "public transportation, underground",
+        "setting_description": "dim lighting, metal tiles, subtle electronic hum",
+        "time_of_day": "late night",
+        "weather_conditions": "none",
+        "lighting": "low-key, blueish ambient",
+        "atmosphere": "tight, tense",
+        "key_visual_elements": [
+          "rolling platform trains",
+          "digital display screens"
+        ],
+        "color_palette": "cool blues and greys",
+        "architectural_style": "modern London tube design",
+        "natural_elements": [],
+        "props_in_background": [
+          "ticket barriers",
+          "passenger benches"
+        ],
+        "scale": "medium",
+        "continuity_notes": "Eliot's outfit remains unchanged",
+        "video_prompt_background": "tram platform with commuters, subtle light glare"
+      },
+      "background_music": "Low pulse synth",
+      "sound_effects": [
+        "electric hum",
+        "train arrival hiss"
+      ],
+      "visual_style": "cinematic depth",
+      "transitions": "fade to next frame",
+      "props": [
+        "data tablet",
+        "leather messenger bag"
+      ],
+      "emotions": [
+        "focus"
+      ],
+      "lighting": "soft blue highlight",
+      "color_palette": [
+        "blue",
+        "grey"
+      ],
+      "special_effects": [],
+      "clothing": [
+        "black henley",
+        "charcoal chinos"
+      ],
+      "time_of_day": "late night",
+      "weather": "indoor",
+      "cultural_elements": [],
+      "historical_context": "present day London",
+      "genre": "sci‑fi thriller",
+      "themes": [
+        "technology",
+        "urgency"
+      ],
+      "mood": "tense",
+      "pacing": "medium",
+      "narrative_techniques": [
+        "voiceover absent, dialogue only"
+      ],
+      "symbolism": [
+        "humming servers = unseen threat"
+      ],
+      "foreshadowing": []
+    },
+    {
+      "segment": 12,
+      "scene": "Bunker’s glass walls, rain drips on the floor.",
+      "overlay_text": "",
+      "overlay_text_position": "",
+      "overlay_text_style": "",
+      "overlay_text_duration": "",
+      "overlay_text_animation": "",
+      "overlay_text_color": "",
+      "overlay_text_font": "",
+      "content_type": "dialogue",
+      "narration": "",
+      "narrator_voice_for_segment": {
+        "voice_type": "professional narration",
+        "tone_variation": "neutral",
+        "pace_variation": "medium",
+        "emotion": "none",
+        "emphasis": "none",
+        "consistency_note": "Same narrator voice as previous segments, only tone/emotion varies"
+      },
+      "dialogue": [
+        {
+          "character": "hero1",
+          "line": "Our client is suspicious, but the data will prove otherwise."
+        },
+        {
+          "character": "hero1",
+          "line": "Destroy the lock before the city's AI awakens."
+        }
+      ],
+      "characters_present": [
+        "hero1"
+      ],
+      "camera": "Crane shot rising from Eliot’s feet to reveal rain‑slickened hall.",
+      "clip_duration": 8,
+      "word_count": "18",
+      "estimated_speech_time": "6",
+      "background_definition": {
+        "location": "undersea bunker",
+        "environment_type": "secure facility",
+        "setting_description": "glass walls reflecting rain, concrete pillars",
+        "time_of_day": "night",
+        "weather_conditions": "rain outside",
+        "lighting": "blue‑toned interior",
+        "atmosphere": "controlled, oppressive",
+        "key_visual_elements": [
+          "data servers",
+          "security cameras"
+        ],
+        "color_palette": "cool blues and greys",
+        "architectural_style": "industrial",
+        "natural_elements": [],
+        "props_in_background": [
+          "rain puddles",
+          "air filters"
+        ],
+        "scale": "medium",
+        "continuity_notes": "Eliot's bag visible",
+        "video_prompt_background": "futuristic control room with rain outside"
+      },
+      "background_music": "Tense low drones",
+      "sound_effects": [
+        "rain",
+        "static hum"
+      ],
+      "visual_style": "cinematic depth",
+      "transitions": "cross dissolve",
+      "props": [
+        "data tablet"
+      ],
+      "emotions": [
+        "alarm"
+      ],
+      "lighting": "blueish glow",
+      "color_palette": [
+        "blue",
+        "grey"
+      ],
+      "special_effects": [
+        "rain splatter overlay"
+      ],
+      "clothing": [
+        "black henley",
+        "charcoal chinos"
+      ],
+      "time_of_day": "night",
+      "weather": "rain",
+      "cultural_elements": [],
+      "historical_context": "present day London",
+      "genre": "sci‑fi thriller",
+      "themes": [
+        "security",
+        "risk"
+      ],
+      "mood": "high tension",
+      "pacing": "fast",
+      "narrative_techniques": [
+        "dialogue only"
+      ],
+      "symbolism": [
+        "rain = cleansing danger"
+      ],
+      "foreshadowing": []
+    },
+    {
+      "segment": 13,
+      "scene": "Vault room, doors lined with biometric scanners.",
+      "overlay_text": "",
+      "overlay_text_position": "",
+      "overlay_text_style": "",
+      "overlay_text_duration": "",
+      "overlay_text_animation": "",
+      "overlay_text_color": "",
+      "overlay_text_font": "",
+      "content_type": "dialogue",
+      "narration": "",
+      "narrator_voice_for_segment": {
+        "voice_type": "professional narration",
+        "tone_variation": "neutral",
+        "pace_variation": "medium",
+        "emotion": "none",
+        "emphasis": "none",
+        "consistency_note": "Same narrator voice as previous segments, only tone/emotion varies"
+      },
+      "dialogue": [
+        {
+          "character": "hero1",
+          "line": "The vault door is turned by carbon imprint."
+        },
+        {
+          "character": "hero1",
+          "line": "Do not stay long, it will give us time."
+        }
+      ],
+      "characters_present": [
+        "hero1"
+      ],
+      "camera": "Steadicam follows Eliot as he slides a token into scanner.",
+      "clip_duration": 8,
+      "word_count": "17",
+      "estimated_speech_time": "6",
+      "background_definition": {
+        "location": "Vault Access Chamber",
+        "environment_type": "secure storage",
+        "setting_description": "steel doors, biometric panels, high tech lighting",
+        "time_of_day": "night",
+        "weather_conditions": "none",
+        "lighting": "white LED",
+        "atmosphere": "cold, clinical",
+        "key_visual_elements": [
+          "vault doors",
+          "scanner panels"
+        ],
+        "color_palette": "white, steel",
+        "architectural_style": "military",
+        "natural_elements": [],
+        "props_in_background": [
+          "control panel",
+          "security cameras"
+        ],
+        "scale": "medium",
+        "continuity_notes": "same color palette",
+        "video_prompt_background": "high security access chamber"
+      },
+      "background_music": "Silence with subtle tension",
+      "sound_effects": [
+        "door cracking",
+        "scanner beep"
+      ],
+      "visual_style": "cinematic depth",
+      "transitions": "cut",
+      "props": [
+        "carbon token"
+      ],
+      "emotions": [
+        "urgency"
+      ],
+      "lighting": "white LED",
+      "color_palette": [
+        "white",
+        "steel"
+      ],
+      "special_effects": [],
+      "clothing": [
+        "black henley",
+        "charcoal chinos"
+      ],
+      "time_of_day": "night",
+      "weather": "indoor",
+      "cultural_elements": [],
+      "historical_context": "present day London",
+      "genre": "sci‑fi thriller",
+      "themes": [
+        "boldness",
+        "timing"
+      ],
+      "mood": "spirit of urgency",
+      "pacing": "medium",
+      "narrative_techniques": [
+        "dialogue only"
+      ],
+      "symbolism": [
+        "vault = guarded secrets"
+      ],
+      "foreshadowing": []
+    },
+    {
+      "segment": 14,
+      "scene": "Control room under flickering monitors.",
+      "overlay_text": "",
+      "overlay_text_position": "",
+      "overlay_text_style": "",
+      "overlay_text_duration": "",
+      "overlay_text_animation": "",
+      "overlay_text_color": "",
+      "overlay_text_font": "",
+      "content_type": "dialogue",
+      "narration": "",
+      "narrator_voice_for_segment": {
+        "voice_type": "professional narration",
+        "tone_variation": "neutral",
+        "pace_variation": "medium",
+        "emotion": "none",
+        "emphasis": "none",
+        "consistency_note": "Same narrator voice as previous segments, only tone/emotion varies"
+      },
+      "dialogue": [
+        {
+          "character": "hero1",
+          "line": "If the firewall fails, congestion could spread."
+        },
+        {
+          "character": "hero1",
+          "line": "Calm your breath, focus on the code."
+        }
+      ],
+      "characters_present": [
+        "hero1"
+      ],
+      "camera": "Crane shot ascending to capture wide room and Eliot’s focus.",
+      "clip_duration": 8,
+      "word_count": "14",
+      "estimated_speech_time": "5",
+      "background_definition": {
+        "location": "AI Control Hub",
+        "environment_type": "high-security server room",
+        "setting_description": "flickering screens, humming servers, red emergency lights",
+        "time_of_day": "night",
+        "weather_conditions": "none",
+        "lighting": "red emergency glow",
+        "atmosphere": "intense, claustrophobic",
+        "key_visual_elements": [
+          "monitor cluster",
+          "error alerts"
+        ],
+        "color_palette": "red, black",
+        "architectural_style": "futuristic industrial",
+        "natural_elements": [],
+        "props_in_background": [
+          "control panels",
+          "firewall diagrams"
+        ],
+        "scale": "medium",
+        "continuity_notes": "lighting consistent with series",
+        "video_prompt_background": "futuristic server room with red alerts"
+      },
+      "background_music": "Subtle electronic pulse",
+      "sound_effects": [
+        "humming servers",
+        "alarm beep"
+      ],
+      "visual_style": "cinematic depth",
+      "transitions": "cut",
+      "props": [
+        "data tablet"
+      ],
+      "emotions": [
+        "calm"
+      ],
+      "lighting": "red emergency glow",
+      "color_palette": [
+        "red",
+        "black"
+      ],
+      "special_effects": [
+        "glitch overlay"
+      ],
+      "clothing": [
+        "black henley",
+        "charcoal chinos"
+      ],
+      "time_of_day": "night",
+      "weather": "indoor",
+      "cultural_elements": [],
+      "historical_context": "present day London",
+      "genre": "sci‑fi thriller",
+      "themes": [
+        "precision",
+        "concentration"
+      ],
+      "mood": "stormy focus",
+      "pacing": "fast",
+      "narrative_techniques": [
+        "dialogue only"
+      ],
+      "symbolism": [
+        "red light = danger"
+      ],
+      "foreshadowing": []
+    },
+    {
+      "segment": 15,
+      "scene": "Hidden server rack, humming deeper than usual.",
+      "overlay_text": "",
+      "overlay_text_position": "",
+      "overlay_text_style": "",
+      "overlay_text_duration": "",
+      "overlay_text_animation": "",
+      "overlay_text_color": "",
+      "overlay_text_font": "",
+      "content_type": "dialogue",
+      "narration": "",
+      "narrator_voice_for_segment": {
+        "voice_type": "professional narration",
+        "tone_variation": "neutral",
+        "pace_variation": "medium",
+        "emotion": "none",
+        "emphasis": "none",
+        "consistency_note": "Same narrator voice as previous segments, only tone/emotion varies"
+      },
+      "dialogue": [
+        {
+          "character": "hero1",
+          "line": "Found the anomaly, the core is humming louder."
+        },
+        {
+          "character": "hero1",
+          "line": "This isn't a glitch, it's a beacon."
+        }
+      ],
+      "characters_present": [
+        "hero1"
+      ],
+      "camera": "Orbit shot circles unit as light pulses, zoom to Eliot’s eyes.",
+      "clip_duration": 8,
+      "word_count": "15",
+      "estimated_speech_time": "5",
+      "background_definition": {
+        "location": "Data Core",
+        "environment_type": "sub-tech center",
+        "setting_description": "racking servers, pulsating light, metallic walls",
+        "time_of_day": "night",
+        "weather_conditions": "none",
+        "lighting": "blueish glow",
+        "atmosphere": "throbbing, electric",
+        "key_visual_elements": [
+          "pulsating core",
+          "suspended cables"
+        ],
+        "color_palette": "blue, black",
+        "architectural_style": "industrial",
+        "natural_elements": [],
+        "props_in_background": [
+          "control panels"
+        ],
+        "scale": "medium",
+        "continuity_notes": "same camera style",
+        "video_prompt_background": "data core with glowing heart"
+      },
+      "background_music": "Low techno pulse",
+      "sound_effects": [
+        "pulse thrum",
+        "cable wind"
+      ],
+      "visual_style": "cinematic depth",
+      "transitions": "cut",
+      "props": [
+        "data tablet"
+      ],
+      "emotions": [
+        "shock"
+      ],
+      "lighting": "blue glow",
+      "color_palette": [
+        "blue",
+        "black"
+      ],
+      "special_effects": [
+        "energy ripple"
+      ],
+      "clothing": [
+        "black henley",
+        "charcoal chinos"
+      ],
+      "time_of_day": "night",
+      "weather": "indoor",
+      "cultural_elements": [],
+      "historical_context": "present day London",
+      "genre": "sci‑fi thriller",
+      "themes": [
+        "mystery",
+        "danger"
+      ],
+      "mood": "tense curiosity",
+      "pacing": "medium",
+      "narrative_techniques": [
+        "dialogue only"
+      ],
+      "symbolism": [
+        "core = life"
+      ],
+      "foreshadowing": []
+    },
+    {
+      "segment": 16,
+      "scene": "Escape corridor dimly lit with emergency exit signs.",
+      "overlay_text": "",
+      "overlay_text_position": "",
+      "overlay_text_style": "",
+      "overlay_text_duration": "",
+      "overlay_text_animation": "",
+      "overlay_text_color": "",
+      "overlay_text_font": "",
+      "content_type": "dialogue",
+      "narration": "",
+      "narrator_voice_for_segment": {
+        "voice_type": "professional narration",
+        "tone_variation": "neutral",
+        "pace_variation": "medium",
+        "emotion": "none",
+        "emphasis": "none",
+        "consistency_note": "Same narrator voice as previous segments, only tone/emotion varies"
+      },
+      "dialogue": [
+        {
+          "character": "hero1",
+          "line": "We need to triangulate the source at once."
+        },
+        {
+          "character": "hero1",
+          "line": "Exit through the vent, not the corridor."
+        }
+      ],
+      "characters_present": [
+        "hero1"
+      ],
+      "camera": "Steadicam follows Eliot sprinting toward vent, camera captures escape route.",
+      "clip_duration": 8,
+      "word_count": "15",
+      "estimated_speech_time": "5",
+      "background_definition": {
+        "location": "Emergency Exit Corridor",
+        "environment_type": "industrial",
+        "setting_description": "dim lighting, rusted walls, flickering exit signs",
+        "time_of_day": "night",
+        "weather_conditions": "none",
+        "lighting": "amber emergency",
+        "atmosphere": "tension",
+        "key_visual_elements": [
+          "vent shaft",
+          "panel doors"
+        ],
+        "color_palette": "amber, steel",
+        "architectural_style": "industrial",
+        "natural_elements": [],
+        "props_in_background": [
+          "exit signs",
+          "sprinkler heads"
+        ],
+        "scale": "medium",
+        "continuity_notes": "circuit board motif remains",
+        "video_prompt_background": "emergency corridor with vent shaft"
+      },
+      "background_music": "Elevating build",
+      "sound_effects": [
+        "heartbeat",
+        "door creak"
+      ],
+      "visual_style": "cinematic depth",
+      "transitions": "cut",
+      "props": [
+        "data tablet"
+      ],
+      "emotions": [
+        "determination"
+      ],
+      "lighting": "amber glow",
+      "color_palette": [
+        "amber",
+        "steel"
+      ],
+      "special_effects": [
+        "slow motion entry"
+      ],
+      "clothing": [
+        "black henley",
+        "charcoal chinos"
+      ],
+      "time_of_day": "night",
+      "weather": "indoor",
+      "cultural_elements": [],
+      "historical_context": "present day London",
+      "genre": "sci‑fi thriller",
+      "themes": [
+        "escape",
+        "urgency"
+      ],
+      "mood": "race against time",
+      "pacing": "fast",
+      "narrative_techniques": [
+        "dialogue only"
+      ],
+      "symbolism": [
+        "vent = escape"
+      ],
+      "foreshadowing": []
+    },
+    {
+      "segment": 17,
+      "scene": "Narrow hallway with shifting shadows.",
+      "overlay_text": "",
+      "overlay_text_position": "",
+      "overlay_text_style": "",
+      "overlay_text_duration": "",
+      "overlay_text_animation": "",
+      "overlay_text_color": "",
+      "overlay_text_font": "",
+      "content_type": "dialogue",
+      "narration": "",
+      "narrator_voice_for_segment": {
+        "voice_type": "professional narration",
+        "tone_variation": "neutral",
+        "pace_variation": "medium",
+        "emotion": "none",
+        "emphasis": "none",
+        "consistency_note": "Same narrator voice as previous segments, only tone/emotion varies"
+      },
+      "dialogue": [
+        {
+          "character": "hero1",
+          "line": "A shadow moves beyond the doorway."
+        },
+        {
+          "character": "hero1",
+          "line": "Keep breathing, keep calculating its trajectory."
+        }
+      ],
+      "characters_present": [
+        "hero1"
+      ],
+      "camera": "Grab shot of Eliot pausing, face illuminated by flickering lights, focus tight.",
+      "clip_duration": 8,
+      "word_count": "12",
+      "estimated_speech_time": "4",
+      "background_definition": {
+        "location": "Switchroom Hallway",
+        "environment_type": "maintenance corridor",
+        "setting_description": "shadowy, panels with LEDs, metallic walls",
+        "time_of_day": "night",
+        "weather_conditions": "none",
+        "lighting": "strobe effect",
+        "atmosphere": "mysterious",
+        "key_visual_elements": [
+          "doorframe",
+          "shadow"
+        ],
+        "color_palette": "black, grey",
+        "architectural_style": "industrial",
+        "natural_elements": [],
+        "props_in_background": [
+          "light panels",
+          "ventilation ducts"
+        ],
+        "scale": "medium",
+        "continuity_notes": "shadow motif continues",
+        "video_prompt_background": "narrow hallway with shifting shadows"
+      },
+      "background_music": "Subtle tension",
+      "sound_effects": [
+        "heartbeat",
+        "ambient hum"
+      ],
+      "visual_style": "cinematic depth",
+      "transitions": "cut",
+      "props": [
+        "data tablet"
+      ],
+      "emotions": [
+        "focus"
+      ],
+      "lighting": "strobe flicker",
+      "color_palette": [
+        "black",
+        "grey"
+      ],
+      "special_effects": [
+        "shadow dodge"
+      ],
+      "clothing": [
+        "black henley",
+        "charcoal chinos"
+      ],
+      "time_of_day": "night",
+      "weather": "indoor",
+      "cultural_elements": [],
+      "historical_context": "present day London",
+      "genre": "sci‑fi thriller",
+      "themes": [
+        "intelligence",
+        "perception"
+      ],
+      "mood": "eerie concentration",
+      "pacing": "slow",
+      "narrative_techniques": [
+        "dialogue only"
+      ],
+      "symbolism": [
+        "shadow = unknown threat"
+      ],
+      "foreshadowing": []
+    },
+    {
+      "segment": 18,
+      "scene": "Control terminal, error code flickering.",
+      "overlay_text": "",
+      "overlay_text_position": "",
+      "overlay_text_style": "",
+      "overlay_text_duration": "",
+      "overlay_text_animation": "",
+      "overlay_text_color": "",
+      "overlay_text_font": "",
+      "content_type": "dialogue",
+      "narration": "",
+      "narrator_voice_for_segment": {
+        "voice_type": "professional narration",
+        "tone_variation": "neutral",
+        "pace_variation": "medium",
+        "emotion": "none",
+        "emphasis": "none",
+        "consistency_note": "Same narrator voice as previous segments, only tone/emotion varies"
+      },
+      "dialogue": [
+        {
+          "character": "hero1",
+          "line": "The algorithm predicts an unexpected cascade."
+        },
+        {
+          "character": "hero1",
+          "line": "Adjust the parameters, or risk urban blackout."
+        }
+      ],
+      "characters_present": [
+        "hero1"
+      ],
+      "camera": "Orbit shot circles terminal table as numbers pulse, cut to Eliot’s determined gaze.",
+      "clip_duration": 8,
+      "word_count": "13",
+      "estimated_speech_time": "5",
+      "background_definition": {
+        "location": "Command Center",
+        "environment_type": "technical overlays",
+        "setting_description": "glowing plates, error codes, flickering panels",
+        "time_of_day": "night",
+        "weather_conditions": "none",
+        "lighting": "cyan glow",
+        "atmosphere": "apocalyptic",
+        "key_visual_elements": [
+          "error Display",
+          "compass needles"
+        ],
+        "color_palette": "cyan, black",
+        "architectural_style": "futuristic",
+        "natural_elements": [],
+        "props_in_background": [
+          "control panels",
+          "holograms"
+        ],
+        "scale": "medium",
+        "continuity_notes": "cyber aesthetic persists",
+        "video_prompt_background": "command center with error codes"
+      },
+      "background_music": "Low throb",
+      "sound_effects": [
+        "alarm beep",
+        "circuit crackle"
+      ],
+      "visual_style": "cinematic depth",
+      "transitions": "cut",
+      "props": [
+        "data tablet"
+      ],
+      "emotions": [
+        "alarm"
+      ],
+      "lighting": "cyan glow",
+      "color_palette": [
+        "cyan",
+        "black"
+      ],
+      "special_effects": [
+        "code overlay"
+      ],
+      "clothing": [
+        "black henley",
+        "charcoal chinos"
+      ],
+      "time_of_day": "night",
+      "weather": "indoor",
+      "cultural_elements": [],
+      "historical_context": "present day London",
+      "genre": "sci‑fi thriller",
+      "themes": [
+        "catastrophe",
+        "choice"
+      ],
+      "mood": "intense",
+      "pacing": "fast",
+      "narrative_techniques": [
+        "dialogue only"
+      ],
+      "symbolism": [
+        "code cascade = impending disaster"
+      ],
+      "foreshadowing": []
+    },
+    {
+      "segment": 19,
+      "scene": "Deep in AI core, circuitry glows red.",
+      "overlay_text": "",
+      "overlay_text_position": "",
+      "overlay_text_style": "",
+      "overlay_text_duration": "",
+      "overlay_text_animation": "",
+      "overlay_text_color": "",
+      "overlay_text_font": "",
+      "content_type": "dialogue",
+      "narration": "",
+      "narrator_voice_for_segment": {
+        "voice_type": "professional narration",
+        "tone_variation": "neutral",
+        "pace_variation": "medium",
+        "emotion": "none",
+        "emphasis": "none",
+        "consistency_note": "Same narrator voice as previous segments, only tone/emotion varies"
+      },
+      "dialogue": [
+        {
+          "character": "hero1",
+          "line": "One last test, one last chance."
+        },
+        {
+          "character": "hero1",
+          "line": "Engage the emergency protocol, everything wills out."
+        }
+      ],
+      "characters_present": [
+        "hero1"
+      ],
+      "camera": "Steadicam tight on Eliot as he pushes a red button, beam shoots out.",
+      "clip_duration": 8,
+      "word_count": "13",
+      "estimated_speech_time": "5",
+      "background_definition": {
+        "location": "AI Core Chamber",
+        "environment_type": "high voltage",
+        "setting_description": "red circuitry, humming, panels glow",
+        "time_of_day": "night",
+        "weather_conditions": "none",
+        "lighting": "red glow",
+        "atmosphere": "urgent, electric",
+        "key_visual_elements": [
+          "red button",
+          "circuits"
+        ],
+        "color_palette": "red, black",
+        "architectural_style": "industrial",
+        "natural_elements": [],
+        "props_in_background": [
+          "control panels",
+          "cable vines"
+        ],
+        "scale": "medium",
+        "continuity_notes": "red motif continues",
+        "video_prompt_background": "AI core with glowing circuitry"
+      },
+      "background_music": "Strong pulse",
+      "sound_effects": [
+        "button click",
+        "electric surge"
+      ],
+      "visual_style": "cinematic depth",
+      "transitions": "cut",
+      "props": [
+        "data tablet"
+      ],
+      "emotions": [
+        "desperation"
+      ],
+      "lighting": "red glow",
+      "color_palette": [
+        "red",
+        "black"
+      ],
+      "special_effects": [
+        "light flare"
+      ],
+      "clothing": [
+        "black henley",
+        "charcoal chinos"
+      ],
+      "time_of_day": "night",
+      "weather": "indoor",
+      "cultural_elements": [],
+      "historical_context": "present day London",
+      "genre": "sci‑fi thriller",
+      "themes": [
+        "last resort",
+        "risk"
+      ],
+      "mood": "final countdown",
+      "pacing": "fast",
+      "narrative_techniques": [
+        "dialogue only"
+      ],
+      "symbolism": [
+        "red button = ultimate decision"
+      ],
+      "foreshadowing": []
+    },
+    {
+      "segment": 20,
+      "scene": "Full view of core, light bleeds outward.",
+      "overlay_text": "",
+      "overlay_text_position": "",
+      "overlay_text_style": "",
+      "overlay_text_duration": "",
+      "overlay_text_animation": "",
+      "overlay_text_color": "",
+      "overlay_text_font": "",
+      "content_type": "dialogue",
+      "narration": "",
+      "narrator_voice_for_segment": {
+        "voice_type": "professional narration",
+        "tone_variation": "neutral",
+        "pace_variation": "medium",
+        "emotion": "none",
+        "emphasis": "none",
+        "consistency_note": "Same narrator voice as previous segments, only tone/emotion varies"
+      },
+      "dialogue": [
+        {
+          "character": "hero1",
+          "line": "Behind the code is the human heart."
+        },
+        {
+          "character": "hero1",
+          "line": "Let it guide you to the AI's core."
+        }
+      ],
+      "characters_present": [
+        "hero1"
+      ],
+      "camera": "Wide establishing shot of the core, then pull focus to Eliot's face, then orbital around the crystal heart.",
+      "clip_duration": 8,
+      "word_count": "15",
+      "estimated_speech_time": "5",
+      "background_definition": {
+        "location": "Central AI Hub",
+        "environment_type": "core control",
+        "setting_description": "glowing orb, swirling lines, chamber bright",
+        "time_of_day": "night",
+        "weather_conditions": "none",
+        "lighting": "warm white glow",
+        "atmosphere": "triumphant, hopeful",
+        "key_visual_elements": [
+          "core orb",
+          "light ribbons"
+        ],
+        "color_palette": "white, soft gold",
+        "architectural_style": "futuristic",
+        "natural_elements": [],
+        "props_in_background": [
+          "control console",
+          "data ribbons"
+        ],
+        "scale": "medium",
+        "continuity_notes": "core setting remains consistent",
+        "video_prompt_background": "core of AI with warm glow"
+      },
+      "background_music": "Cinematic crescendo",
+      "sound_effects": [
+        "light hum",
+        "wind turbo"
+      ],
+      "visual_style": "cinematic depth, sparkle",
+      "transitions": "fade out",
+      "props": [
+        "data tablet"
+      ],
+      "emotions": [
+        "hope"
+      ],
+      "lighting": "warm glow",
+      "color_palette": [
+        "white",
+        "gold"
+      ],
+      "special_effects": [
+        "light bloom"
+      ],
+      "clothing": [
+        "black henley",
+        "charcoal chinos"
+      ],
+      "time_of_day": "night",
+      "weather": "indoor",
+      "cultural_elements": [],
+      "historical_context": "present day London",
+      "genre": "sci‑fi thriller",
+      "themes": [
+        "hope",
+        "humanity"
+      ],
+      "mood": "uplifting climax",
+      "pacing": "medium",
+      "narrative_techniques": [
+        "dialogue only"
+      ],
+      "symbolism": [
+        "core = heart"
+      ],
+      "foreshadowing": []
+    }
+  ]
+}
