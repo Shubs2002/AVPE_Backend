@@ -13,7 +13,7 @@ from app.utils.story_retry_helper import (
     get_retry_info_by_title,
     construct_retry_payload
 )
-from app.utils.file_storage_manager import storage_manager, ContentType
+from app.services.file_storage_manager import storage_manager, ContentType
 
 router = APIRouter()
 
@@ -62,8 +62,6 @@ class GenerateFullmovieAutoRequest(BaseModel):
     idea: str
     total_segments: Optional[int] = None  # Optional - will auto-detect if not provided
     segments_per_set: Optional[int] = 10
-    save_to_files: Optional[bool] = True
-    output_directory: Optional[str] = "generated_movie_script"
     custom_character_roster: Optional[List[dict]] = None  # User-provided main character roster
     no_narration: Optional[bool] = False  # If true, no narration in any segment
     narration_only_first: Optional[bool] = False  # If true, narration only in first segment
@@ -101,7 +99,7 @@ class RetryFailedStorySetsRequest(BaseModel):
 class RetryStoryByTitleRequest(BaseModel):
     title: str  # Story title (e.g., "Midnight Protocol")
     max_retries: Optional[int] = 3  # Maximum retry attempts per failed set
-    base_dir: Optional[str] = "generated_movie_script"  # Directory where stories are saved
+    content_type: Optional[str] = "movies"  # Content type (movies, stories, anime, etc.)
 
 @router.post("/generate-prompt-based-story")
 async def build_story_route(payload: GenerateStoryRequest) -> dict:
@@ -126,8 +124,6 @@ async def build_full_story_auto_route(payload: GenerateFullmovieAutoRequest) -> 
         payload.idea,
         payload.total_segments,
         payload.segments_per_set,
-        payload.save_to_files,
-        payload.output_directory,
         payload.custom_character_roster,
         payload.no_narration,
         payload.narration_only_first,
@@ -169,15 +165,15 @@ async def retry_failed_story_sets_route(payload: RetryFailedStorySetsRequest) ->
     return screenwriter_controller.retry_failed_story_sets(payload.previous_result, payload.max_retries)
 
 
-@router.get("/story-status/{title}")
-async def get_story_status_route(title: str, base_dir: str = "generated_movie_script") -> dict:
+@router.get("/story-status/{content_type}/{title}")
+async def get_story_status_route(content_type: str, title: str) -> dict:
     """
     Check the status of a story generation - see which sets succeeded and which failed.
     
     Example:
-        GET /api/story-status/Midnight Protocol
+        GET /api/story-status/movies/Midnight Protocol
     """
-    return get_retry_info_by_title(title, base_dir)
+    return get_retry_info_by_title(title, content_type)
 
 
 @router.post("/retry-story-by-title")
@@ -190,11 +186,12 @@ async def retry_story_by_title_route(payload: RetryStoryByTitleRequest) -> dict:
         POST /api/retry-story-by-title
         {
             "title": "Midnight Protocol",
+            "content_type": "movies",
             "max_retries": 3
         }
     """
     # Get story info and failed sets
-    retry_info = get_retry_info_by_title(payload.title, payload.base_dir)
+    retry_info = get_retry_info_by_title(payload.title, payload.content_type)
     
     if not retry_info["success"]:
         return {
@@ -216,10 +213,10 @@ async def retry_story_by_title_route(payload: RetryStoryByTitleRequest) -> dict:
     # Construct retry payload
     retry_payload_data = construct_retry_payload(
         title=payload.title,
+        content_type=payload.content_type,
         metadata=retry_info["metadata"],
         failed_sets=retry_info["failed_sets"],
-        max_retries=payload.max_retries,
-        base_dir=payload.base_dir
+        max_retries=payload.max_retries
     )
     
     # Call the existing retry function
@@ -283,6 +280,82 @@ async def analyze_multiple_character_images_files_route(
     return screenwriter_controller.analyze_multiple_character_images_files(images, character_names, save_characters)
 
 
+@router.post("/create-character-from-image")
+async def create_character_from_image_route(
+    image: UploadFile,
+    character_name: str = Form(...),
+    remove_background: bool = Form(True),
+    upload_to_cloudinary: bool = Form(True)
+) -> dict:
+    """
+    🎭 Create a complete character from an uploaded image with AI analysis!
+    
+    This endpoint provides a complete character creation pipeline:
+    
+    **Pipeline Steps:**
+    1. 🔍 **AI Analysis** - Gemini analyzes the image for ultra-detailed character description
+    2. 🎨 **Background Removal** - Removes background for clean character image (optional)
+    3. ☁️ **Cloudinary Upload** - Uploads processed image and gets public URL (optional)
+    4. 💾 **MongoDB Storage** - Saves character data + image URL to database
+    
+    **What You Get:**
+    - Complete character analysis (physical appearance, clothing, personality)
+    - Clean character image with transparent background
+    - Cloudinary-hosted image URL for use in video generation
+    - MongoDB document with all character data
+    
+    **Perfect For:**
+    - Creating custom characters for your stories
+    - Building character libraries for video generation
+    - Maintaining consistent character appearances across videos
+    
+    **Example Usage:**
+    ```
+    POST /api/create-character-from-image
+    Form Data:
+    - image: [your character image file]
+    - character_name: "Hero Knight"
+    - remove_background: true
+    - upload_to_cloudinary: true
+    ```
+    
+    **Response:**
+    ```json
+    {
+        "success": true,
+        "character_id": "507f1f77bcf86cd799439011",
+        "character_name": "Hero Knight",
+        "image_url": "https://res.cloudinary.com/.../hero_knight.png",
+        "character_data": {
+            "characters_roster": [{
+                "name": "Hero Knight",
+                "physical_appearance": {...},
+                "clothing_style": {...},
+                ...
+            }]
+        }
+    }
+    ```
+    
+    **Parameters:**
+    - image: Image file (JPG, PNG, WEBP) - Max 10MB
+    - character_name: Name for your character
+    - remove_background: Remove image background (default: true)
+    - upload_to_cloudinary: Upload to Cloudinary (default: true)
+    
+    **Note:** Make sure to configure Cloudinary credentials in .env file:
+    - CLOUDINARY_CLOUD_NAME
+    - CLOUDINARY_API_KEY
+    - CLOUDINARY_API_SECRET
+    """
+    return screenwriter_controller.create_character_from_uploaded_image(
+        image=image,
+        character_name=character_name,
+        remove_background=remove_background,
+        upload_to_cloudinary=upload_to_cloudinary
+    )
+
+
 # ---------- COMPLETE VIDEO GENERATION ----------
 class GenerateFullContentRequest(BaseModel):
     content_data: dict
@@ -298,6 +371,63 @@ class GenerateFullContentRequest(BaseModel):
 async def generate_full_content_videos_route(payload: GenerateFullContentRequest) -> dict:
     """Generate complete videos for any content type (story, meme, free_content) with auto-merge. Content type is automatically detected from content_data structure."""
     return cinematographer_controller.handle_generate_full_content_videos(payload.dict())
+
+
+# ---------- VIDEO GENERATION WITH KEYFRAMES ----------
+class GenerateVideoWithKeyframesRequest(BaseModel):
+    prompt: str
+    first_frame_gcs_uri: Optional[str] = None  # Image URI: GCS (gs://...), HTTP/HTTPS URL, or Cloudinary URL
+    last_frame_gcs_uri: Optional[str] = None   # Image URI: GCS (gs://...), HTTP/HTTPS URL, or Cloudinary URL
+    duration: Optional[int] = 8
+    resolution: Optional[str] = "720p"
+    aspect_ratio: Optional[str] = "9:16"
+
+@router.post("/generate-video-with-keyframes")
+async def generate_video_with_keyframes_route(payload: GenerateVideoWithKeyframesRequest) -> dict:
+    """
+    Generate a video with optional first and last frame keyframes.
+    
+    This endpoint allows you to specify exact start and end frames for better
+    video continuity between segments. Useful for:
+    - Maintaining character consistency across segments
+    - Creating smooth transitions between scenes
+    - Ensuring visual continuity in multi-segment stories
+    
+    Example:
+        POST /api/generate-video-with-keyframes
+        {
+            "prompt": "A cat walking across the room",
+            "first_frame_gcs_uri": "gs://my-bucket/cat_start.png",
+            "last_frame_gcs_uri": "gs://my-bucket/cat_end.png",
+            "duration": 8,
+            "aspect_ratio": "9:16"
+        }
+    """
+    from app.services import genai_service
+    
+    try:
+        video_urls = genai_service.generate_video_with_keyframes(
+            prompt=payload.prompt,
+            first_frame=payload.first_frame_gcs_uri,
+            last_frame=payload.last_frame_gcs_uri,
+            duration=payload.duration,
+            resolution=payload.resolution,
+            aspect_ratio=payload.aspect_ratio
+        )
+        
+        return {
+            "success": True,
+            "video_urls": video_urls,
+            "keyframes_used": {
+                "first_frame": payload.first_frame_gcs_uri is not None,
+                "last_frame": payload.last_frame_gcs_uri is not None
+            }
+        }
+    except Exception as e:
+        return {
+            "success": False,
+            "error": str(e)
+        }
 
 
 # ---------- VIDEO MERGING ----------
@@ -530,3 +660,174 @@ async def get_storage_stats_route() -> dict:
         "total_items": total_items,
         "by_type": stats
     }
+
+
+
+# ---------- ANIME GENERATION ----------
+class GenerateAnimeAutoRequest(BaseModel):
+    idea: str
+    total_segments: Optional[int] = None  # Auto-detect if not provided
+    segments_per_set: Optional[int] = 10
+    custom_character_roster: Optional[List[dict]] = None
+    anime_style: Optional[str] = "shonen"  # shonen, shojo, seinen, slice_of_life, mecha, isekai
+    no_narration: Optional[bool] = False
+    narration_only_first: Optional[bool] = False
+    cliffhanger_interval: Optional[int] = 0
+    content_rating: Optional[str] = "U/A"  # U, U/A, A
+
+@router.post("/generate-anime-auto")
+async def generate_anime_auto_route(payload: GenerateAnimeAutoRequest) -> dict:
+    """
+    Generate a complete Japanese anime story automatically in English.
+    
+    Creates anime-style content with:
+    - Authentic Japanese anime aesthetics and art style
+    - Large expressive anime eyes and distinctive character designs
+    - Anime storytelling conventions and tropes
+    - English dialogue and narration
+    - Anime-specific visual effects and cinematography
+    
+    Anime Styles:
+    - shonen: Action-packed with battles, friendship, and growth
+    - shojo: Romantic with emotional depth and beautiful aesthetics
+    - seinen: Mature themes with complex characters
+    - slice_of_life: Everyday moments with warmth and humor
+    - mecha: Giant robots and sci-fi battles
+    - isekai: Fantasy world with magic and adventure
+    
+    Example:
+        POST /api/generate-anime-auto
+        {
+            "idea": "A high school student discovers they have magical powers",
+            "anime_style": "shonen",
+            "total_segments": 30,
+            "cliffhanger_interval": 10,
+            "content_rating": "U/A"
+        }
+    """
+    return screenwriter_controller.generate_anime_automatically(
+        idea=payload.idea,
+        total_segments=payload.total_segments,
+        segments_per_set=payload.segments_per_set,
+        custom_character_roster=payload.custom_character_roster,
+        anime_style=payload.anime_style,
+        no_narration=payload.no_narration,
+        narration_only_first=payload.narration_only_first,
+        cliffhanger_interval=payload.cliffhanger_interval,
+        content_rating=payload.content_rating
+    )
+
+
+
+# ---------- DAILY CHARACTER LIFE CONTENT ----------
+class GenerateDailyCharacterRequest(BaseModel):
+    idea: str  # The daily life moment (e.g., "character sees reflection and gets scared")
+    character_name: str  # Name of the character (e.g., "Floof")
+    creature_language: Optional[str] = "Soft and High-Pitched"  # Voice description: Any description (e.g., "Soft and High-Pitched", "Deep and Grumbly", "Magical and mystical")
+    num_segments: Optional[int] = 7  # Number of segments (max 10, default 7 for ~1 min)
+
+@router.post("/generate-daily-character")
+async def generate_daily_character_route(payload: GenerateDailyCharacterRequest) -> dict:
+    """
+    Generate daily character life content for Instagram using keyframe images.
+    
+    Perfect for Instagram pages showcasing a recurring character's daily life.
+    Creates relatable, funny, engaging moments with NO dialogue/narration - only creature sounds.
+    
+    Features:
+    - Simple: Just provide idea, character name, and voice type
+    - Visual: Pure visual storytelling with creature sounds only
+    - Quick: Maximum 10 segments (~1 minute video)
+    - Keyframe-Ready: Designed for use with character images as keyframes
+    - Viral: Optimized for Instagram engagement
+    
+    Character Voice Examples (you can use any description):
+    - "Soft and High-Pitched" - Cute, gentle creature sounds
+    - "Magical or Otherworldly" - Mystical, ethereal sounds
+    - "Muffled and Low" - Deep, grumbly creature sounds
+    - "Soft and High-Pitched and mystical" - Custom combination
+    - "Deep and Grumbly with echoes" - Your own description
+    - Any description that fits your character!
+    
+    Use Cases:
+    - Funny reactions (seeing reflection, hearing noise)
+    - Relatable struggles (waking up, cooking fails)
+    - Character quirks (weird habits, behaviors)
+    - Everyday adventures (shopping, commuting)
+    - Emotional moments (happy, sad, confused)
+    
+    Example:
+        POST /api/generate-daily-character
+        {
+            "idea": "Character sees his own reflection in a puddle and gets scared",
+            "character_name": "Floof",
+            "creature_language": "Soft and High-Pitched",
+            "num_segments": 7
+        }
+    
+    Response includes:
+    - 7-10 segments (8 seconds each)
+    - Pure visual storytelling (NO dialogue/narration)
+    - Creature sound descriptions and timing
+    - Scene descriptions for keyframe generation
+    - Instagram optimization tips
+    
+    Note: Use the character's image as keyframe when generating videos with Veo3
+    """
+    return screenwriter_controller.generate_daily_character_content(
+        idea=payload.idea,
+        character_name=payload.character_name,
+        creature_language=payload.creature_language,
+        num_segments=payload.num_segments
+    )
+
+
+class GenerateDailyCharacterVideosRequest(BaseModel):
+    content_data: dict  # Output from /generate-daily-character
+    character_keyframe_uri: str  # Image URI: GCS (gs://...), HTTP/HTTPS URL (https://...), or Cloudinary URL
+    resolution: Optional[str] = "720p"
+    aspect_ratio: Optional[str] = "9:16"
+    download: Optional[bool] = False
+    auto_merge: Optional[bool] = False  # Automatically merge segments into final video
+    cleanup_segments: Optional[bool] = True  # Delete individual segments after merge
+
+@router.post("/generate-daily-character-videos")
+async def generate_daily_character_videos_route(payload: GenerateDailyCharacterVideosRequest) -> dict:
+    """
+    Generate videos for daily character content using keyframes.
+    
+    Takes the output from /generate-daily-character and generates videos for each segment
+    using the character's image as the first keyframe for consistency.
+    
+    Features:
+    - Automatic keyframe application for character consistency
+    - Generates videos for all segments
+    - Optional auto-merge into final video
+    - Progress tracking for each segment
+    
+    Example:
+        POST /api/generate-daily-character-videos
+        {
+            "content_data": {
+                "title": "First Mirror Fumble",
+                "character_name": "Floof",
+                "segments": [...]
+            },
+            "character_keyframe_uri": "https://res.cloudinary.com/.../floof.png",
+            "resolution": "720p",
+            "aspect_ratio": "9:16",
+            "auto_merge": true
+        }
+    
+    Supported Image URIs:
+    - GCS: "gs://your-bucket/characters/floof.png"
+    - HTTP/HTTPS: "https://example.com/floof.png"
+    - Cloudinary: "https://res.cloudinary.com/.../floof.png"
+    
+    Response includes:
+    - Video URLs for each segment
+    - Generation status and timing
+    - Optional merged final video
+    - Failed segments for retry
+    """
+    return cinematographer_controller.handle_generate_daily_character_videos(payload.dict())

@@ -306,13 +306,20 @@ def merge_content_videos_complete(results: dict, skip_missing: bool = False,
     try:
         from app.services.genai_service import generate_thumbnail_image
         
+        # Get aspect ratio from results (default to 9:16 for vertical videos)
+        aspect_ratio = results.get("aspect_ratio", results.get("aspectRatio", "9:16"))
+        
         content_data = {
             "title": results.get("content_title", results.get("story_title", "Video")),
             "characters_roster": results.get("characters_roster", []),
             "content_type": results.get("content_type", "story")
         }
         
-        thumbnail_result = generate_thumbnail_image(content_data, f"{output_filename}_thumbnail.png")
+        thumbnail_result = generate_thumbnail_image(
+            content_data, 
+            f"{output_filename}_thumbnail.png",
+            aspect_ratio=aspect_ratio
+        )
         
         if thumbnail_result.get("success"):
             print(f"✅ Thumbnail generated: {thumbnail_result['thumbnail_path']}")

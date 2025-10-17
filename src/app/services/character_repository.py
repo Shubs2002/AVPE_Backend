@@ -24,13 +24,21 @@ class CharacterRepository:
         # Ensure indexes are created
         Character.create_indexes(self.collection)
     
-    def create(self, character_data: Dict[str, Any], character_name: str) -> Dict[str, Any]:
+    def create(
+        self, 
+        character_data: Dict[str, Any], 
+        character_name: str,
+        image_url: Optional[str] = None,
+        cloudinary_public_id: Optional[str] = None
+    ) -> Dict[str, Any]:
         """
         Create a new character in the database
         
         Args:
             character_data: Complete character analysis data
             character_name: Name of the character
+            image_url: Optional Cloudinary URL of character image
+            cloudinary_public_id: Optional Cloudinary public ID
         
         Returns:
             dict: Created character with ID
@@ -38,18 +46,23 @@ class CharacterRepository:
         try:
             character = Character(
                 character_data=character_data,
-                character_name=character_name
+                character_name=character_name,
+                image_url=image_url,
+                cloudinary_public_id=cloudinary_public_id
             )
             
             result = self.collection.insert_one(character.to_dict())
             character._id = result.inserted_id
             
             print(f"💾 Character saved to MongoDB: {character_name} (ID: {result.inserted_id})")
+            if image_url:
+                print(f"🖼️ Character image URL: {image_url}")
             
             return {
                 "success": True,
                 "character_id": str(result.inserted_id),
                 "character_name": character_name,
+                "image_url": image_url,
                 "created_at": character.created_at.isoformat()
             }
         

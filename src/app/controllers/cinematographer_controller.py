@@ -269,6 +269,88 @@ def handle_generate_full_content_videos(request_body: dict):
         return {"error": str(e)}
 
 
+def handle_generate_daily_character_videos(request_body: dict):
+    """
+    Generate videos for daily character content using keyframes.
+    Each segment uses the character image as first keyframe for consistency.
+    """
+    try:
+        content_data = request_body.get("content_data")
+        character_keyframe_uri = request_body.get("character_keyframe_uri")
+        auto_merge = request_body.get("auto_merge", False)
+        cleanup_segments = request_body.get("cleanup_segments", True)
+        
+        if not content_data:
+            return {"error": "content_data is required"}
+        
+        if not character_keyframe_uri:
+            return {"error": "character_keyframe_uri is required (GCS URI of character image)"}
+        
+        # Video options
+        video_options = {
+            "resolution": request_body.get("resolution", "720p"),
+            "aspect_ratio": request_body.get("aspect_ratio", "9:16"),
+            "download": request_body.get("download", False),
+            "character_keyframe_uri": character_keyframe_uri
+        }
+        
+        # Import the function
+        from app.services.content_to_video_service import execute_daily_character_video_generation
+        
+        # Execute the full pipeline with keyframes
+        results = execute_daily_character_video_generation(content_data, video_options)
+        
+        # Auto-merge if requested and videos were generated
+        if auto_merge and results.get("success_count", 0) > 0:
+            print(f"\n🎬 Auto-merging enabled - attempting to merge {results['success_count']} segments...")
+            
+            try:
+                from app.services.video_merger_service import merge_content_videos_complete
+                
+                merge_result = merge_content_videos_complete(
+                    results, 
+                    skip_missing=True,
+                    cleanup_segments=cleanup_segments
+                )
+                
+                if merge_result["success"]:
+                    results["merged_video"] = {
+                        "success": True,
+                        "merge_method": merge_result.get("merge_method", "client_side"),
+                        "output_filename": merge_result.get("output_filename"),
+                        "video_urls": merge_result.get("video_urls", []),
+                        "total_segments": merge_result.get("total_segments", 0)
+                    }
+                    print(f"✅ Auto-merge prepared: {merge_result.get('merge_method', 'client_side')} approach")
+                else:
+                    results["merged_video"] = {
+                        "success": False,
+                        "error": merge_result.get("error", "Merge failed")
+                    }
+                    print(f"❌ Auto-merge failed: {merge_result.get('error')}")
+                    
+            except Exception as merge_error:
+                results["merged_video"] = {
+                    "success": False,
+                    "error": f"Auto-merge error: {str(merge_error)}"
+                }
+                print(f"❌ Auto-merge error: {str(merge_error)}")
+        
+        # Add merge recommendation if not auto-merged
+        elif results.get("success_count", 0) > 0 and not auto_merge:
+            results["merge_recommendation"] = {
+                "can_merge": results["success_count"] >= results["total_segments"] * 0.5,
+                "success_rate": (results["success_count"] / results["total_segments"]) * 100,
+                "message": f"You have {results['success_count']}/{results['total_segments']} segments ready. Use /api/merge-content-videos to create final video.",
+                "next_step": "merge_videos"
+            }
+        
+        return results
+        
+    except Exception as e:
+        return {"error": str(e)}
+
+
 def handle_content_segment_to_video(request_body: dict):
     """
     Convert any content segment (story, meme, free_content) to video generation

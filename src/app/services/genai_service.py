@@ -8,9 +8,75 @@ from app.config.settings import settings
 from app.connectors.genai_connector import get_genai_client
 
 
+def _prepare_image_input(image_input):
+    """
+    Prepare image input for Veo 3 video generation.
+    
+    Args:
+        image_input: Can be:
+            - PIL Image object
+            - bytes (image data)
+            - str (GCS URI starting with "gs://")
+            - dict with 'gcs_uri' or 'data' keys
+    
+    Returns:
+        types.Image: Prepared image object for Veo 3
+    """
+    # If it's already a types.Image, return as-is
+    if isinstance(image_input, types.Image):
+        return image_input
+    
+    # If it's a GCS URI string
+    if isinstance(image_input, str) and image_input.startswith("gs://"):
+        return types.Image(gcs_uri=image_input, mime_type="image/png")
+    
+    # If it's a dict with gcs_uri
+    if isinstance(image_input, dict) and "gcs_uri" in image_input:
+        return types.Image(
+            gcs_uri=image_input["gcs_uri"],
+            mime_type=image_input.get("mime_type", "image/png")
+        )
+    
+    # If it's a PIL Image, convert to bytes
+    if isinstance(image_input, Image.Image):
+        buffer = BytesIO()
+        image_input.save(buffer, format="PNG")
+        image_bytes = buffer.getvalue()
+        return types.Image(image_bytes=image_bytes, mime_type="image/png")
+    
+    # If it's bytes
+    if isinstance(image_input, bytes):
+        return types.Image(image_bytes=image_input, mime_type="image/png")
+    
+    # If it's a dict with data
+    if isinstance(image_input, dict) and "data" in image_input:
+        return types.Image(
+            image_bytes=image_input["data"],
+            mime_type=image_input.get("mime_type", "image/png")
+        )
+    
+    raise ValueError(f"Unsupported image input type: {type(image_input)}")
+
+
 def generate_video_from_payload(payload: dict):
     """
     Calls Vertex AI Veo-3 model and generates a video using google-genai client.
+    
+    Supports optional first and last frame images for better video continuity.
+    
+    Args:
+        payload: Dictionary containing:
+            - prompt (required): Text description of the video
+            - durationSeconds (optional): Video duration (default: 8)
+            - resolution (optional): Video resolution (default: "720p")
+            - aspectRatio (optional): Aspect ratio (default: "9:16")
+            - first_frame_image (optional): First frame image (PIL Image, bytes, or GCS URI)
+            - last_frame_image (optional): Last frame image (PIL Image, bytes, or GCS URI)
+            - first_frame_gcs_uri (optional): GCS URI for first frame (e.g., "gs://bucket/img.png")
+            - last_frame_gcs_uri (optional): GCS URI for last frame
+    
+    Returns:
+        list: List of generated video URLs
     """
 
     client = get_genai_client()
@@ -27,6 +93,13 @@ def generate_video_from_payload(payload: dict):
     duration = payload.get("durationSeconds", 8)
     resolution = payload.get("resolution", "720p")
     aspect_ratio = payload.get("aspectRatio", "9:16")
+    
+    # Extract optional frame images
+    first_frame_image = payload.get("first_frame_image")  # PIL Image, bytes, or GCS URI
+    last_frame_image = payload.get("last_frame_image")
+    first_frame_gcs_uri = payload.get("first_frame_gcs_uri")  # Direct GCS URI
+    last_frame_gcs_uri = payload.get("last_frame_gcs_uri")
+    
     # Note: generate_audio and sample_count are not supported in GenerateVideosConfig
 
     def _is_transient_service_error(exc_or_obj) -> bool:
@@ -42,17 +115,40 @@ def generate_video_from_payload(payload: dict):
     last_exception = None
     for attempt in range(max_retries):
         try:
-            # Start async video generation
-            operation = client.models.generate_videos(
-                model=settings.VIDEO_GENERATION_MODEL,
-                # model="veo-3.0-fast-generate-preview",
-                prompt=prompt,
-                config=types.GenerateVideosConfig(
-                    duration_seconds=duration,
-                    resolution=resolution,
-                    aspect_ratio=aspect_ratio,
+            # Prepare config with optional last frame
+            config_params = {
+                "duration_seconds": duration,
+                "resolution": resolution,
+                "aspect_ratio": aspect_ratio,
+            }
+            
+            # Add last frame if provided
+            if last_frame_gcs_uri:
+                config_params["last_frame"] = types.Image(
+                    gcs_uri=last_frame_gcs_uri,
+                    mime_type="image/png"
                 )
-            )
+            elif last_frame_image:
+                config_params["last_frame"] = _prepare_image_input(last_frame_image)
+            
+            # Prepare generation parameters
+            generation_params = {
+                "model": settings.VIDEO_GENERATION_MODEL,
+                "prompt": prompt,
+                "config": types.GenerateVideosConfig(**config_params)
+            }
+            
+            # Add first frame if provided (as 'image' parameter)
+            if first_frame_gcs_uri:
+                generation_params["image"] = types.Image(
+                    gcs_uri=first_frame_gcs_uri,
+                    mime_type="image/png"
+                )
+            elif first_frame_image:
+                generation_params["image"] = _prepare_image_input(first_frame_image)
+            
+            # Start async video generation
+            operation = client.models.generate_videos(**generation_params)
 
             # Poll until completion
             while not operation.done:
@@ -245,6 +341,284 @@ def download_video(video_url: str, filename: str = None, download_dir: str = "do
     raise Exception(error_msg)
 
 
+def extract_last_frame_from_video(video_path: str, output_path: str = None) -> str:
+    """
+    Extract the last frame from a video file.
+    
+    Args:
+        video_path: Path to the video file
+        output_path: Optional path to save the frame (defaults to auto-generated)
+    
+    Returns:
+        str: Path to the extracted frame image
+    """
+    import cv2
+    from PIL import Image
+    
+    print(f"🎞️ Extracting last frame from: {video_path}")
+    
+    # Open video
+    cap = cv2.VideoCapture(video_path)
+    
+    if not cap.isOpened():
+        raise Exception(f"Failed to open video: {video_path}")
+    
+    # Get total frame count
+    total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+    
+    if total_frames == 0:
+        raise Exception(f"Video has no frames: {video_path}")
+    
+    # Set to last frame
+    cap.set(cv2.CAP_PROP_POS_FRAMES, total_frames - 1)
+    
+    # Read the last frame
+    ret, frame = cap.read()
+    cap.release()
+    
+    if not ret:
+        raise Exception(f"Failed to read last frame from video: {video_path}")
+    
+    # Convert BGR to RGB
+    frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+    
+    # Convert to PIL Image
+    pil_image = Image.fromarray(frame_rgb)
+    
+    # Generate output path if not provided
+    if not output_path:
+        timestamp = int(time.time())
+        output_path = f"last_frame_{timestamp}.png"
+    
+    # Save the frame
+    pil_image.save(output_path)
+    print(f"✅ Last frame extracted: {output_path} ({pil_image.size})")
+    
+    return output_path
+
+
+def generate_first_frame_with_imagen(character_keyframe_uri: str, frame_description: str, aspect_ratio: str = "9:16") -> 'Image.Image':
+    """
+    Generate the first frame using Imagen (nano banana model) by combining
+    character keyframe with scene description.
+    
+    Args:
+        character_keyframe_uri: URI of the character image (HTTP/HTTPS or GCS)
+        frame_description: Description of the scene, pose, environment
+        aspect_ratio: Aspect ratio for the generated frame
+    
+    Returns:
+        PIL.Image: Generated first frame
+    """
+    from PIL import Image
+    from io import BytesIO
+    import requests
+    
+    print(f"🎨 Generating first frame with Imagen...")
+    print(f"📝 Description: {frame_description[:100]}...")
+    
+    # Download character image if it's a URL
+    if character_keyframe_uri.startswith("http://") or character_keyframe_uri.startswith("https://"):
+        print(f"📥 Downloading character image from: {character_keyframe_uri[:50]}...")
+        response = requests.get(character_keyframe_uri, timeout=30)
+        response.raise_for_status()
+        character_image = Image.open(BytesIO(response.content))
+        print(f"✅ Character image loaded: {character_image.size}")
+    else:
+        raise ValueError(f"Unsupported character_keyframe_uri format: {character_keyframe_uri}")
+    
+    # Map aspect ratio to description
+    aspect_ratio_descriptions = {
+        "9:16": "vertical portrait orientation (9:16 aspect ratio)",
+        "16:9": "horizontal landscape orientation (16:9 aspect ratio)",
+        "1:1": "square format (1:1 aspect ratio)",
+        "4:5": "vertical format (4:5 aspect ratio)"
+    }
+    
+    aspect_ratio_desc = aspect_ratio_descriptions.get(aspect_ratio, f"{aspect_ratio} aspect ratio")
+    
+    # Build prompt for Imagen with aspect ratio
+    prompt = f"Create a {aspect_ratio_desc} image. A scene with the character in this exact appearance: {frame_description}. Maintain character's exact look, colors, and features. The image must be in {aspect_ratio_desc}."
+    
+    print(f"🎨 Generating frame with Imagen ({aspect_ratio})...")
+    print(f"📝 Full prompt: {prompt[:150]}...")
+    
+    # TODO: Implement actual Imagen (nano banana) API call with aspect ratio
+    # For now, we'll resize the character image to match aspect ratio
+    
+    print(f"⚠️ Imagen generation not yet implemented - resizing character image to {aspect_ratio}")
+    
+    # Resize character image to match aspect ratio
+    resized_image = _resize_to_aspect_ratio(character_image, aspect_ratio)
+    
+    return resized_image
+
+
+def _resize_to_aspect_ratio(image: 'Image.Image', aspect_ratio: str) -> 'Image.Image':
+    """
+    Resize an image to match the specified aspect ratio.
+    
+    Args:
+        image: PIL Image to resize
+        aspect_ratio: Target aspect ratio (e.g., "9:16", "16:9", "1:1")
+    
+    Returns:
+        PIL.Image: Resized image
+    """
+    from PIL import Image
+    
+    # Parse aspect ratio
+    try:
+        width_ratio, height_ratio = map(int, aspect_ratio.split(':'))
+    except:
+        print(f"⚠️ Invalid aspect ratio '{aspect_ratio}', using original image")
+        return image
+    
+    # Calculate target dimensions
+    original_width, original_height = image.size
+    target_aspect = width_ratio / height_ratio
+    current_aspect = original_width / original_height
+    
+    if abs(target_aspect - current_aspect) < 0.01:
+        # Already correct aspect ratio
+        return image
+    
+    # Determine new dimensions (maintain quality, crop if needed)
+    if current_aspect > target_aspect:
+        # Image is too wide, crop width
+        new_height = original_height
+        new_width = int(new_height * target_aspect)
+    else:
+        # Image is too tall, crop height
+        new_width = original_width
+        new_height = int(new_width / target_aspect)
+    
+    # Center crop
+    left = (original_width - new_width) // 2
+    top = (original_height - new_height) // 2
+    right = left + new_width
+    bottom = top + new_height
+    
+    cropped_image = image.crop((left, top, right, bottom))
+    
+    print(f"✅ Resized from {image.size} to {cropped_image.size} ({aspect_ratio})")
+    
+    return cropped_image
+
+
+def generate_video_with_keyframes(
+    prompt: str,
+    first_frame=None,
+    last_frame=None,
+    duration: int = 8,
+    resolution: str = "720p",
+    aspect_ratio: str = "9:16"
+):
+    """
+    Generate a video with optional first and last frame keyframes.
+    
+    This is a convenience function that makes it easy to generate videos
+    with specific start and end frames for better continuity between segments.
+    
+    Args:
+        prompt: Text description of the video
+        first_frame: Optional first frame (PIL Image, bytes, GCS URI, HTTP/HTTPS URL, or dict)
+        last_frame: Optional last frame (PIL Image, bytes, GCS URI, HTTP/HTTPS URL, or dict)
+        duration: Video duration in seconds (default: 8)
+        resolution: Video resolution (default: "720p")
+        aspect_ratio: Aspect ratio (default: "9:16")
+    
+    Returns:
+        list: List of generated video URLs
+    
+    Example:
+        # Using PIL Images
+        from PIL import Image
+        first_img = Image.open("start.png")
+        last_img = Image.open("end.png")
+        urls = generate_video_with_keyframes(
+            prompt="A cat walking across the room",
+            first_frame=first_img,
+            last_frame=last_img
+        )
+        
+        # Using GCS URIs
+        urls = generate_video_with_keyframes(
+            prompt="A cat walking across the room",
+            first_frame="gs://my-bucket/start.png",
+            last_frame="gs://my-bucket/end.png"
+        )
+        
+        # Using HTTP/HTTPS URLs (Cloudinary, etc.)
+        urls = generate_video_with_keyframes(
+            prompt="A cat walking across the room",
+            first_frame="https://res.cloudinary.com/.../image.png"
+        )
+    """
+    import requests
+    from PIL import Image
+    from io import BytesIO
+    
+    def process_image_input(image_input):
+        """Process various image input types"""
+        import os
+        
+        if image_input is None:
+            return None
+            
+        # If it's a string, check what type
+        if isinstance(image_input, str):
+            # GCS URI - pass as is
+            if image_input.startswith("gs://"):
+                return {"type": "gcs_uri", "value": image_input}
+            # HTTP/HTTPS URL - download and convert to PIL Image
+            elif image_input.startswith("http://") or image_input.startswith("https://"):
+                print(f"📥 Downloading image from URL: {image_input[:50]}...")
+                response = requests.get(image_input, timeout=30)
+                response.raise_for_status()
+                img = Image.open(BytesIO(response.content))
+                print(f"✅ Image downloaded: {img.size} {img.mode}")
+                return {"type": "image", "value": img}
+            # Local file path - load from disk
+            elif os.path.exists(image_input):
+                print(f"📂 Loading image from local file: {image_input}")
+                img = Image.open(image_input)
+                print(f"✅ Image loaded: {img.size} {img.mode}")
+                return {"type": "image", "value": img}
+            else:
+                raise ValueError(f"Unsupported string format for image: {image_input}")
+        else:
+            # PIL Image, bytes, or dict - pass as is
+            return {"type": "image", "value": image_input}
+    
+    payload = {
+        "prompt": prompt,
+        "durationSeconds": duration,
+        "resolution": resolution,
+        "aspectRatio": aspect_ratio
+    }
+    
+    # Process first frame
+    if first_frame:
+        processed = process_image_input(first_frame)
+        if processed:
+            if processed["type"] == "gcs_uri":
+                payload["first_frame_gcs_uri"] = processed["value"]
+            else:
+                payload["first_frame_image"] = processed["value"]
+    
+    # Process last frame
+    if last_frame:
+        processed = process_image_input(last_frame)
+        if processed:
+            if processed["type"] == "gcs_uri":
+                payload["last_frame_gcs_uri"] = processed["value"]
+            else:
+                payload["last_frame_image"] = processed["value"]
+    
+    return generate_video_from_payload(payload)
+
+
 def generate_and_download_video(payload: dict, download: bool = True, filename: str = None):
     """
     Generate video and optionally download it immediately
@@ -283,25 +657,31 @@ def generate_and_download_video(payload: dict, download: bool = True, filename: 
     return result
 
 
-def generate_thumbnail_image(content_data: dict, output_filename: str = None) -> dict:
+def generate_thumbnail_image(content_data: dict, output_filename: str = None, content_type_override: str = None, aspect_ratio: str = "9:16") -> dict:
     """
-    Generate a thumbnail image using Google AI Studio API based on content data
+    Generate a thumbnail image using Imagen (nano banana model) with title included in the image.
     
     Args:
         content_data: Dictionary containing content information (title, characters, etc.)
         output_filename: Optional filename for the thumbnail (defaults to content title)
+        content_type_override: Optional content type override (e.g., "daily_character")
+        aspect_ratio: Aspect ratio for the thumbnail (default: "9:16" for vertical videos)
     
     Returns:
         dict: Contains success status, thumbnail path, and generation details
     """
     try:
-        client = get_genai_client()
+        from app.services.file_storage_manager import storage_manager, ContentType
         
-        # Build thumbnail prompt from content data
-        prompt = _build_thumbnail_prompt(content_data)
+        # Build thumbnail prompt from content data (includes title in the image and aspect ratio)
+        prompt = _build_thumbnail_prompt(content_data, aspect_ratio)
         
-        print(f"🎨 Generating thumbnail image...")
+        print(f"🎨 Generating thumbnail with Imagen (nano banana)...")
         print(f"📝 Prompt: {prompt[:100]}...")
+        
+        # TODO: Implement actual Imagen (nano banana) API call
+        # For now, using Gemini as placeholder
+        client = get_genai_client()
         
         # Generate the thumbnail image
         response = client.models.generate_content(
@@ -314,25 +694,39 @@ def generate_thumbnail_image(content_data: dict, output_filename: str = None) ->
             if part.text is not None:
                 print(f"📋 AI Response: {part.text[:100]}...")
             elif part.inline_data is not None:
-                # Save the generated image
+                # Save the generated image (no text overlay - title is in the image)
                 image = Image.open(BytesIO(part.inline_data.data))
                 
-                # Add text overlay with title
-                image_with_text = _add_title_overlay(image, content_data)
+                # Determine content type and title
+                title = content_data.get("title", "thumbnail")
+                content_type = content_type_override or content_data.get("content_type", "daily_character")
+                
+                # Map content type to ContentType constants
+                content_type_map = {
+                    "daily_character": ContentType.DAILY_CHARACTER,
+                    "daily_character_life": ContentType.DAILY_CHARACTER,
+                    "story": ContentType.STORY,
+                    "movie": ContentType.MOVIE,
+                    "meme": ContentType.MEME,
+                    "free_content": ContentType.FREE_CONTENT,
+                    "music_video": ContentType.MUSIC_VIDEO,
+                    "whatsapp_story": ContentType.WHATSAPP_STORY,
+                    "anime": ContentType.ANIME
+                }
+                
+                content_type_constant = content_type_map.get(content_type, ContentType.DAILY_CHARACTER)
+                
+                # Get content directory from file storage manager
+                content_dir = storage_manager.get_content_directory(content_type_constant, title)
                 
                 # Create output filename
                 if not output_filename:
-                    title = content_data.get("title", "thumbnail")
-                    # Clean filename
                     safe_title = "".join(c for c in title if c.isalnum() or c in (' ', '-', '_')).rstrip()
                     output_filename = f"{safe_title}_thumbnail.png"
                 
-                # Ensure thumbnails directory exists
-                os.makedirs("thumbnails", exist_ok=True)
-                thumbnail_path = os.path.join("thumbnails", output_filename)
-                
-                # Save the final thumbnail
-                image_with_text.save(thumbnail_path)
+                # Save to content directory
+                thumbnail_path = os.path.join(content_dir, output_filename)
+                image.save(thumbnail_path)
                 
                 print(f"✅ Thumbnail saved: {thumbnail_path}")
                 
@@ -355,12 +749,13 @@ def generate_thumbnail_image(content_data: dict, output_filename: str = None) ->
         }
 
 
-def _build_thumbnail_prompt(content_data: dict) -> str:
+def _build_thumbnail_prompt(content_data: dict, aspect_ratio: str = "9:16") -> str:
     """
     Build a detailed prompt for thumbnail generation based on content data
     
     Args:
         content_data: Dictionary containing content information
+        aspect_ratio: Aspect ratio for the thumbnail (e.g., "9:16", "16:9", "1:1")
     
     Returns:
         str: Detailed prompt for thumbnail generation
@@ -378,6 +773,16 @@ def _build_thumbnail_prompt(content_data: dict) -> str:
         else:
             content_type = "story"
     
+    # Map aspect ratio to description
+    aspect_ratio_descriptions = {
+        "9:16": "vertical (9:16 aspect ratio, portrait orientation for mobile/Instagram)",
+        "16:9": "horizontal (16:9 aspect ratio, landscape orientation for YouTube)",
+        "1:1": "square (1:1 aspect ratio for Instagram posts)",
+        "4:5": "vertical (4:5 aspect ratio for Instagram feed)"
+    }
+    
+    aspect_ratio_desc = aspect_ratio_descriptions.get(aspect_ratio, f"{aspect_ratio} aspect ratio")
+    
     # Build character descriptions
     character_descriptions = []
     for char in characters_roster:
@@ -388,14 +793,22 @@ def _build_thumbnail_prompt(content_data: dict) -> str:
     
     # Build the prompt based on content type
     prompt_parts = [
-        f"Create a vibrant, eye-catching realistic YouTube thumbnail image for a {content_type} video titled '{title}'.",
+        f"Create a vibrant, eye-catching realistic thumbnail image for a {content_type} video.",
+        "",
+        f"TITLE TO INCLUDE IN IMAGE: '{title}'",
+        "- The title MUST be prominently displayed in the image",
+        "- Use bold, eye-catching text that's easy to read",
+        "- Place title at the top or center of the image",
+        "- Use contrasting colors for text (white text with dark outline, or vice versa)",
+        "- Make the title text large and clear",
         "",
         "REQUIREMENTS:",
-        "- High-quality, professional YouTube thumbnail style",
+        "- High-quality, professional thumbnail style",
         "- Bright, saturated colors that grab attention",
-        "- 16:9 aspect ratio (1280x1080 resolution)",
+        f"- {aspect_ratio_desc}",
         "- Eye-catching composition that encourages clicks by people of middle age preferable teens",
-        "- Leave space at the top for title text overlay",
+        "- Title text integrated into the design (not added separately)",
+        "- Optimized for the specified aspect ratio",
         ""
     ]
     
@@ -446,70 +859,6 @@ def _build_thumbnail_prompt(content_data: dict) -> str:
     ])
     
     return "\n".join(prompt_parts)
-
-
-def _add_title_overlay(image: Image.Image, content_data: dict) -> Image.Image:
-    """
-    Add title text overlay to the generated thumbnail image
-    
-    Args:
-        image: PIL Image object
-        content_data: Dictionary containing content information
-    
-    Returns:
-        Image.Image: Image with title overlay added
-    """
-    try:
-        # Create a copy of the image to work with
-        img_with_text = image.copy()
-        draw = ImageDraw.Draw(img_with_text)
-        
-        # Get title
-        title = content_data.get("title", "Video Title")
-        
-        # Get image dimensions
-        img_width, img_height = img_with_text.size
-        
-        # Try to load a font, fallback to default
-        try:
-            # Try different font sizes to fit the title
-            font_size = min(img_width // 15, 60)  # Responsive font size
-            font = ImageFont.truetype("arial.ttf", font_size)
-        except:
-            try:
-                font = ImageFont.load_default()
-            except:
-                # If all else fails, use basic drawing without font
-                font = None
-        
-        if font:
-            # Calculate text size and position
-            bbox = draw.textbbox((0, 0), title, font=font)
-            text_width = bbox[2] - bbox[0]
-            text_height = bbox[3] - bbox[1]
-            
-            # Position text in upper portion of image
-            x = (img_width - text_width) // 2
-            y = img_height // 8  # Top 1/8 of the image
-            
-            # Add text with outline for better readability
-            outline_color = "black"
-            text_color = "white"
-            outline_width = 2
-            
-            # Draw text outline
-            for adj_x in range(-outline_width, outline_width + 1):
-                for adj_y in range(-outline_width, outline_width + 1):
-                    draw.text((x + adj_x, y + adj_y), title, font=font, fill=outline_color)
-            
-            # Draw main text
-            draw.text((x, y), title, font=font, fill=text_color)
-        
-        return img_with_text
-        
-    except Exception as e:
-        print(f"⚠️ Warning: Failed to add title overlay: {str(e)}")
-        return image  # Return original image if overlay fails
 
 
 def generate_video_with_thumbnail(payload: dict, content_data: dict = None) -> dict:

@@ -786,3 +786,327 @@ def execute_content_video_generation(content_data: dict, content_type: str = Non
     print(f"📥 Downloaded: {len(results['downloaded_files'])} files")
     
     return results
+
+
+
+def execute_daily_character_video_generation(content_data: dict, video_options: dict = None):
+    """
+    Generate videos for daily character content using keyframes.
+    Each segment uses the character image as first keyframe for consistency.
+    
+    Args:
+        content_data: Daily character content data with segments
+        video_options: Video generation options including character_keyframe_uri
+    
+    Returns:
+        dict: Complete results with video generation status
+    """
+    import time
+    from app.services.genai_service import generate_video_with_keyframes
+    
+    if video_options is None:
+        video_options = {}
+    
+    character_keyframe_uri = video_options.get("character_keyframe_uri")
+    if not character_keyframe_uri:
+        return {"error": "character_keyframe_uri is required in video_options"}
+    
+    # Extract segments
+    segments = content_data.get("segments", [])
+    if not segments:
+        return {"error": "No segments found in content_data"}
+    
+    character_name = content_data.get("character_name", "Character")
+    title = content_data.get("title", "Daily Character Content")
+    
+    print(f"\n🎬 Starting daily character video generation for: {title}")
+    print(f"👤 Character: {character_name}")
+    print(f"🖼️ Keyframe: {character_keyframe_uri}")
+    print(f"📊 Total segments: {len(segments)}")
+    
+    # Initialize results
+    results = {
+        "success": False,
+        "content_type": "daily_character",
+        "character_name": character_name,
+        "title": title,
+        "total_segments": len(segments),
+        "success_count": 0,
+        "error_count": 0,
+        "video_urls": [],
+        "downloaded_files": [],
+        "segments_results": [],
+        "frame_chain": []  # Track frame chaining
+    }
+    
+    # Track the last frame for chaining
+    previous_last_frame = None
+    
+    # Process each segment
+    for idx, segment in enumerate(segments):
+        segment_num = segment.get("segment", 0)
+        duration = segment.get("duration", 8)
+        is_first_segment = (idx == 0)
+        is_last_segment = (idx == len(segments) - 1)
+        
+        # Build comprehensive prompt from segment data
+        scene = segment.get("scene", "")
+        action = segment.get("action", "")
+        reaction = segment.get("reaction", "")
+        camera = segment.get("camera", "")
+        visual_focus = segment.get("visual_focus", "")
+        
+        # Get background details
+        background = segment.get("background", {})
+        video_prompt_background = background.get("video_prompt_background", "")
+        
+        # Combine all visual elements into prompt
+        prompt_parts = []
+        if scene:
+            prompt_parts.append(scene)
+        if action:
+            prompt_parts.append(action)
+        if reaction:
+            prompt_parts.append(f"Character shows {reaction}.")
+        if visual_focus:
+            prompt_parts.append(f"Focus on: {visual_focus}.")
+        if camera:
+            prompt_parts.append(f"Camera: {camera}.")
+        if video_prompt_background:
+            prompt_parts.append(f"Background: {video_prompt_background}")
+        
+        prompt = " ".join(prompt_parts)
+        
+        segment_result = {
+            "segment_number": segment_num,
+            "duration": duration,
+            "prompt": prompt,
+            "status": "processing",
+            "video_url": None,
+            "error": None,
+            "first_frame_source": None,
+            "last_frame_extracted": None
+        }
+        
+        results["segments_results"].append(segment_result)
+        
+        print(f"\n🎬 Generating video for Segment {segment_num}/{len(segments)}...")
+        print(f"📝 Prompt: {prompt[:100]}...")
+        
+        # Determine first frame for this segment
+        first_frame_to_use = None
+        
+        if is_first_segment:
+            # For first segment, check if there's a first_frame_description
+            first_frame_desc = segment.get("first_frame_description")
+            if first_frame_desc:
+                print(f"🎨 Segment 1: Generating custom first frame with Imagen (nano banana)...")
+                print(f"📝 Frame description: {first_frame_desc[:80]}...")
+                try:
+                    from app.services.imagen_service import generate_first_frame_with_imagen
+                    
+                    # Generate and download the first frame
+                    generated_image, frame_filepath = generate_first_frame_with_imagen(
+                        character_image_url=character_keyframe_uri,
+                        frame_description=first_frame_desc,
+                        aspect_ratio=video_options.get("aspect_ratio", "9:16"),
+                        output_dir="frames"
+                    )
+                    
+                    # Use the downloaded frame file path
+                    first_frame_to_use = frame_filepath
+                    segment_result["first_frame_source"] = "imagen_generated"
+                    segment_result["first_frame_path"] = frame_filepath
+                    print(f"✅ First frame generated with Imagen and saved to: {frame_filepath}")
+                except Exception as e:
+                    print(f"⚠️ Imagen generation failed: {str(e)}, using character keyframe")
+                    first_frame_to_use = character_keyframe_uri
+                    segment_result["first_frame_source"] = "character_keyframe"
+            else:
+                # No description, use character keyframe
+                first_frame_to_use = character_keyframe_uri
+                segment_result["first_frame_source"] = "character_keyframe"
+                print(f"🖼️ Segment 1: Using character keyframe as first frame")
+        else:
+            # For subsequent segments, use last frame from previous video
+            if previous_last_frame:
+                first_frame_to_use = previous_last_frame
+                segment_result["first_frame_source"] = f"last_frame_from_segment_{segment_num-1}"
+                print(f"🔗 Segment {segment_num}: Using last frame from previous segment")
+            else:
+                # Fallback to character keyframe if previous frame not available
+                first_frame_to_use = character_keyframe_uri
+                segment_result["first_frame_source"] = "character_keyframe_fallback"
+                print(f"⚠️ Segment {segment_num}: Previous frame not available, using character keyframe")
+        
+        # Retry logic
+        max_retries = 3
+        retry_delay = 30
+        
+        for attempt in range(max_retries):
+            try:
+                if attempt > 0:
+                    print(f"🔄 Retry attempt {attempt + 1}/{max_retries} for Segment {segment_num}")
+                    print(f"⏳ Waiting {retry_delay} seconds before retry...")
+                    time.sleep(retry_delay)
+                
+                # Generate video with keyframe chaining
+                video_urls = generate_video_with_keyframes(
+                    prompt=prompt,
+                    first_frame=first_frame_to_use,
+                    last_frame=None,  # Let Veo3 generate the end naturally
+                    duration=duration,
+                    resolution=video_options.get("resolution", "720p"),
+                    aspect_ratio=video_options.get("aspect_ratio", "9:16")
+                )
+                
+                if video_urls and len(video_urls) > 0:
+                    video_url = video_urls[0]
+                    segment_result["video_url"] = video_url
+                    segment_result["status"] = "completed"
+                    results["video_urls"].append(video_url)
+                    results["success_count"] += 1
+                    
+                    print(f"✅ Segment {segment_num} video generated: {video_url[:50]}...")
+                    
+                    # Download video and extract last frame (skip for last segment)
+                    try:
+                        from app.services.genai_service import download_video, extract_last_frame_from_video
+                        from app.services.file_storage_manager import storage_manager, ContentType
+                        import os
+                        
+                        # Get content directory from file storage manager
+                        content_dir = storage_manager.get_content_directory(ContentType.DAILY_CHARACTER, title)
+                        
+                        # Create subdirectories
+                        videos_dir = os.path.join(content_dir, "videos")
+                        frames_dir = os.path.join(content_dir, "frames")
+                        os.makedirs(videos_dir, exist_ok=True)
+                        os.makedirs(frames_dir, exist_ok=True)
+                        
+                        # Download video to content directory
+                        temp_filename = f"{character_name}_segment_{segment_num}"
+                        temp_video_path = download_video(video_url, temp_filename, download_dir=videos_dir)
+                        print(f"📥 Downloaded to: {temp_video_path}")
+                        
+                        # Also save to downloads folder if requested
+                        if video_options.get("download", False):
+                            downloads_path = download_video(video_url, temp_filename, download_dir="downloads")
+                            segment_result["downloaded_file"] = downloads_path
+                            results["downloaded_files"].append(downloads_path)
+                            print(f"💾 Also saved to downloads: {downloads_path}")
+                        
+                        segment_result["video_file"] = temp_video_path
+                        
+                        # Extract last frame ONLY if not the last segment (need n-1 frames for n segments)
+                        if not is_last_segment:
+                            last_frame_filename = f"last_frame_seg_{segment_num}.png"
+                            last_frame_path = os.path.join(frames_dir, last_frame_filename)
+                            extracted_frame_path = extract_last_frame_from_video(temp_video_path, last_frame_path)
+                            
+                            # Store for next segment
+                            previous_last_frame = extracted_frame_path
+                            segment_result["last_frame_extracted"] = extracted_frame_path
+                            results["frame_chain"].append({
+                                "segment": segment_num,
+                                "last_frame": extracted_frame_path,
+                                "video_file": temp_video_path
+                            })
+                            
+                            print(f"🖼️ Last frame extracted for next segment: {extracted_frame_path}")
+                        else:
+                            print(f"⏭️ Last segment - skipping frame extraction")
+                        
+                        print(f"📁 Content directory: {content_dir}")
+                        
+                    except Exception as e:
+                        print(f"⚠️ Frame extraction failed for segment {segment_num}: {str(e)}")
+                        print(f"⚠️ Next segment will use character keyframe as fallback")
+                        previous_last_frame = None
+                    
+                    break  # Success, exit retry loop
+                    
+                else:
+                    raise Exception("No video URL returned from generation")
+                    
+            except Exception as e:
+                error_msg = f"Video generation failed for segment {segment_num} (attempt {attempt + 1}): {str(e)}"
+                print(f"❌ {error_msg}")
+                
+                if attempt == max_retries - 1:  # Last attempt failed
+                    segment_result["status"] = "failed"
+                    segment_result["error"] = error_msg
+                    segment_result["retry_attempts"] = max_retries
+                    results["error_count"] += 1
+                else:
+                    # Check if it's a temporary error
+                    error_str = str(e).lower()
+                    is_temporary_error = (
+                        "overloaded" in error_str or 
+                        "rate" in error_str or 
+                        "quota" in error_str or
+                        "internal server" in error_str or
+                        "'code': 13" in str(e) or
+                        "server issue" in error_str or
+                        "try again" in error_str
+                    )
+                    
+                    if is_temporary_error:
+                        print(f"🔄 Temporary error detected, will retry...")
+                        continue
+                    else:
+                        # Permanent error, don't retry
+                        segment_result["status"] = "failed"
+                        segment_result["error"] = error_msg
+                        segment_result["retry_attempts"] = attempt + 1
+                        results["error_count"] += 1
+                        break
+        
+        # Small delay between segments to avoid rate limits
+        if segment_num < len(segments):
+            time.sleep(2)
+    
+    # Update final status
+    results["success"] = results["error_count"] == 0
+    
+    # Summary
+    print(f"\n{'='*60}")
+    print(f"🎉 Daily Character Video Generation Complete!")
+    print(f"✅ Successful: {results['success_count']}/{results['total_segments']}")
+    print(f"❌ Failed: {results['error_count']}/{results['total_segments']}")
+    
+    if results["error_count"] > 0:
+        failed_segments = [s["segment_number"] for s in results["segments_results"] if s["status"] == "failed"]
+        print(f"⚠️ Failed segments: {failed_segments}")
+        print(f"💡 You can retry failed segments using the retry endpoint")
+    
+    # Clean up extracted frames (no longer needed after all videos are generated)
+    if results["frame_chain"]:
+        print(f"\n🧹 Cleaning up extracted frames...")
+        import os
+        from app.services.file_storage_manager import storage_manager, ContentType
+        
+        try:
+            content_dir = storage_manager.get_content_directory(ContentType.DAILY_CHARACTER, title, create=False)
+            frames_dir = os.path.join(content_dir, "frames")
+            
+            if os.path.exists(frames_dir):
+                # Delete all frame files
+                for frame_info in results["frame_chain"]:
+                    frame_path = frame_info.get("last_frame")
+                    if frame_path and os.path.exists(frame_path):
+                        os.remove(frame_path)
+                        print(f"🗑️ Deleted: {os.path.basename(frame_path)}")
+                
+                # Remove frames directory if empty
+                if not os.listdir(frames_dir):
+                    os.rmdir(frames_dir)
+                    print(f"🗑️ Removed empty frames directory")
+                
+                print(f"✅ Cleanup complete")
+        except Exception as e:
+            print(f"⚠️ Cleanup warning: {str(e)}")
+    
+    print(f"{'='*60}\n")
+    
+    return results

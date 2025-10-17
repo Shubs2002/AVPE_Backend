@@ -25,7 +25,9 @@ class Character:
         _id: Optional[ObjectId] = None,
         created_at: Optional[datetime] = None,
         updated_at: Optional[datetime] = None,
-        version: str = "1.0"
+        version: str = "1.0",
+        image_url: Optional[str] = None,
+        cloudinary_public_id: Optional[str] = None
     ):
         """
         Initialize a Character instance
@@ -37,6 +39,8 @@ class Character:
             created_at: Creation timestamp
             updated_at: Last update timestamp
             version: Data version
+            image_url: Cloudinary URL of character image (with background removed)
+            cloudinary_public_id: Cloudinary public ID for image management
         """
         self._id = _id
         self.character_data = character_data
@@ -44,6 +48,8 @@ class Character:
         self.created_at = created_at or datetime.utcnow()
         self.updated_at = updated_at or datetime.utcnow()
         self.version = version
+        self.image_url = image_url
+        self.cloudinary_public_id = cloudinary_public_id
     
     def to_dict(self) -> Dict[str, Any]:
         """
@@ -57,7 +63,9 @@ class Character:
             "character_name": self.character_name,
             "created_at": self.created_at,
             "updated_at": self.updated_at,
-            "version": self.version
+            "version": self.version,
+            "image_url": self.image_url,
+            "cloudinary_public_id": self.cloudinary_public_id
         }
         
         if self._id:
@@ -82,7 +90,9 @@ class Character:
             character_name=data.get("character_name", "Unknown"),
             created_at=data.get("created_at"),
             updated_at=data.get("updated_at"),
-            version=data.get("version", "1.0")
+            version=data.get("version", "1.0"),
+            image_url=data.get("image_url"),
+            cloudinary_public_id=data.get("cloudinary_public_id")
         )
     
     def to_response(self) -> Dict[str, Any]:
@@ -96,6 +106,8 @@ class Character:
             "id": str(self._id) if self._id else None,
             "character_name": self.character_name,
             "character_data": self.character_data,
+            "image_url": self.image_url,
+            "cloudinary_public_id": self.cloudinary_public_id,
             "created_at": self.created_at.isoformat() if self.created_at else None,
             "updated_at": self.updated_at.isoformat() if self.updated_at else None,
             "version": self.version

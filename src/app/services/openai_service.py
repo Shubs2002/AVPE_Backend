@@ -11,6 +11,8 @@ from app.data.prompts.generate_meme_segments_prompt import get_meme_segments_pro
 from app.data.prompts.generate_free_content_prompt import get_free_content_prompt
 from app.data.prompts.generate_whatsapp_story_prompt import get_whatsapp_story_prompt
 from app.data.prompts.generate_music_video_prompt import get_music_video_prompt
+from app.data.prompts.generate_anime_prompt import get_anime_story_prompt
+from app.data.prompts.generate_daily_character_prompt import get_daily_character_prompt
 from app.data.prompts.generate_trending_ideas_prompt import get_trending_ideas_prompt
 from app.data.prompts.analyze_character_prompt import get_character_analysis_prompt
 from app.utils.id_generator import generate_character_id
@@ -383,12 +385,12 @@ def generate_story_segments_in_sets(idea: str, total_segments: int, segments_per
             error_msg += "\n\nNo output received from API"
         raise ValueError(error_msg)
 
-def generate_full_story_automatically(idea: str, total_segments: int = None, segments_per_set: int = 10, save_to_files: bool = True, output_directory: str = "generated_stories", custom_character_roster: list = None, no_narration: bool = False, narration_only_first: bool = False, cliffhanger_interval: int = 0, content_rating: str = "U"):
+def generate_full_story_automatically(idea: str, total_segments: int = None, segments_per_set: int = 10, custom_character_roster: list = None, no_narration: bool = False, narration_only_first: bool = False, cliffhanger_interval: int = 0, content_rating: str = "U"):
     """
     Automatically generate a complete story by:
     1. Detecting the total segments needed from the idea
     2. Generating all sets automatically with retry logic
-    3. Saving each set to JSON files
+    3. Saving each set to JSON files using file storage manager
     4. Returning a summary of all generated content
     
     Args:
@@ -401,6 +403,7 @@ def generate_full_story_automatically(idea: str, total_segments: int = None, seg
     import json
     import time
     from datetime import datetime
+    from app.services.file_storage_manager import storage_manager, ContentType
     
     print(f"🚀 Starting automatic full story generation...")
     print(f"💡 Idea: {idea}")
@@ -417,11 +420,6 @@ def generate_full_story_automatically(idea: str, total_segments: int = None, seg
     # Step 2: Calculate how many sets we need
     total_sets = (total_segments + segments_per_set - 1) // segments_per_set
     print(f"📦 Will generate {total_sets} sets of {segments_per_set} segments each")
-    
-    # Step 3: Create output directory if saving to files
-    if save_to_files:
-        os.makedirs(output_directory, exist_ok=True)
-        print(f"📁 Output directory: {output_directory}")
     
     # Step 4: Generate all sets with retry logic
     all_sets = []
@@ -497,23 +495,16 @@ def generate_full_story_automatically(idea: str, total_segments: int = None, seg
                     }
                 }
                 print(f"✅ Stored metadata from Set 1 for consistency across all sets")
+                
+                # Save metadata using storage manager
+                storage_manager.save_metadata(ContentType.MOVIE, story_title, story_metadata)
+                print(f"📋 Saved story metadata using storage manager")
             else:
                 print(f"♻️ Reusing metadata from Set 1 to ensure consistency")
             
-            # Save to file if requested
-            filepath = None
-            if save_to_files:
-                # Clean title for filename
-                safe_title = "".join(c for c in story_title if c.isalnum() or c in (' ', '-', '_')).rstrip()
-                safe_title = safe_title.replace(' ', '_')[:50]  # Limit length
-                
-                filename = f"{safe_title}_set_{set_number:02d}.json"
-                filepath = os.path.join(output_directory, filename)
-                
-                with open(filepath, 'w', encoding='utf-8') as f:
-                    json.dump(story_set, f, indent=2, ensure_ascii=False)
-                
-                print(f"💾 Saved: {filepath}")
+            # Save set using storage manager
+            filepath = storage_manager.save_set(ContentType.MOVIE, story_title, set_number, story_set)
+            print(f"💾 Saved: {filepath}")
             
             all_sets.append({
                 'set_number': set_number,
@@ -538,18 +529,10 @@ def generate_full_story_automatically(idea: str, total_segments: int = None, seg
             print("⏳ Waiting 2 seconds to avoid rate limits...")
             time.sleep(2)
     
-    # Step 5: Save complete story metadata
-    if save_to_files and story_metadata:
-        safe_title = "".join(c for c in story_title if c.isalnum() or c in (' ', '-', '_')).rstrip()
-        safe_title = safe_title.replace(' ', '_')[:50]
-        
-        metadata_filename = f"{safe_title}_metadata.json"
-        metadata_filepath = os.path.join(output_directory, metadata_filename)
-        
-        with open(metadata_filepath, 'w', encoding='utf-8') as f:
-            json.dump(story_metadata, f, indent=2, ensure_ascii=False)
-        
-        print(f"📋 Saved story metadata: {metadata_filepath}")
+    # Step 5: Get content directory for reference
+    content_dir = None
+    if story_title:
+        content_dir = storage_manager.get_content_directory(ContentType.MOVIE, story_title, create=False)
     
     # Step 6: Create summary
     successful_sets = [s for s in all_sets if s.get('status') == 'success']
@@ -574,7 +557,8 @@ def generate_full_story_automatically(idea: str, total_segments: int = None, seg
             'failed_set_numbers': failed_set_numbers
         },
         'files_saved': save_to_files,
-        'output_directory': output_directory if save_to_files else None,
+        'content_type': ContentType.MOVIE,
+        'content_directory': content_dir,
         'sets': all_sets,
         'retry_info': {
             'can_retry': len(failed_sets) > 0,
@@ -590,8 +574,8 @@ def generate_full_story_automatically(idea: str, total_segments: int = None, seg
     if failed_sets:
         print(f"❌ Failed sets: {len(failed_sets)} - {failed_set_numbers}")
         print(f"🔄 You can retry failed sets using the retry endpoint")
-    if save_to_files:
-        print(f"💾 Files saved to: {output_directory}")
+    if content_dir:
+        print(f"💾 Files saved to: {content_dir}")
     
     return summary
 
@@ -642,9 +626,10 @@ def retry_failed_story_sets(previous_result: dict, max_retries: int = 3):
     
     print(f"🎯 Found {len(failed_sets)} failed sets to retry: {[s['set_number'] for s in failed_sets]}")
     
-    # Get output directory and file saving settings
-    save_to_files = previous_result.get('files_saved', True)
-    output_directory = previous_result.get('output_directory', 'generated_movie_script')
+    # Get content type and directory
+    from app.services.file_storage_manager import storage_manager, ContentType
+    content_type = previous_result.get('content_type', ContentType.MOVIE)
+    story_title = story_metadata.get('title', 'Untitled Story')
     
     def retry_single_set(set_number, max_retries=3):
         """Retry a single failed set with exponential backoff"""
@@ -698,20 +683,9 @@ def retry_failed_story_sets(previous_result: dict, max_retries: int = 3):
         set_index = next(i for i, s in enumerate(updated_sets) if s['set_number'] == set_number)
         
         if story_set is not None:
-            # Success - update the set
-            filepath = None
-            if save_to_files:
-                story_title = story_metadata.get('title', 'Untitled Story')
-                safe_title = "".join(c for c in story_title if c.isalnum() or c in (' ', '-', '_')).rstrip()
-                safe_title = safe_title.replace(' ', '_')[:50]
-                
-                filename = f"{safe_title}_set_{set_number:02d}.json"
-                filepath = os.path.join(output_directory, filename)
-                
-                with open(filepath, 'w', encoding='utf-8') as f:
-                    json.dump(story_set, f, indent=2, ensure_ascii=False)
-                
-                print(f"💾 Saved: {filepath}")
+            # Success - update the set using storage manager
+            filepath = storage_manager.save_set(content_type, story_title, set_number, story_set)
+            print(f"💾 Saved: {filepath}")
             
             updated_sets[set_index] = {
                 'set_number': set_number,
@@ -1248,7 +1222,7 @@ def analyze_character_from_image(image_data: str, image_format: str = "jpeg", ch
         max_tokens = 8000 if character_count == 1 else 5000 + (character_count * 4000)
         
         response = client.chat.completions.create(
-            model=settings.SCRIPT_MODEL,  # Using Grok vision model for image analysis
+            model="meta-llama/llama-4-maverick:free",  # Using Grok vision model for image analysis
             messages=messages,
             max_tokens=max_tokens,
             temperature=0.7
@@ -1802,3 +1776,386 @@ def search_characters(query: str = None, filters: dict = None):
             "success": False,
             "error": f"Failed to search characters: {str(e)}"
         }
+
+
+
+def generate_anime_story_automatically(
+    idea: str,
+    total_segments: int = None,
+    segments_per_set: int = 10,
+    custom_character_roster: list = None,
+    anime_style: str = "shonen",
+    no_narration: bool = False,
+    narration_only_first: bool = False,
+    cliffhanger_interval: int = 0,
+    content_rating: str = "U/A"
+):
+    """
+    Automatically generate a complete Japanese anime story in English.
+    
+    Similar to generate_full_story_automatically but specifically for anime content.
+    Files are automatically saved using the file storage manager.
+    
+    Args:
+        idea: The anime story concept
+        total_segments: Total number of segments (auto-detected if None)
+        segments_per_set: Segments per set (default: 10)
+        custom_character_roster: Optional pre-defined anime characters
+        anime_style: Type of anime - "shonen", "shojo", "seinen", "slice_of_life", "mecha", "isekai"
+        no_narration: If True, no narration in any segment
+        narration_only_first: If True, narration only in first segment
+        cliffhanger_interval: Add cliffhangers every N segments
+        content_rating: "U" (Universal), "U/A" (Parental Guidance), "A" (Adult)
+    
+    Returns:
+        dict: Complete anime generation results with metadata and segments
+    """
+    import os
+    import json
+    import time
+    from datetime import datetime
+    from app.services.file_storage_manager import storage_manager, ContentType
+    
+    print(f"🎌 Starting automatic anime generation...")
+    print(f"💡 Anime Idea: {idea}")
+    print(f"🎨 Anime Style: {anime_style}")
+    
+    # Step 1: Determine total segments needed
+    if total_segments is None:
+        total_segments = detect_total_segments_from_idea(idea)
+        print(f"📊 Auto-detected total segments needed: {total_segments}")
+    else:
+        print(f"📊 Using specified total segments: {total_segments}")
+    
+    # Step 2: Calculate how many sets we need
+    total_sets = (total_segments + segments_per_set - 1) // segments_per_set
+    print(f"📦 Will generate {total_sets} sets of {segments_per_set} segments each")
+    
+    # Step 4: Generate all sets with retry logic
+    all_sets = []
+    anime_title = None
+    anime_metadata = None
+    
+    def generate_set_with_retry(set_number, max_retries=3):
+        """Generate a single anime set with retry logic"""
+        nonlocal anime_title, anime_metadata
+        
+        for attempt in range(1, max_retries + 1):
+            try:
+                if attempt > 1:
+                    wait_time = 2 ** (attempt - 1)
+                    print(f"🔄 Retry attempt {attempt}/{max_retries} for Set {set_number} (waiting {wait_time}s)...")
+                    time.sleep(wait_time)
+                else:
+                    print(f"\n🎬 Generating Anime Set {set_number}/{total_sets}...")
+                
+                # Calculate segment range for this set
+                start_segment = (set_number - 1) * segments_per_set + 1
+                end_segment = min(set_number * segments_per_set, total_segments)
+                
+                # Determine cliffhanger segments
+                cliffhanger_segments = []
+                if cliffhanger_interval > 0:
+                    for seg_num in range(start_segment, end_segment + 1):
+                        if seg_num % cliffhanger_interval == 0:
+                            cliffhanger_segments.append(seg_num)
+                
+                # Build the prompt
+                prompt = get_anime_story_prompt(
+                    idea=idea,
+                    num_segments=end_segment - start_segment + 1,
+                    custom_character_roster=custom_character_roster,
+                    anime_style=anime_style
+                )
+                
+                # Add special instructions
+                special_instructions = []
+                if no_narration:
+                    special_instructions.append("NO NARRATION in any segment - only dialogue and visual storytelling")
+                elif narration_only_first and set_number == 1:
+                    special_instructions.append("Include narration ONLY in the first segment for introduction")
+                elif narration_only_first:
+                    special_instructions.append("NO NARRATION - only dialogue")
+                
+                if cliffhanger_segments:
+                    special_instructions.append(f"Add DRAMATIC ANIME CLIFFHANGERS at segments: {cliffhanger_segments}")
+                
+                special_instructions.append(f"Content Rating: {content_rating}")
+                special_instructions.append(f"This is set {set_number} of {total_sets}, segments {start_segment}-{end_segment}")
+                
+                if anime_metadata and set_number > 1:
+                    special_instructions.append("CRITICAL: Use the EXACT same character descriptions and anime style from previous sets")
+                
+                if special_instructions:
+                    prompt += "\n\n**SPECIAL INSTRUCTIONS**:\n" + "\n".join(f"- {inst}" for inst in special_instructions)
+                
+                # Call OpenAI
+                client = get_openai_client()
+                response = client.chat.completions.create(
+                    model=settings.SCRIPT_MODEL,
+                    messages=[
+                        {"role": "system", "content": "You are a professional Japanese anime scriptwriter creating anime content in English."},
+                        {"role": "user", "content": prompt}
+                    ],
+                    response_format={"type": "json_object"},
+                    temperature=0.8
+                )
+                
+                # Parse response
+                anime_set = json.loads(response.choices[0].message.content)
+                
+                # Store metadata from first set
+                if set_number == 1:
+                    anime_title = anime_set.get("title", "Untitled Anime")
+                    anime_metadata = {
+                        "title": anime_title,
+                        "anime_style": anime_style,
+                        "short_summary": anime_set.get("short_summary", ""),
+                        "description": anime_set.get("description", ""),
+                        "hashtags": anime_set.get("hashtags", []),
+                        "target_demographic": anime_set.get("target_demographic", ""),
+                        "narrator_voice": anime_set.get("narrator_voice", {}),
+                        "characters_roster": anime_set.get("characters_roster", []),
+                        "anime_themes": anime_set.get("anime_themes", []),
+                        "power_system": anime_set.get("power_system", ""),
+                        "world_building": anime_set.get("world_building", ""),
+                        "generation_info": {
+                            "total_segments": total_segments,
+                            "segments_per_set": segments_per_set,
+                            "total_sets": total_sets,
+                            "generated_at": datetime.now().isoformat(),
+                            "idea": idea,
+                            "anime_style": anime_style,
+                            "no_narration": no_narration,
+                            "narration_only_first": narration_only_first,
+                            "cliffhanger_interval": cliffhanger_interval,
+                            "content_rating": content_rating
+                        }
+                    }
+                    print(f"🎌 Anime Title: {anime_title}")
+                    print(f"🎨 Style: {anime_style}")
+                
+                # Save to file if requested
+                filepath = None
+                if save_to_files:
+                    safe_title = "".join(c for c in anime_title if c.isalnum() or c in (' ', '-', '_')).rstrip()
+                    safe_title = safe_title.replace(' ', '_')[:50]
+                    
+                    filename = f"{safe_title}_set_{set_number:02d}.json"
+                    filepath = os.path.join(output_directory, filename)
+                    
+                    with open(filepath, 'w', encoding='utf-8') as f:
+                        json.dump(anime_set, f, indent=2, ensure_ascii=False)
+                    
+                    print(f"💾 Saved: {filepath}")
+                
+                return {
+                    'set_number': set_number,
+                    'segments_count': len(anime_set.get('segments', [])),
+                    'file_path': filepath,
+                    'set_data': anime_set,
+                    'status': 'success'
+                }
+                
+            except Exception as e:
+                error = str(e)
+                print(f"❌ Error generating anime set {set_number} (attempt {attempt}/{max_retries}): {error}")
+                if attempt == max_retries:
+                    return {
+                        'set_number': set_number,
+                        'error': error,
+                        'file_path': None,
+                        'set_data': None,
+                        'status': 'failed'
+                    }
+        
+        return None
+    
+    # Generate all sets
+    for set_num in range(1, total_sets + 1):
+        result = generate_set_with_retry(set_num)
+        if result:
+            all_sets.append(result)
+        
+        # Small delay between sets
+        if set_num < total_sets:
+            print("⏳ Waiting 2 seconds...")
+            time.sleep(2)
+    
+    # Step 5: Save complete anime metadata
+    if save_to_files and anime_metadata:
+        safe_title = "".join(c for c in anime_title if c.isalnum() or c in (' ', '-', '_')).rstrip()
+        safe_title = safe_title.replace(' ', '_')[:50]
+        
+        metadata_filename = f"{safe_title}_metadata.json"
+        metadata_filepath = os.path.join(output_directory, metadata_filename)
+        
+        with open(metadata_filepath, 'w', encoding='utf-8') as f:
+            json.dump(anime_metadata, f, indent=2, ensure_ascii=False)
+        
+        print(f"📋 Saved anime metadata: {metadata_filepath}")
+    
+    # Step 6: Create summary
+    successful_sets = [s for s in all_sets if s.get('status') == 'success']
+    failed_sets = [s for s in all_sets if s.get('status') == 'failed']
+    
+    total_segments_generated = sum(s.get('segments_count', 0) for s in successful_sets)
+    failed_set_numbers = [s['set_number'] for s in failed_sets]
+    
+    summary = {
+        'success': len(failed_sets) == 0,
+        'anime_title': anime_title,
+        'anime_style': anime_style,
+        'story_metadata': anime_metadata,
+        'generation_summary': {
+            'total_segments_requested': total_segments,
+            'total_segments_generated': total_segments_generated,
+            'total_sets_requested': total_sets,
+            'successful_sets': len(successful_sets),
+            'failed_sets': len(failed_sets),
+            'segments_per_set': segments_per_set,
+            'failed_set_numbers': failed_set_numbers
+        },
+        'files_saved': save_to_files,
+        'output_directory': output_directory if save_to_files else None,
+        'sets': all_sets,
+        'retry_info': {
+            'can_retry': len(failed_sets) > 0,
+            'failed_sets': failed_set_numbers,
+            'retry_endpoint': '/retry-failed-story-sets' if len(failed_sets) > 0 else None
+        }
+    }
+    
+    print(f"\n🎉 Anime Generation Complete!")
+    print(f"🎌 Title: {anime_title}")
+    print(f"🎨 Style: {anime_style}")
+    print(f"✅ Successfully generated: {len(successful_sets)}/{total_sets} sets")
+    print(f"📊 Total segments: {total_segments_generated}/{total_segments}")
+    if failed_sets:
+        print(f"❌ Failed sets: {len(failed_sets)} - {failed_set_numbers}")
+        print(f"🔄 You can retry failed sets using the retry endpoint")
+    if save_to_files:
+        print(f"💾 Files saved to: {output_directory}")
+    
+    return summary
+
+
+
+def generate_daily_character_content(
+    idea: str,
+    character_name: str,
+    creature_language: str = "Soft and High-Pitched",
+    num_segments: int = 7
+):
+    """
+    Generate daily character life content for Instagram using keyframes.
+    
+    Creates engaging daily moments with NO dialogue/narration - only creature sounds.
+    Designed for use with character images as keyframes in Veo3.
+    Maximum 10 segments per generation.
+    
+    Args:
+        idea: The daily life moment/situation
+        character_name: Name of the character
+        creature_language: Voice type ("Soft and High-Pitched", "Magical or Otherworldly", "Muffled and Low")
+        num_segments: Number of segments (max 10, default 7 for ~1 min video)
+    
+    Returns:
+        dict: Generated daily character content
+    """
+    import json
+    from datetime import datetime
+    
+    # Limit to 10 segments
+    if num_segments > 10:
+        print(f"⚠️ Limiting segments to 10 (requested: {num_segments})")
+        num_segments = 10
+    
+    if num_segments < 1:
+        raise ValueError("Number of segments must be at least 1")
+    
+    print(f"🎬 Generating daily character content...")
+    print(f"👤 Character: {character_name}")
+    print(f"🗣️ Creature Language: {creature_language}")
+    print(f"💡 Idea: {idea}")
+    print(f"📊 Segments: {num_segments} (~{num_segments * 8} seconds)")
+    
+    # Build the prompt
+    prompt = get_daily_character_prompt(idea, character_name, creature_language, num_segments)
+    
+    # Call OpenAI
+    raw_output = None
+    try:
+        client = get_openai_client()
+        response = client.chat.completions.create(
+            model=settings.SCRIPT_MODEL,
+            messages=[
+                {
+                    "role": "system",
+                    "content": "You are a viral Instagram content creator specializing in relatable character moments. Always respond with valid JSON only."
+                },
+                {
+                    "role": "user",
+                    "content": prompt
+                }
+            ],
+            temperature=0.9  # Higher creativity for fun content
+        )
+        
+        # Validate response
+        if response is None:
+            raise ValueError("API returned None response")
+        
+        if not hasattr(response, 'choices') or not response.choices:
+            raise ValueError(f"Invalid API response structure: {response}")
+        
+        if not hasattr(response.choices[0], 'message') or not hasattr(response.choices[0].message, 'content'):
+            raise ValueError(f"Missing message content in response: {response.choices[0]}")
+        
+        raw_output = response.choices[0].message.content
+        
+        if not raw_output or raw_output.strip() == "":
+            raise ValueError("API returned empty content")
+        
+        raw_output = raw_output.strip()
+        
+        # Remove code block wrappers if present
+        if raw_output.startswith("```"):
+            raw_output = raw_output.split("```json")[-1].split("```")[0].strip()
+        
+        if not raw_output:
+            raise ValueError("Content became empty after removing code blocks")
+        
+        # Parse response
+        content = json.loads(raw_output)
+        
+    except json.JSONDecodeError as e:
+        error_msg = f"JSON parsing failed: {e}"
+        if raw_output:
+            error_msg += f"\n\nRaw output:\n{raw_output[:500]}"
+        raise ValueError(error_msg)
+    
+    except Exception as e:
+        error_msg = f"Daily character content generation failed: {e}"
+        if raw_output:
+            error_msg += f"\n\nRaw output:\n{raw_output[:500]}"
+        else:
+            error_msg += "\n\nNo output received from API"
+        raise ValueError(error_msg)
+    
+    # Add generation metadata
+    content["generation_info"] = {
+        "generated_at": datetime.now().isoformat(),
+        "idea": idea,
+        "num_segments": num_segments,
+        "total_duration_seconds": num_segments * 8,
+        "content_type": "daily_character_life",
+        "platform": "instagram"
+    }
+    
+    print(f"✅ Generated: {content.get('title', 'Untitled')}")
+    print(f"🎭 Character: {content.get('character', {}).get('name', 'Unknown')}")
+    print(f"📊 Segments: {len(content.get('segments', []))}")
+    print(f"⏱️ Duration: ~{num_segments * 8} seconds")
+    
+    return content

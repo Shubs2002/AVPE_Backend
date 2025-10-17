@@ -41,6 +41,11 @@ class Settings(BaseSettings):
     MONGODB_URI: str | None = None
     MONGODB_DATABASE: str | None = None
 
+    # ☁️ Cloudinary Configuration
+    CLOUDINARY_CLOUD_NAME: str | None = None
+    CLOUDINARY_API_KEY: str | None = None
+    CLOUDINARY_API_SECRET: str | None = None
+
     # Define CORS origins for different environments
     DEV_ORIGINS: ClassVar[list[str]] = ["*"]
     PROD_ORIGINS: ClassVar[list[str]] = ["*"]

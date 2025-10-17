@@ -63,7 +63,7 @@ def build_story_set(idea: str, total_segments: int, segments_per_set: int = 10, 
             detail=f"Story set generation failed: {str(e)}"
         )
 
-def build_full_story_auto(idea: str, total_segments: int = None, segments_per_set: int = 10, save_to_files: bool = True, output_directory: str = "generated_stories", custom_character_roster: list = None, no_narration: bool = False, narration_only_first: bool = False, cliffhanger_interval: int = 0, content_rating: str = "U"):
+def build_full_story_auto(idea: str, total_segments: int = None, segments_per_set: int = 10, custom_character_roster: list = None, no_narration: bool = False, narration_only_first: bool = False, cliffhanger_interval: int = 0, content_rating: str = "U"):
     """Generate a complete story automatically in sets and save to JSON files."""
     if not idea:
         raise HTTPException(
@@ -87,7 +87,7 @@ def build_full_story_auto(idea: str, total_segments: int = None, segments_per_se
     
     try:
         result = openai_service.generate_full_story_automatically(
-            idea, total_segments, segments_per_set, save_to_files, output_directory, custom_character_roster,
+            idea, total_segments, segments_per_set, custom_character_roster,
             no_narration, narration_only_first, cliffhanger_interval, content_rating
         )
         return {"result": result}
@@ -606,4 +606,210 @@ def search_saved_characters(query: str = None, gender: str = None, age_range: st
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to search characters: {str(e)}"
+        )
+
+
+def create_character_from_uploaded_image(
+    image: UploadFile,
+    character_name: str,
+    remove_background: bool = True,
+    upload_to_cloudinary: bool = True
+):
+    """
+    Create a character from an uploaded image with complete pipeline:
+    1. Analyze image with Gemini for detailed character description
+    2. Remove background from image (optional)
+    3. Upload to Cloudinary (optional)
+    4. Save character data + image URL to MongoDB
+    
+    Args:
+        image: Uploaded image file
+        character_name: Name for the character
+        remove_background: Whether to remove background (default: True)
+        upload_to_cloudinary: Whether to upload to Cloudinary (default: True)
+    
+    Returns:
+        dict: Complete character creation result
+    """
+    from app.services.character_image_service import create_character_from_image
+    
+    # Validate file
+    if not image:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="No image file provided"
+        )
+    
+    # Validate character name
+    if not character_name or character_name.strip() == "":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Character name is required"
+        )
+    
+    # Check file size (limit to 10MB)
+    max_size = 10 * 1024 * 1024  # 10MB
+    if hasattr(image, 'size') and image.size > max_size:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Image file too large. Maximum size is 10MB"
+        )
+    
+    try:
+        # Read image data
+        image_data = image.file.read()
+        
+        # Create character from image
+        result = create_character_from_image(
+            image_data=image_data,
+            character_name=character_name,
+            remove_bg=remove_background,
+            upload_to_cloudinary=upload_to_cloudinary
+        )
+        
+        if not result.get('success'):
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=result.get('error', 'Failed to create character')
+            )
+        
+        return result
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to create character from image: {str(e)}"
+        )
+
+
+
+def generate_anime_automatically(
+    idea: str,
+    total_segments: int = None,
+    segments_per_set: int = 10,
+    custom_character_roster: list = None,
+    anime_style: str = "shonen",
+    no_narration: bool = False,
+    narration_only_first: bool = False,
+    cliffhanger_interval: int = 0,
+    content_rating: str = "U/A"
+):
+    """
+    Generate a complete Japanese anime story automatically in English.
+    
+    Args:
+        idea: The anime story concept
+        total_segments: Total segments (auto-detected if None)
+        segments_per_set: Segments per set
+        custom_character_roster: Optional pre-defined anime characters
+        anime_style: "shonen", "shojo", "seinen", "slice_of_life", "mecha", "isekai"
+        no_narration: No narration in any segment
+        narration_only_first: Narration only in first segment
+        cliffhanger_interval: Add cliffhangers every N segments
+        content_rating: "U", "U/A", or "A"
+    
+    Returns:
+        dict: Complete anime generation results
+    """
+    if not idea:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Missing anime idea"
+        )
+    
+    # Validate anime style
+    valid_styles = ["shonen", "shojo", "seinen", "slice_of_life", "mecha", "isekai"]
+    if anime_style not in valid_styles:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Invalid anime_style. Must be one of: {', '.join(valid_styles)}"
+        )
+    
+    try:
+        result = openai_service.generate_anime_story_automatically(
+            idea=idea,
+            total_segments=total_segments,
+            segments_per_set=segments_per_set,
+            custom_character_roster=custom_character_roster,
+            anime_style=anime_style,
+            no_narration=no_narration,
+            narration_only_first=narration_only_first,
+            cliffhanger_interval=cliffhanger_interval,
+            content_rating=content_rating
+        )
+        return {"result": result}
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Anime generation failed: {str(e)}"
+        )
+
+
+
+def generate_daily_character_content(
+    idea: str,
+    character_name: str,
+    creature_language: str = "Soft and High-Pitched",
+    num_segments: int = 7
+):
+    """
+    Generate daily character life content for Instagram using keyframes.
+    
+    Simple service for creating engaging daily moments with NO dialogue/narration.
+    Uses creature sounds only. Maximum 10 segments per generation.
+    
+    Args:
+        idea: The daily life moment/situation
+        character_name: Name of the character
+        creature_language: Voice type ("Soft and High-Pitched", "Magical or Otherworldly", "Muffled and Low")
+        num_segments: Number of segments (max 10)
+    
+    Returns:
+        dict: Generated content
+    """
+    if not idea:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Missing idea for daily character content"
+        )
+    
+    if not character_name:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Missing character name"
+        )
+    
+    # Validate creature language is provided
+    if not creature_language or not creature_language.strip():
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="creature_language is required. Describe your character's voice (e.g., 'Soft and High-Pitched', 'Deep and Grumbly', 'Magical and Ethereal')"
+        )
+    
+    if num_segments > 10:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Maximum 10 segments allowed for daily character content"
+        )
+    
+    if num_segments < 1:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Number of segments must be at least 1"
+        )
+    
+    try:
+        content = openai_service.generate_daily_character_content(
+            idea=idea,
+            character_name=character_name,
+            creature_language=creature_language,
+            num_segments=num_segments
+        )
+        return {"content": content}
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Daily character content generation failed: {str(e)}"
         )
