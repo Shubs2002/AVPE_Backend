@@ -831,3 +831,62 @@ async def generate_daily_character_videos_route(payload: GenerateDailyCharacterV
     - Failed segments for retry
     """
     return cinematographer_controller.handle_generate_daily_character_videos(payload.dict())
+
+
+
+class GenerateDailyCharacterVideosWithReferencesRequest(BaseModel):
+    content_data: dict  # Output from /generate-daily-character
+    character_keyframe_uri: str  # Character image URI for reference
+    resolution: Optional[str] = "720p"
+    aspect_ratio: Optional[str] = "9:16"
+    download: Optional[bool] = False
+    auto_merge: Optional[bool] = False
+    cleanup_segments: Optional[bool] = True
+
+@router.post("/generate-daily-character-videos-with-references")
+async def generate_daily_character_videos_with_references_route(payload: GenerateDailyCharacterVideosWithReferencesRequest) -> dict:
+    """
+    Generate videos for daily character content using REFERENCE IMAGES for character consistency.
+    
+    NEW MODE: Uses both previous frame AND character keyframe as reference images (not as image parameter).
+    This provides better character consistency across segments using Veo 3.1's reference image feature.
+    
+    Differences from /generate-daily-character-videos:
+    - Previous frame → Used as REFERENCE IMAGE (not image parameter)
+    - Character keyframe → Used as REFERENCE IMAGE
+    - Both images guide character consistency without being the starting frame
+    - Better for maintaining character appearance across segments
+    
+    Features:
+    - Dual reference images (previous frame + character keyframe)
+    - Enhanced character consistency with Veo 3.1
+    - Automatic reference image management
+    - Optional auto-merge into final video
+    - Progress tracking for each segment
+    
+    Example:
+        POST /api/generate-daily-character-videos-with-references
+        {
+            "content_data": {
+                "title": "Floof's Splash Surprise",
+                "character_name": "Floof",
+                "segments": [...]
+            },
+            "character_keyframe_uri": "https://res.cloudinary.com/.../floof.png",
+            "resolution": "720p",
+            "aspect_ratio": "9:16",
+            "auto_merge": true
+        }
+    
+    Supported Image URIs:
+    - GCS: "gs://your-bucket/characters/floof.png"
+    - HTTP/HTTPS: "https://example.com/floof.png"
+    - Cloudinary: "https://res.cloudinary.com/.../floof.png"
+    
+    Response includes:
+    - Video URLs for each segment
+    - Generation status and timing
+    - Optional merged final video
+    - Failed segments for retry
+    """
+    return cinematographer_controller.handle_generate_daily_character_videos_with_references(payload.dict())

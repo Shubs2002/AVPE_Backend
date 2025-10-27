@@ -213,7 +213,8 @@ def get_daily_character_prompt(idea: str, character_name: str, creature_language
         {{
           "segment": 1,
           "duration": 8,
-          "first_frame_description": "ONLY FOR SEGMENT 1: Detailed description of the starting frame - character pose, position, environment, lighting. Character appearance stays same (from keyframe), only describe pose, surroundings, and background.",
+          "first_frame_description": "Detailed description of the starting frame - character pose, position, environment, lighting. Character appearance stays same (from keyframe), only describe pose, surroundings, and background. Character MUST be fully visible (whole body) in this frame.",
+          "last_frame_description": "Detailed description of the ending frame - character's final pose, position, environment at segment end. This will be generated with Imagen and used as first frame for next segment. Character MUST be fully visible (whole body) in this frame.",
           "scene": "What's happening visually",
           "action": "Specific character action",
           "reaction": "Character's reaction/emotion",
@@ -288,13 +289,30 @@ def get_daily_character_prompt(idea: str, character_name: str, creature_language
     - **Cute Moment**: "Soft close-up, slight slow motion"
     - **Ending**: "Wide shot, slow zoom out as character exits"
     
-    **FIRST FRAME DESCRIPTION** (SEGMENT 1 ONLY):
-    - For segment 1, include "first_frame_description" field
+    **FIRST AND LAST FRAME DESCRIPTIONS** (CRITICAL FOR IMAGEN GENERATION):
+    
+    **First Frame Description** (ALL SEGMENTS):
     - Describe the STARTING FRAME: character's initial pose, position, environment
-    - Character appearance STAYS THE SAME (from keyframe image)
+    - Character appearance STAYS THE SAME (from user's keyframe image)
     - Only describe: pose, body position, surroundings, background, lighting
-    - This will be used to generate the first frame with Imagen before video generation
-    - Example: "{character_name} standing at cave entrance, looking curious, surrounded by icy rocks and snow, soft moonlight from above"
+    - **MUST show character FULLY VISIBLE** (whole body in frame)
+    - This will be generated with Imagen (Nano Banana) using user's character image as reference
+    - Example: "{character_name} standing at cave entrance, looking curious, surrounded by icy rocks and snow, soft moonlight from above, full body visible"
+    
+    **Last Frame Description** (ALL SEGMENTS):
+    - Describe the ENDING FRAME: character's final pose, position at segment end
+    - This frame will be generated with Imagen using BOTH:
+      1. User's character image (for character consistency)
+      2. The first frame of this segment (for environment/lighting consistency)
+    - **MUST show character FULLY VISIBLE** (whole body in frame)
+    - This becomes the FIRST FRAME of the NEXT segment (ensures perfect continuity)
+    - Example: "{character_name} bent over puddle, eyes wide in surprise, same cave environment, full body visible"
+    
+    **Character Visibility Rule**:
+    - Character MUST be fully visible (whole body) in BOTH first AND last frame
+    - This ensures character consistency across all generated frames
+    - Avoid close-ups that crop the character in frame descriptions
+    - Full body visibility = better Imagen generation with character reference
     
     **REMEMBER**:
     - Maximum {num_segments} segments (each 8 seconds)
@@ -304,7 +322,9 @@ def get_daily_character_prompt(idea: str, character_name: str, creature_language
     - 100% VISUAL storytelling - NO dialogue, NO narration
     - ONLY creature sounds: {sound_description}
     - Character appearance defined by keyframe image
-    - **SEGMENT 1**: Include "first_frame_description" for starting frame generation
+    - **ALL SEGMENTS**: Include BOTH "first_frame_description" AND "last_frame_description"
+    - **FRAME CHAINING**: Last frame of segment N = First frame of segment N+1
+    - **CHARACTER VISIBILITY**: Character MUST be fully visible (whole body) in BOTH first and last frames
     - **VARY CAMERA ANGLES** - Different shot for each segment (but maintain spatial continuity)
     - **MATCH CAMERA TO EMOTION** - Close for reactions, wide for action
     - Make it RELATABLE and SHAREABLE

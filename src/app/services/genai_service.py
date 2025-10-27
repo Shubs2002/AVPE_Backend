@@ -60,9 +60,10 @@ def _prepare_image_input(image_input):
 
 def generate_video_from_payload(payload: dict):
     """
-    Calls Vertex AI Veo-3 model and generates a video using google-genai client.
+    Calls Vertex AI Veo-3.1 model and generates a video using google-genai client.
     
-    Supports optional first and last frame images for better video continuity.
+    Supports reference images for better character consistency (Veo 3.1 feature).
+    Now using google-genai SDK v1.45.0+ with VideoGenerationReferenceImage support!
     
     Args:
         payload: Dictionary containing:
@@ -70,10 +71,10 @@ def generate_video_from_payload(payload: dict):
             - durationSeconds (optional): Video duration (default: 8)
             - resolution (optional): Video resolution (default: "720p")
             - aspectRatio (optional): Aspect ratio (default: "9:16")
-            - first_frame_image (optional): First frame image (PIL Image, bytes, or GCS URI)
+            - first_frame_image (optional): First frame image (PIL Image, bytes, or GCS URI) - used as main image
             - last_frame_image (optional): Last frame image (PIL Image, bytes, or GCS URI)
-            - first_frame_gcs_uri (optional): GCS URI for first frame (e.g., "gs://bucket/img.png")
-            - last_frame_gcs_uri (optional): GCS URI for last frame
+            - reference_images (optional): List of reference images for character consistency
+            - reference_image_urls (optional): List of URLs to download and use as references
     
     Returns:
         list: List of generated video URLs
@@ -100,6 +101,13 @@ def generate_video_from_payload(payload: dict):
     first_frame_gcs_uri = payload.get("first_frame_gcs_uri")  # Direct GCS URI
     last_frame_gcs_uri = payload.get("last_frame_gcs_uri")
     
+    # Extract reference images (Veo 3.1 feature)
+    reference_images = payload.get("reference_images", [])  # List of PIL Images
+    reference_image_urls = payload.get("reference_image_urls", [])  # List of URLs to download
+    
+    # NEW: Option to use frames as reference images instead of image parameter
+    use_frames_as_references = payload.get("use_frames_as_references", False)
+    
     # Note: generate_audio and sample_count are not supported in GenerateVideosConfig
 
     def _is_transient_service_error(exc_or_obj) -> bool:
@@ -122,14 +130,118 @@ def generate_video_from_payload(payload: dict):
                 "aspect_ratio": aspect_ratio,
             }
             
-            # Add last frame if provided
+            # Add last_frame to config if provided (Veo 3.1 interpolation)
             if last_frame_gcs_uri:
                 config_params["last_frame"] = types.Image(
                     gcs_uri=last_frame_gcs_uri,
                     mime_type="image/png"
                 )
+                print(f"🎬 Last frame added to config (GCS): {last_frame_gcs_uri}")
             elif last_frame_image:
                 config_params["last_frame"] = _prepare_image_input(last_frame_image)
+                print(f"🎬 Last frame added to config for interpolation")
+            
+            # Prepare reference images for Veo 3.1 (character consistency)
+            reference_image_objects = []
+            
+            # Download and prepare reference images from URLs
+            if reference_image_urls:
+                print(f"📥 Downloading {len(reference_image_urls)} reference images...")
+                for idx, url in enumerate(reference_image_urls):
+                    try:
+                        if url.startswith("http://") or url.startswith("https://"):
+                            response = requests.get(url, timeout=30)
+                            response.raise_for_status()
+                            ref_image = Image.open(BytesIO(response.content))
+                            
+                            # Create reference image object
+                            ref_obj = types.VideoGenerationReferenceImage(
+                                image=_prepare_image_input(ref_image),
+                                reference_type="asset"  # For character/object consistency
+                            )
+                            reference_image_objects.append(ref_obj)
+                            print(f"✅ Reference image {idx+1} loaded: {url[:50]}...")
+                    except Exception as e:
+                        print(f"⚠️ Failed to load reference image {idx+1}: {str(e)}")
+            
+            # Add provided reference images
+            if reference_images:
+                for idx, ref_img in enumerate(reference_images):
+                    try:
+                        ref_obj = types.VideoGenerationReferenceImage(
+                            image=_prepare_image_input(ref_img),
+                            reference_type="asset"
+                        )
+                        reference_image_objects.append(ref_obj)
+                        print(f"✅ Reference image {idx+1} added")
+                    except Exception as e:
+                        print(f"⚠️ Failed to add reference image {idx+1}: {str(e)}")
+            
+            # NEW: Add first/last frames as reference images if flag is set
+            if use_frames_as_references:
+                print(f"🎨 Using frames as reference images (character consistency mode)")
+                
+                # Add first frame as reference
+                if first_frame_gcs_uri:
+                    try:
+                        ref_obj = types.VideoGenerationReferenceImage(
+                            image=types.Image(gcs_uri=first_frame_gcs_uri, mime_type="image/png"),
+                            reference_type="asset"
+                        )
+                        reference_image_objects.append(ref_obj)
+                        print(f"✅ First frame added as reference image (GCS)")
+                    except Exception as e:
+                        print(f"⚠️ Failed to add first frame as reference: {str(e)}")
+                elif first_frame_image:
+                    try:
+                        ref_obj = types.VideoGenerationReferenceImage(
+                            image=_prepare_image_input(first_frame_image),
+                            reference_type="asset"
+                        )
+                        reference_image_objects.append(ref_obj)
+                        print(f"✅ First frame added as reference image")
+                    except Exception as e:
+                        print(f"⚠️ Failed to add first frame as reference: {str(e)}")
+                
+                # Add last frame as reference
+                if last_frame_gcs_uri:
+                    try:
+                        ref_obj = types.VideoGenerationReferenceImage(
+                            image=types.Image(gcs_uri=last_frame_gcs_uri, mime_type="image/png"),
+                            reference_type="asset"
+                        )
+                        reference_image_objects.append(ref_obj)
+                        print(f"✅ Last frame added as reference image (GCS)")
+                    except Exception as e:
+                        print(f"⚠️ Failed to add last frame as reference: {str(e)}")
+                elif last_frame_image:
+                    try:
+                        ref_obj = types.VideoGenerationReferenceImage(
+                            image=_prepare_image_input(last_frame_image),
+                            reference_type="asset"
+                        )
+                        reference_image_objects.append(ref_obj)
+                        print(f"✅ Last frame added as reference image")
+                    except Exception as e:
+                        print(f"⚠️ Failed to add last frame as reference: {str(e)}")
+            
+            # Determine if we have a starting frame (image parameter)
+            # When use_frames_as_references is True, don't use frames as image parameter
+            has_starting_frame = False
+            if not use_frames_as_references:
+                has_starting_frame = (last_frame_gcs_uri or last_frame_image or 
+                                     first_frame_gcs_uri or first_frame_image)
+            
+            # IMPORTANT: Google Gemini API doesn't support using both 'image' and 'reference_images' together
+            # Choose one approach based on what's available
+            if has_starting_frame and reference_image_objects:
+                print(f"⚠️ Cannot use both image parameter and reference images - prioritizing image parameter")
+                reference_image_objects = []  # Clear reference images
+            
+            # Add reference images to config if available (and no starting frame)
+            if reference_image_objects:
+                config_params["reference_images"] = reference_image_objects
+                print(f"🎨 Using {len(reference_image_objects)} reference images for character consistency")
             
             # Prepare generation parameters
             generation_params = {
@@ -138,14 +250,24 @@ def generate_video_from_payload(payload: dict):
                 "config": types.GenerateVideosConfig(**config_params)
             }
             
-            # Add first frame if provided (as 'image' parameter)
-            if first_frame_gcs_uri:
-                generation_params["image"] = types.Image(
-                    gcs_uri=first_frame_gcs_uri,
-                    mime_type="image/png"
-                )
-            elif first_frame_image:
-                generation_params["image"] = _prepare_image_input(first_frame_image)
+            # IMPORTANT: Only add 'image' parameter if NOT using frames as references
+            # When use_frames_as_references=True, frames are already added to reference_images
+            if not use_frames_as_references:
+                # CORRECT BEHAVIOR: Use FIRST frame as 'image' parameter
+                # Last frame is already in config for interpolation
+                if first_frame_gcs_uri:
+                    generation_params["image"] = types.Image(
+                        gcs_uri=first_frame_gcs_uri,
+                        mime_type="image/png"
+                    )
+                    print(f"🖼️ Using first frame as IMAGE parameter (GCS): {first_frame_gcs_uri}")
+                elif first_frame_image:
+                    generation_params["image"] = _prepare_image_input(first_frame_image)
+                    print(f"🖼️ Using first frame as IMAGE parameter")
+                else:
+                    print(f"⚠️ No first frame provided - video will start without keyframe")
+            else:
+                print(f"ℹ️ Frames are being used as reference images only (no image parameter)")
             
             # Start async video generation
             operation = client.models.generate_videos(**generation_params)
@@ -429,10 +551,11 @@ def generate_first_frame_with_imagen(character_keyframe_uri: str, frame_descript
     
     # Map aspect ratio to description
     aspect_ratio_descriptions = {
-        "9:16": "vertical portrait orientation (9:16 aspect ratio)",
-        "16:9": "horizontal landscape orientation (16:9 aspect ratio)",
-        "1:1": "square format (1:1 aspect ratio)",
-        "4:5": "vertical format (4:5 aspect ratio)"
+        "9:16": "Portrait (9:16 aspect ratio)",
+        "3:4": "Portrait full screen (3:4 aspect ratio)",
+        "16:9": "Widescreen (16:9 aspect ratio)",
+        "1:1": "square (1:1 aspect ratio)",
+        "4:3": "fullscreen (4:3 aspect ratio)"
     }
     
     aspect_ratio_desc = aspect_ratio_descriptions.get(aspect_ratio, f"{aspect_ratio} aspect ratio")
@@ -512,21 +635,25 @@ def generate_video_with_keyframes(
     last_frame=None,
     duration: int = 8,
     resolution: str = "720p",
-    aspect_ratio: str = "9:16"
+    aspect_ratio: str = "9:16",
+    reference_image_urls: list = None,
+    use_frames_as_references: bool = False
 ):
     """
-    Generate a video with optional first and last frame keyframes.
+    Generate a video with optional first and last frame keyframes and reference images (Veo 3.1).
     
     This is a convenience function that makes it easy to generate videos
     with specific start and end frames for better continuity between segments.
     
     Args:
         prompt: Text description of the video
-        first_frame: Optional first frame (PIL Image, bytes, GCS URI, HTTP/HTTPS URL, or dict)
+        first_frame: Optional first frame (PIL Image, bytes, GCS URI, HTTP/HTTPS URL, or dict) - main starting image
         last_frame: Optional last frame (PIL Image, bytes, GCS URI, HTTP/HTTPS URL, or dict)
         duration: Video duration in seconds (default: 8)
         resolution: Video resolution (default: "720p")
         aspect_ratio: Aspect ratio (default: "9:16")
+        reference_image_urls: Optional list of image URLs to use as references for character consistency (Veo 3.1)
+        use_frames_as_references: If True, treats first/last frames as reference images instead of image parameter (default: False)
     
     Returns:
         list: List of generated video URLs
@@ -616,6 +743,16 @@ def generate_video_with_keyframes(
             else:
                 payload["last_frame_image"] = processed["value"]
     
+    # Add reference image URLs for Veo 3.1 character consistency
+    if reference_image_urls:
+        payload["reference_image_urls"] = reference_image_urls
+        print(f"� Adding {len(reference_image_urls)} reference images for character consistency")
+    
+    # Add the new flag to use frames as references
+    if use_frames_as_references:
+        payload["use_frames_as_references"] = True
+        print(f"🎨 Frames will be used as reference images (character consistency mode)")
+    
     return generate_video_from_payload(payload)
 
 
@@ -657,7 +794,13 @@ def generate_and_download_video(payload: dict, download: bool = True, filename: 
     return result
 
 
-def generate_thumbnail_image(content_data: dict, output_filename: str = None, content_type_override: str = None, aspect_ratio: str = "9:16") -> dict:
+def generate_thumbnail_image(
+    content_data: dict, 
+    output_filename: str = None, 
+    content_type_override: str = None, 
+    aspect_ratio: str = "9:16",
+    reference_image_path: str = None
+) -> dict:
     """
     Generate a thumbnail image using Imagen (nano banana model) with title included in the image.
     
@@ -666,6 +809,7 @@ def generate_thumbnail_image(content_data: dict, output_filename: str = None, co
         output_filename: Optional filename for the thumbnail (defaults to content title)
         content_type_override: Optional content type override (e.g., "daily_character")
         aspect_ratio: Aspect ratio for the thumbnail (default: "9:16" for vertical videos)
+        reference_image_path: Optional path to reference image (e.g., first frame) for visual consistency
     
     Returns:
         dict: Contains success status, thumbnail path, and generation details
@@ -676,17 +820,54 @@ def generate_thumbnail_image(content_data: dict, output_filename: str = None, co
         # Build thumbnail prompt from content data (includes title in the image and aspect ratio)
         prompt = _build_thumbnail_prompt(content_data, aspect_ratio)
         
-        print(f"🎨 Generating thumbnail with Imagen (nano banana)...")
+        print(f"🎨 Generating thumbnail with Gemini 2.5 Flash Image...")
         print(f"📝 Prompt: {prompt[:100]}...")
         
-        # TODO: Implement actual Imagen (nano banana) API call
-        # For now, using Gemini as placeholder
         client = get_genai_client()
         
-        # Generate the thumbnail image
+        contents = [prompt]
+        
+        # Add reference image if provided (e.g., first frame for visual consistency)
+        if reference_image_path:
+            try:
+                import os
+                if os.path.exists(reference_image_path):
+                    print(f"🖼️ Loading reference image: {reference_image_path}")
+                    ref_image = Image.open(reference_image_path)
+                    contents.append(ref_image)
+                    print(f"✅ Reference image loaded for visual consistency")
+                else:
+                    print(f"⚠️ Reference image not found: {reference_image_path}")
+            except Exception as e:
+                print(f"⚠️ Could not load reference image: {str(e)}")
+        
+        # Get character images if available for reference
+        characters_roster = content_data.get("characters_roster", [])
+        
+        # Add character images as reference if available
+        if characters_roster:
+            for char in characters_roster:
+                char_image_url = char.get("image_url")
+                if char_image_url:
+                    try:
+                        import requests
+                        print(f"📥 Loading character image: {char.get('name', 'Character')}")
+                        response_img = requests.get(char_image_url, timeout=10)
+                        char_image = Image.open(BytesIO(response_img.content))
+                        contents.append(char_image)
+                        print(f"✅ Character image loaded for reference")
+                    except Exception as e:
+                        print(f"⚠️ Could not load character image: {str(e)}")
+        
+        # Generate the thumbnail image with Gemini 2.5 Flash Image using proper ImageConfig
         response = client.models.generate_content(
-            model="gemini-2.5-flash-image-preview",
-            contents=[prompt],
+            model="gemini-2.5-flash-image",
+            contents=contents,
+            config=types.GenerateContentConfig(
+                image_config=types.ImageConfig(
+                    aspect_ratio=aspect_ratio
+                )
+            )
         )
         
         # Process the response
@@ -773,16 +954,6 @@ def _build_thumbnail_prompt(content_data: dict, aspect_ratio: str = "9:16") -> s
         else:
             content_type = "story"
     
-    # Map aspect ratio to description
-    aspect_ratio_descriptions = {
-        "9:16": "vertical (9:16 aspect ratio, portrait orientation for mobile/Instagram)",
-        "16:9": "horizontal (16:9 aspect ratio, landscape orientation for YouTube)",
-        "1:1": "square (1:1 aspect ratio for Instagram posts)",
-        "4:5": "vertical (4:5 aspect ratio for Instagram feed)"
-    }
-    
-    aspect_ratio_desc = aspect_ratio_descriptions.get(aspect_ratio, f"{aspect_ratio} aspect ratio")
-    
     # Build character descriptions
     character_descriptions = []
     for char in characters_roster:
@@ -791,24 +962,37 @@ def _build_thumbnail_prompt(content_data: dict, aspect_ratio: str = "9:16") -> s
         if char_desc:
             character_descriptions.append(f"{char_name}: {char_desc}")
     
-    # Build the prompt based on content type
+    # Build the prompt based on content type (aspect ratio handled by ImageConfig)
     prompt_parts = [
-        f"Create a vibrant, eye-catching realistic thumbnail image for a {content_type} video.",
+        f"Create a STUNNING, PROFESSIONAL, REALISTIC thumbnail image for a {content_type} video.",
         "",
-        f"TITLE TO INCLUDE IN IMAGE: '{title}'",
-        "- The title MUST be prominently displayed in the image",
-        "- Use bold, eye-catching text that's easy to read",
-        "- Place title at the top or center of the image",
-        "- Use contrasting colors for text (white text with dark outline, or vice versa)",
-        "- Make the title text large and clear",
+        f"🎯 TITLE TO DISPLAY: '{title}'",
+        "- Display the title prominently with BOLD, LARGE text",
+        "- Use eye-catching typography (thick, bold fonts)",
+        "- Add text effects: drop shadow, outline, or glow for readability",
+        "- Place title strategically (top third or center)",
+        "- Use HIGH CONTRAST colors (white text with black outline is most readable)",
+        "- Make text HUGE - it should be readable even at small sizes",
         "",
-        "REQUIREMENTS:",
-        "- High-quality, professional thumbnail style",
-        "- Bright, saturated colors that grab attention",
-        f"- {aspect_ratio_desc}",
-        "- Eye-catching composition that encourages clicks by people of middle age preferable teens",
-        "- Title text integrated into the design (not added separately)",
-        "- Optimized for the specified aspect ratio",
+        "🎨 VISUAL STYLE:",
+        "- HYPER-REALISTIC, high-quality 3D rendering or photorealistic style",
+        "- VIBRANT, SATURATED colors that POP on screen",
+        "- Professional lighting with dramatic highlights and shadows",
+        "- Cinematic composition with depth and dimension",
+        "- Sharp focus on main subjects, slight blur on background",
+        "",
+        "📐 COMPOSITION RULES:",
+        "- Rule of thirds for character placement",
+        "- Leave space at edges for platform UI (YouTube, Instagram)",
+        "- Create visual hierarchy: characters → title → background",
+        "- Use leading lines to draw eye to important elements",
+        "",
+        "🎭 THUMBNAIL PSYCHOLOGY:",
+        "- Create CURIOSITY - make viewers want to know more",
+        "- Show EMOTION - expressive faces and reactions",
+        "- Use CONTRAST - bright vs dark, big vs small",
+        "- Add MOVEMENT - dynamic poses, action elements",
+        "- Include FOCAL POINT - one clear main subject",
         ""
     ]
     
@@ -845,17 +1029,26 @@ def _build_thumbnail_prompt(content_data: dict, aspect_ratio: str = "9:16") -> s
             "- Elements that suggest learning and value",
             "- Approachable yet authoritative visual style"
         ])
+    elif content_type == "daily_character" or content_type == "daily_character_life":
+        prompt_parts.extend([
+            "STYLE: Cute, relatable character moment style",
+            "- Bright, cheerful colors that appeal to all ages",
+            "- Character with expressive, endearing features",
+            "- Fun, lighthearted atmosphere",
+            "- Instagram-optimized visual appeal"
+        ])
     
     prompt_parts.extend([
         "",
-        "COMPOSITION:",
+        "✨ FINAL TOUCHES:",
         "- Characters prominently featured in foreground",
         "- Engaging background that supports the theme",
-        "- Clear visual hierarchy with good contrast",
-        "- Professional lighting that makes characters pop",
-        "- Avoid placing important elements in corners (YouTube UI space)",
+        "- Clear visual hierarchy with excellent contrast",
+        "- Professional lighting that makes subjects POP",
+        "- Avoid placing important elements in corners (platform UI space)",
+        "- Add subtle visual effects (glow, sparkles, light rays) for extra appeal",
         "",
-        "Create an image that would make viewers want to click and watch the video!"
+        "🎯 GOAL: Create a thumbnail so attractive that viewers CAN'T resist clicking!"
     ])
     
     return "\n".join(prompt_parts)

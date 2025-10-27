@@ -950,14 +950,15 @@ def execute_daily_character_video_generation(content_data: dict, video_options: 
                     print(f"⏳ Waiting {retry_delay} seconds before retry...")
                     time.sleep(retry_delay)
                 
-                # Generate video with keyframe chaining
+                # Generate video with keyframe chaining and character reference (Veo 3.1)
                 video_urls = generate_video_with_keyframes(
                     prompt=prompt,
-                    first_frame=first_frame_to_use,
-                    last_frame=None,  # Let Veo3 generate the end naturally
+                    first_frame=first_frame_to_use,  # Previous frame as main image
+                    last_frame=None,  # Let Veo3.1 generate the end naturally
                     duration=duration,
                     resolution=video_options.get("resolution", "720p"),
-                    aspect_ratio=video_options.get("aspect_ratio", "9:16")
+                    aspect_ratio=video_options.get("aspect_ratio", "9:16"),
+                    reference_image_urls=[character_keyframe_uri]  # Character as reference for consistency
                 )
                 
                 if video_urls and len(video_urls) > 0:
@@ -1108,5 +1109,482 @@ def execute_daily_character_video_generation(content_data: dict, video_options: 
             print(f"⚠️ Cleanup warning: {str(e)}")
     
     print(f"{'='*60}\n")
+    
+    return results
+
+
+
+def build_daily_character_video_prompt(segment: dict) -> str:
+    """
+    Build a video prompt from daily character segment data.
+    
+    Args:
+        segment: Daily character segment with scene, action, reaction, etc.
+    
+    Returns:
+        str: Complete video prompt for generation
+    """
+    prompt_parts = []
+    
+    # Scene description
+    scene = segment.get('scene', '')
+    if scene:
+        prompt_parts.append(f"Scene: {scene}")
+    
+    # Action
+    action = segment.get('action', '')
+    if action:
+        prompt_parts.append(f"Action: {action}")
+    
+    # Reaction
+    reaction = segment.get('reaction', '')
+    if reaction:
+        prompt_parts.append(f"Reaction: {reaction}")
+    
+    # Visual focus
+    visual_focus = segment.get('visual_focus', '')
+    if visual_focus:
+        prompt_parts.append(f"Visual Focus: {visual_focus}")
+    
+    # Background
+    background = segment.get('background', {})
+    if background:
+        bg_prompt = background.get('video_prompt_background', '')
+        if bg_prompt:
+            prompt_parts.append(f"Background: {bg_prompt}")
+    
+    # Camera
+    camera = segment.get('camera', '')
+    if camera:
+        prompt_parts.append(f"Camera: {camera}")
+    
+    # Comedy element
+    comedy = segment.get('comedy_element', '')
+    if comedy:
+        prompt_parts.append(f"Comedy: {comedy}")
+    
+    # Join all parts
+    return ". ".join(prompt_parts) if prompt_parts else "Daily character moment"
+
+
+def execute_daily_character_video_generation(content_data: dict, video_options: dict = None):
+    """
+    Generate videos for daily character content using keyframes (original mode).
+    Uses character image as first frame and previous frame as image parameter.
+    
+    Args:
+        content_data: Daily character content data
+        video_options: Video generation options including character_keyframe_uri
+    
+    Returns:
+        dict: Complete results with video generation status
+    """
+    if video_options is None:
+        video_options = {}
+    
+    character_keyframe_uri = video_options.get("character_keyframe_uri")
+    if not character_keyframe_uri:
+        raise ValueError("character_keyframe_uri is required in video_options")
+    
+    segments = content_data.get('segments', [])
+    
+    if not segments:
+        raise ValueError("No segments found in content data")
+    
+    # Prepare results structure
+    results = {
+        "content_title": content_data.get('title', 'Daily Character Video'),
+        "character_name": content_data.get('character_name', 'Character'),
+        "content_type": "daily_character",
+        "total_segments": len(segments),
+        "segments_results": [],
+        "success_count": 0,
+        "error_count": 0,
+        "video_urls": [],
+        "character_keyframe_uri": character_keyframe_uri
+    }
+    
+    print(f"🎬 Starting daily character video generation for: {results['content_title']}")
+    print(f"👤 Character: {results['character_name']}")
+    print(f"🖼️ Keyframe: {character_keyframe_uri}")
+    print(f"📊 Total segments: {len(segments)}")
+    
+    # Import here to avoid circular imports
+    from app.services.genai_service import generate_video_with_keyframes
+    from app.services.imagen_service import generate_first_frame_with_imagen
+    
+    previous_frame = None  # Track previous frame for continuity
+    
+    # Process each segment sequentially
+    for i, segment in enumerate(segments, 1):
+        print(f"\n🎬 Generating video for Segment {i}/{len(segments)}...")
+        
+        segment_result = {
+            "segment_number": i,
+            "status": "processing",
+            "video_url": None,
+            "error": None
+        }
+        
+        try:
+            # Extract or build prompt from segment
+            prompt = segment.get('video_prompt', '')
+            if not prompt:
+                # Build prompt from segment fields for daily character content
+                prompt = build_daily_character_video_prompt(segment)
+            
+            if not prompt or prompt == "Daily character moment":
+                raise ValueError(f"Could not build video prompt for segment {i}")
+            
+            print(f"📝 Prompt: {prompt[:100]}...")
+            
+            # Setup organized directories using file_storage_manager
+            from app.services.file_storage_manager import storage_manager, ContentType
+            import os
+            
+            title = content_data.get('title', 'Untitled')
+            content_dir = storage_manager.get_content_directory(ContentType.DAILY_CHARACTER, title)
+            frames_dir = os.path.join(content_dir, "frames")
+            videos_dir = os.path.join(content_dir, "videos")
+            os.makedirs(frames_dir, exist_ok=True)
+            os.makedirs(videos_dir, exist_ok=True)
+            
+            is_last_segment = (i == len(segments))
+            
+            # STEP 1: Determine IMAGE parameter (first frame for video)
+            # For segment 1: Generate with Imagen
+            # For segment 2+: Use generated last frame from previous segment
+            first_frame = None
+            first_frame_description = segment.get('first_frame_description')
+            
+            if i == 1:
+                # First segment: Generate first frame with Imagen
+                if first_frame_description:
+                    print(f"🎨 Segment {i}: Generating first frame with Imagen (character reference)...")
+                    print(f"📝 Frame description: {first_frame_description[:100]}...")
+                    try:
+                        generated_image, frame_path = generate_first_frame_with_imagen(
+                            character_image_url=character_keyframe_uri,
+                            frame_description=first_frame_description,
+                            aspect_ratio=video_options.get("aspect_ratio", "9:16"),
+                            output_dir=frames_dir
+                        )
+                        first_frame = frame_path
+                        segment_result["first_frame_generated"] = frame_path
+                        print(f"✅ First frame generated: {frame_path}")
+                    except Exception as e:
+                        print(f"⚠️ Imagen generation failed: {str(e)}, using character keyframe")
+                        first_frame = character_keyframe_uri
+                else:
+                    first_frame = character_keyframe_uri
+                    print(f"⚠️ No first_frame_description, using character keyframe")
+            else:
+                # Subsequent segments: Use generated last frame from previous segment
+                if previous_frame:
+                    first_frame = previous_frame
+                    print(f"🔗 Segment {i}: Using generated last frame from previous segment: {first_frame}")
+                else:
+                    # Fallback: Use character keyframe
+                    print(f"⚠️ Segment {i}: Previous frame not available, using character keyframe")
+                    first_frame = character_keyframe_uri
+            
+            # STEP 2: Generate LAST_FRAME parameter with Imagen (for ALL segments)
+            last_frame = None
+            last_frame_description = segment.get('last_frame_description')
+            
+            if last_frame_description:
+                print(f"🎨 Segment {i}: Generating last frame with Imagen (dual reference)...")
+                print(f"📝 Last frame description: {last_frame_description[:100]}...")
+                try:
+                    from app.services.imagen_service import generate_last_frame_with_imagen
+                    
+                    generated_image, last_frame_path = generate_last_frame_with_imagen(
+                        character_image_url=character_keyframe_uri,
+                        first_frame_path=first_frame,
+                        last_frame_description=last_frame_description,
+                        aspect_ratio=video_options.get("aspect_ratio", "9:16"),
+                        output_dir=frames_dir
+                    )
+                    last_frame = last_frame_path
+                    segment_result["last_frame_generated"] = last_frame_path
+                    print(f"✅ Last frame generated: {last_frame_path}")
+                    
+                    # Store generated last frame for next segment (no extraction needed!)
+                    if not is_last_segment:
+                        previous_frame = last_frame_path
+                        print(f"   → Will be used as first frame for segment {i+1}")
+                    else:
+                        print(f"   → Last segment: Frame used for video interpolation only")
+                    
+                except Exception as e:
+                    print(f"⚠️ Last frame generation failed: {str(e)}")
+                    last_frame = None
+            else:
+                print(f"⚠️ No last_frame_description provided for segment {i}")
+            
+            # Generate video with BOTH first and last frames (Veo 3.1 interpolation)
+            print(f"🎬 Generating video with first frame{' and last frame' if last_frame else ''}...")
+            video_urls = generate_video_with_keyframes(
+                prompt=prompt,
+                first_frame=first_frame,
+                last_frame=last_frame,  # Use generated last frame if available
+                duration=segment.get('clip_duration', 8),
+                resolution=video_options.get("resolution", "720p"),
+                aspect_ratio=video_options.get("aspect_ratio", "9:16"),
+                reference_image_urls=None,  # No reference images in this mode
+                use_frames_as_references=False  # Use frames as image parameter
+            )
+            
+            if video_urls and len(video_urls) > 0:
+                video_url = video_urls[0]
+                segment_result["video_url"] = video_url
+                segment_result["status"] = "completed"
+                results["video_urls"].append(video_url)
+                results["success_count"] += 1
+                
+                # STEP 3: Download video (NO extraction - using generated frames!)
+                try:
+                    from app.services.genai_service import download_video
+                    
+                    # Download video to content directory
+                    character_name = content_data.get('character_name', 'character')
+                    safe_name = "".join(c for c in character_name if c.isalnum() or c in (' ', '-', '_')).strip().replace(' ', '_').lower()
+                    filename = f"{safe_name}_segment_{i}"
+                    video_path = download_video(video_url, filename, download_dir=videos_dir)
+                    segment_result["video_file"] = video_path
+                    print(f"📥 Downloaded to: {video_path}")
+                    
+                    # Also save to downloads folder if explicitly requested
+                    if video_options.get("download", False):
+                        downloads_path = download_video(video_url, filename, download_dir="downloads")
+                        segment_result["downloaded_file"] = downloads_path
+                        if "downloaded_files" not in results:
+                            results["downloaded_files"] = []
+                        results["downloaded_files"].append(downloads_path)
+                        print(f"💾 Also saved to downloads: {downloads_path}")
+                    
+                except Exception as download_error:
+                    print(f"⚠️ Download failed for segment {i}: {str(download_error)}")
+                    segment_result["download_error"] = str(download_error)
+                
+                print(f"✅ Segment {i} completed: {video_url}")
+            else:
+                raise ValueError("No video URL returned from generation")
+                
+        except Exception as e:
+            error_msg = f"Video generation failed for segment {i}: {str(e)}"
+            print(f"❌ {error_msg}")
+            segment_result["status"] = "failed"
+            segment_result["error"] = error_msg
+            results["error_count"] += 1
+        
+        results["segments_results"].append(segment_result)
+    
+    print(f"\n{'='*60}")
+    print(f"🎉 Daily Character Video Generation Complete!")
+    print(f"✅ Successful: {results['success_count']}/{results['total_segments']}")
+    print(f"❌ Failed: {results['error_count']}/{results['total_segments']}")
+    
+    if results['error_count'] > 0:
+        failed_segments = [r['segment_number'] for r in results['segments_results'] if r['status'] == 'failed']
+        print(f"⚠️ Failed segments: {failed_segments}")
+        print(f"💡 You can retry failed segments using the retry endpoint")
+    
+    # NOTE: Frame cleanup is now handled AFTER thumbnail generation in the merge pipeline
+    # Frames are kept here so thumbnail can use them as reference
+    print(f"\nℹ️ Frames kept for thumbnail generation (will be cleaned up after merge)")
+    results["frames_cleaned"] = False
+    
+    print(f"{'='*60}")
+    
+    return results
+
+
+def execute_daily_character_video_generation_with_references(content_data: dict, video_options: dict = None):
+    """
+    Generate videos for daily character content using REFERENCE IMAGES (new mode).
+    Uses both previous frame AND character keyframe as reference images for character consistency.
+    
+    Args:
+        content_data: Daily character content data
+        video_options: Video generation options including character_keyframe_uri and use_frames_as_references=True
+    
+    Returns:
+        dict: Complete results with video generation status
+    """
+    if video_options is None:
+        video_options = {}
+    
+    character_keyframe_uri = video_options.get("character_keyframe_uri")
+    if not character_keyframe_uri:
+        raise ValueError("character_keyframe_uri is required in video_options")
+    
+    segments = content_data.get('segments', [])
+    
+    if not segments:
+        raise ValueError("No segments found in content data")
+    
+    # Prepare results structure
+    results = {
+        "content_title": content_data.get('title', 'Daily Character Video'),
+        "character_name": content_data.get('character_name', 'Character'),
+        "content_type": "daily_character",
+        "mode": "reference_images",
+        "total_segments": len(segments),
+        "segments_results": [],
+        "success_count": 0,
+        "error_count": 0,
+        "video_urls": [],
+        "character_keyframe_uri": character_keyframe_uri
+    }
+    
+    print(f"🎬 Starting daily character video generation (REFERENCE MODE) for: {results['content_title']}")
+    print(f"👤 Character: {results['character_name']}")
+    print(f"🖼️ Character Keyframe: {character_keyframe_uri}")
+    print(f"🎨 Mode: Using frames as REFERENCE IMAGES for character consistency")
+    print(f"📊 Total segments: {len(segments)}")
+    
+    # Import here to avoid circular imports
+    from app.services.genai_service import generate_video_with_keyframes
+    from app.services.imagen_service import generate_first_frame_with_imagen
+    
+    previous_frame = None  # Track previous frame for continuity
+    
+    # Process each segment sequentially
+    for i, segment in enumerate(segments, 1):
+        print(f"\n🎬 Generating video for Segment {i}/{len(segments)}...")
+        
+        segment_result = {
+            "segment_number": i,
+            "status": "processing",
+            "video_url": None,
+            "error": None
+        }
+        
+        try:
+            # Extract or build prompt from segment
+            prompt = segment.get('video_prompt', '')
+            if not prompt:
+                # Build prompt from segment fields for daily character content
+                prompt = build_daily_character_video_prompt(segment)
+            
+            if not prompt or prompt == "Daily character moment":
+                raise ValueError(f"Could not build video prompt for segment {i}")
+            
+            print(f"📝 Prompt: {prompt[:100]}...")
+            
+            # Generate first frame with Imagen if frame description exists
+            first_frame = None
+            frame_description = segment.get('first_frame_description')
+            
+            if frame_description and i == 1:  # Only for first segment
+                print(f"🎨 Segment {i}: Generating custom first frame with Imagen (nano banana)...")
+                print(f"📝 Frame description: {frame_description[:100]}...")
+                try:
+                    # Create frames directory in workspace
+                    import os
+                    frames_dir = "frames"
+                    os.makedirs(frames_dir, exist_ok=True)
+                    
+                    generated_image, frame_path = generate_first_frame_with_imagen(
+                        character_image_url=character_keyframe_uri,
+                        frame_description=frame_description,
+                        aspect_ratio=video_options.get("aspect_ratio", "9:16"),
+                        output_dir=frames_dir
+                    )
+                    # Use the saved frame path as first_frame (will be used as reference)
+                    first_frame = frame_path
+                    print(f"✅ First frame generated and saved to: {frame_path}")
+                except Exception as e:
+                    print(f"⚠️ Imagen generation failed: {str(e)}, using character keyframe")
+                    first_frame = character_keyframe_uri
+            elif previous_frame:
+                # Use previous frame for continuity
+                first_frame = previous_frame
+                print(f"🔗 Segment {i}: Using previous frame as reference")
+            else:
+                # Use character keyframe as fallback
+                first_frame = character_keyframe_uri
+                print(f"⚠️ Segment {i}: Previous frame not available, using character keyframe")
+            
+            # NEW MODE: Generate video with REFERENCE IMAGES
+            # Both previous frame and character keyframe are used as references
+            video_urls = generate_video_with_keyframes(
+                prompt=prompt,
+                first_frame=first_frame,  # Will be used as reference image
+                duration=segment.get('clip_duration', 8),
+                resolution=video_options.get("resolution", "720p"),
+                aspect_ratio=video_options.get("aspect_ratio", "9:16"),
+                reference_image_urls=[character_keyframe_uri],  # Character keyframe as reference
+                use_frames_as_references=True  # NEW: Use frames as reference images
+            )
+            
+            if video_urls and len(video_urls) > 0:
+                video_url = video_urls[0]
+                segment_result["video_url"] = video_url
+                segment_result["status"] = "completed"
+                results["video_urls"].append(video_url)
+                results["success_count"] += 1
+                
+                print(f"✅ Segment {i} completed: {video_url}")
+                
+                # Extract last frame from generated video for next segment
+                # This will be used as a reference image for the next segment
+                if i < len(segments):  # Not the last segment
+                    try:
+                        print(f"🎞️ Extracting last frame from segment {i} for next segment...")
+                        from app.services.genai_service import download_video
+                        import os
+                        
+                        # Create frames directory in the workspace (not temp)
+                        frames_dir = "frames"
+                        os.makedirs(frames_dir, exist_ok=True)
+                        
+                        # Download video to frames directory
+                        video_filename = f"segment_{i}_temp.mp4"
+                        video_path = download_video(video_url, video_filename, frames_dir)
+                        
+                        # Extract last frame to frames directory
+                        from app.services.video_frame_extractor import extract_last_frame_from_video
+                        frame_filename = f"segment_{i}_last_frame.png"
+                        frame_path = os.path.join(frames_dir, frame_filename)
+                        extract_last_frame_from_video(video_path, frame_path)
+                        
+                        # Use this frame for next segment
+                        previous_frame = frame_path
+                        print(f"✅ Last frame extracted and will be used as reference for segment {i+1}")
+                        
+                        # Clean up downloaded video (keep frame for next segment)
+                        if os.path.exists(video_path):
+                            os.remove(video_path)
+                            print(f"🗑️ Cleaned up temporary video file")
+                            
+                    except Exception as e:
+                        print(f"⚠️ Failed to extract last frame: {str(e)}")
+                        print(f"⚠️ Next segment will use character keyframe instead")
+                        previous_frame = None
+            else:
+                raise ValueError("No video URL returned from generation")
+                
+        except Exception as e:
+            error_msg = f"Video generation failed for segment {i} (attempt 1): {str(e)}"
+            print(f"❌ {error_msg}")
+            segment_result["status"] = "failed"
+            segment_result["error"] = error_msg
+            results["error_count"] += 1
+        
+        results["segments_results"].append(segment_result)
+    
+    print(f"\n{'='*60}")
+    print(f"🎉 Daily Character Video Generation Complete!")
+    print(f"✅ Successful: {results['success_count']}/{results['total_segments']}")
+    print(f"❌ Failed: {results['error_count']}/{results['total_segments']}")
+    
+    if results['error_count'] > 0:
+        failed_segments = [r['segment_number'] for r in results['segments_results'] if r['status'] == 'failed']
+        print(f"⚠️ Failed segments: {failed_segments}")
+        print(f"💡 You can retry failed segments using the retry endpoint")
+    
+    print(f"{'='*60}")
     
     return results

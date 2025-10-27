@@ -315,10 +315,25 @@ def merge_content_videos_complete(results: dict, skip_missing: bool = False,
             "content_type": results.get("content_type", "story")
         }
         
+        # Try to get first frame path for reference (if available)
+        reference_image_path = None
+        if results.get("segments_results"):
+            first_segment = results["segments_results"][0]
+            # Check for generated first frame or last frame
+            reference_image_path = first_segment.get("first_frame_generated") or first_segment.get("last_frame_generated")
+            
+            if reference_image_path:
+                print(f"🖼️ Using first frame as thumbnail reference: {reference_image_path}")
+            else:
+                print(f"⚠️ No first frame found in segment results")
+        else:
+            print(f"⚠️ No segments_results found for thumbnail reference")
+        
         thumbnail_result = generate_thumbnail_image(
             content_data, 
             f"{output_filename}_thumbnail.png",
-            aspect_ratio=aspect_ratio
+            aspect_ratio=aspect_ratio,
+            reference_image_path=reference_image_path  # Pass first frame for consistency
         )
         
         if thumbnail_result.get("success"):
@@ -373,6 +388,47 @@ def merge_content_videos_complete(results: dict, skip_missing: bool = False,
     
     if thumbnail_result and thumbnail_result.get("success"):
         print(f"🎨 Thumbnail: {thumbnail_result['thumbnail_path']}")
+    
+    # Cleanup frames AFTER thumbnail generation (if all successful)
+    if results.get("success_count") == results.get("total_segments") and results.get("error_count", 0) == 0:
+        try:
+            import shutil
+            from app.services.file_storage_manager import storage_manager, ContentType
+            import os
+            
+            content_title = results.get("content_title", results.get("story_title"))
+            content_type = results.get("content_type", "daily_character")
+            
+            if content_title:
+                # Map content type to ContentType constants
+                content_type_map = {
+                    "daily_character": ContentType.DAILY_CHARACTER,
+                    "daily_character_life": ContentType.DAILY_CHARACTER,
+                    "story": ContentType.STORY,
+                    "movie": ContentType.MOVIE,
+                    "meme": ContentType.MEME,
+                    "free_content": ContentType.FREE_CONTENT,
+                    "music_video": ContentType.MUSIC_VIDEO,
+                    "whatsapp_story": ContentType.WHATSAPP_STORY,
+                    "anime": ContentType.ANIME
+                }
+                
+                content_type_constant = content_type_map.get(content_type, ContentType.DAILY_CHARACTER)
+                content_dir = storage_manager.get_content_directory(content_type_constant, content_title, create=False)
+                frames_dir = os.path.join(content_dir, "frames")
+                
+                if os.path.exists(frames_dir):
+                    print(f"\n🧹 Cleaning up temporary frames...")
+                    shutil.rmtree(frames_dir)
+                    print(f"✅ Frames directory deleted: {frames_dir}")
+                    final_result["frames_cleaned"] = True
+                else:
+                    final_result["frames_cleaned"] = False
+        except Exception as cleanup_error:
+            print(f"⚠️ Frame cleanup failed: {str(cleanup_error)}")
+            final_result["frames_cleaned"] = False
+    else:
+        final_result["frames_cleaned"] = False
     
     return final_result
 

@@ -101,7 +101,7 @@ Example:
 first_frame_20250117_143022.png
 ```
 
-## 🎨 Imagen Generation Process
+## 🎨 Frame Generation Process
 
 ### Step 1: Character Image Download
 ```
@@ -109,11 +109,12 @@ first_frame_20250117_143022.png
 ✅ Character image loaded: (1024, 1024)
 ```
 
-### Step 2: Frame Generation
+### Step 2: Frame Preparation
 ```
 🎨 Generating frame with Imagen...
 📐 Target size: 720x1280 (9:16)
-✅ Image generated: (720, 1280)
+ℹ️ Imagen API not yet available - using character image with smart composition
+✅ Resized from (1024, 1024) to (720, 1280) (9:16)
 ```
 
 ### Step 3: Frame Download
@@ -128,6 +129,8 @@ first_frame_20250117_143022.png
 🖼️ Using first frame: frames/first_frame_20250117_143022.png
 ✅ Video generated successfully
 ```
+
+**Note:** Currently uses character image with proper aspect ratio. See `IMAGEN_API_IMPLEMENTATION_NOTE.md` for full Imagen API implementation details.
 
 ## 🔧 Configuration
 
