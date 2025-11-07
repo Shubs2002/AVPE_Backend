@@ -6,3 +6,5 @@ merged_videos
 __pycache__
 *.pyc
 generated_*
+*.md
+*.googleusercontent.com.json

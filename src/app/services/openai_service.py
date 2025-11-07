@@ -2045,12 +2045,13 @@ def generate_daily_character_content(
     idea: str,
     character_name: str,
     creature_language: str = "Soft and High-Pitched",
-    num_segments: int = 7
+    num_segments: int = 7,
+    allow_dialogue: bool = False
 ):
     """
     Generate daily character life content for Instagram using keyframes.
     
-    Creates engaging daily moments with NO dialogue/narration - only creature sounds.
+    Creates engaging daily moments. By default uses creature sounds only (NO dialogue/narration).
     Designed for use with character images as keyframes in Veo3.
     Maximum 10 segments per generation.
     
@@ -2059,6 +2060,7 @@ def generate_daily_character_content(
         character_name: Name of the character
         creature_language: Voice type ("Soft and High-Pitched", "Magical or Otherworldly", "Muffled and Low")
         num_segments: Number of segments (max 10, default 7 for ~1 min video)
+        allow_dialogue: Allow human dialogue/narration (default: False - creature sounds only)
     
     Returns:
         dict: Generated daily character content
@@ -2081,7 +2083,7 @@ def generate_daily_character_content(
     print(f"📊 Segments: {num_segments} (~{num_segments * 8} seconds)")
     
     # Build the prompt
-    prompt = get_daily_character_prompt(idea, character_name, creature_language, num_segments)
+    prompt = get_daily_character_prompt(idea, character_name, creature_language, num_segments, allow_dialogue)
     
     # Call OpenAI
     raw_output = None

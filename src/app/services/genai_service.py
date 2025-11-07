@@ -111,11 +111,20 @@ def generate_video_from_payload(payload: dict):
     # Note: generate_audio and sample_count are not supported in GenerateVideosConfig
 
     def _is_transient_service_error(exc_or_obj) -> bool:
-        """Rudimentary check for transient service errors (503 / UNAVAILABLE)."""
+        """Check for transient service errors (503 / UNAVAILABLE / OVERLOADED)."""
         try:
-            text = str(exc_or_obj)
-            if "UNAVAILABLE" in text or "503" in text or "service is currently unavailable" in text.lower():
-                return True
+            text = str(exc_or_obj).lower()
+            # Check for various transient error indicators
+            transient_indicators = [
+                "unavailable",
+                "503",
+                "service is currently unavailable",
+                "overloaded",  # Code 14
+                "'code': 14",  # Explicit code 14 check
+                "currently overloaded",
+                "please try again later"
+            ]
+            return any(indicator in text for indicator in transient_indicators)
         except Exception:
             pass
         return False

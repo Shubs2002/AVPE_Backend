@@ -725,6 +725,7 @@ class GenerateDailyCharacterRequest(BaseModel):
     character_name: str  # Name of the character (e.g., "Floof")
     creature_language: Optional[str] = "Soft and High-Pitched"  # Voice description: Any description (e.g., "Soft and High-Pitched", "Deep and Grumbly", "Magical and mystical")
     num_segments: Optional[int] = 7  # Number of segments (max 10, default 7 for ~1 min)
+    allow_dialogue: Optional[bool] = False  # Allow human dialogue/narration (default: False - creature sounds only)
 
 @router.post("/generate-daily-character")
 async def generate_daily_character_route(payload: GenerateDailyCharacterRequest) -> dict:
@@ -778,7 +779,8 @@ async def generate_daily_character_route(payload: GenerateDailyCharacterRequest)
         idea=payload.idea,
         character_name=payload.character_name,
         creature_language=payload.creature_language,
-        num_segments=payload.num_segments
+        num_segments=payload.num_segments,
+        allow_dialogue=payload.allow_dialogue
     )
 
 

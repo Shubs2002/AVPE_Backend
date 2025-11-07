@@ -752,19 +752,22 @@ def generate_daily_character_content(
     idea: str,
     character_name: str,
     creature_language: str = "Soft and High-Pitched",
-    num_segments: int = 7
+    num_segments: int = 7,
+    allow_dialogue: bool = False
 ):
     """
     Generate daily character life content for Instagram using keyframes.
     
-    Simple service for creating engaging daily moments with NO dialogue/narration.
-    Uses creature sounds only. Maximum 10 segments per generation.
+    Simple service for creating engaging daily moments.
+    By default uses creature sounds only (NO dialogue/narration).
+    Maximum 10 segments per generation.
     
     Args:
         idea: The daily life moment/situation
         character_name: Name of the character
         creature_language: Voice type ("Soft and High-Pitched", "Magical or Otherworldly", "Muffled and Low")
         num_segments: Number of segments (max 10)
+        allow_dialogue: Allow human dialogue/narration (default: False - creature sounds only)
     
     Returns:
         dict: Generated content
@@ -805,7 +808,8 @@ def generate_daily_character_content(
             idea=idea,
             character_name=character_name,
             creature_language=creature_language,
-            num_segments=num_segments
+            num_segments=num_segments,
+            allow_dialogue=allow_dialogue
         )
         return {"content": content}
     except Exception as e:

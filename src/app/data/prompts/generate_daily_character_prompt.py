@@ -6,7 +6,7 @@ Perfect for Instagram pages showcasing character personality and behavior.
 Maximum 10 segments per generation.
 """
 
-def get_daily_character_prompt(idea: str, character_name: str, creature_language: str, num_segments: int) -> str:
+def get_daily_character_prompt(idea: str, character_name: str, creature_language: str, num_segments: int, allow_dialogue: bool = False) -> str:
     """
     Generate prompt for daily character life content using keyframes.
     
@@ -15,6 +15,7 @@ def get_daily_character_prompt(idea: str, character_name: str, creature_language
         character_name: Name of the character
         creature_language: Voice type ("Soft and High-Pitched", "Magical or Otherworldly", "Muffled and Low")
         num_segments: Number of segments (max 10)
+        allow_dialogue: Allow human dialogue/narration (default: False - creature sounds only)
         
     Returns:
         str: The formatted prompt
@@ -36,18 +37,32 @@ def get_daily_character_prompt(idea: str, character_name: str, creature_language
     # Use predefined description if available, otherwise use user's custom description
     sound_description = creature_sound_guide.get(creature_language, f"creature sounds that are {creature_language}")
     
-    return f"""
-    You are a viral content creator specializing in VISUAL storytelling for Instagram cutte creature character content.
-    
-    **CHARACTER**: {character_name}
-    **CREATURE LANGUAGE**: {creature_language} ({sound_description})
-    
+    # Build dialogue rules based on allow_dialogue parameter
+    if allow_dialogue:
+        dialogue_rules = f"""
+    **DIALOGUE ALLOWED**:
+    - Character CAN speak human language if needed
+    - Can include narration or voiceover
+    - Still use creature sounds ({sound_description}) for emotional moments
+    - Balance dialogue with visual storytelling
+    - Keep dialogue natural and engaging
+        """
+    else:
+        dialogue_rules = f"""
     **CRITICAL RULES**:
     - **NO DIALOGUE** - Character cannot speak human language
     - **NO NARRATION** - Pure visual storytelling only
     - **ONLY CREATURE SOUNDS** - {sound_description}
     - **KEYFRAME-BASED** - User will provide character image as keyframe to Veo3
     - **VISUAL COMEDY** - Show emotions and reactions through actions, not words
+        """
+    
+    return f"""
+    You are a viral content creator specializing in VISUAL storytelling for Instagram cute creature character content.
+    
+    **CHARACTER**: {character_name}
+    **CREATURE LANGUAGE**: {creature_language} ({sound_description})
+    {dialogue_rules}
     
     Your specialty is creating SHORT, PUNCHY daily life content using ONLY visuals and creature sounds.
     Each video is ~1 minute total (8 seconds per segment × {num_segments} segments)
