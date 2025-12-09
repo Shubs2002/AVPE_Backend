@@ -1,11 +1,88 @@
 import time
 import requests
 import os
+import json
+import base64
 from google.genai import types
 from PIL import Image, ImageDraw, ImageFont
 from io import BytesIO
 from app.config.settings import settings
 from app.connectors.genai_connector import get_genai_client
+
+
+def analyze_image_with_gemini(image_data: str, prompt: str) -> dict:
+    """
+    Analyze an image using Gemini 3 Pro with high-resolution analysis
+    
+    Args:
+        image_data: Base64 encoded image data
+        prompt: Analysis prompt
+        
+    Returns:
+        dict: Analysis results
+    """
+    try:
+        print(f"🤖 Analyzing image with Gemini 3 Pro...")
+        
+        # Get Gemini client
+        client = get_genai_client()
+        
+        # Decode base64 image
+        if image_data.startswith('data:image'):
+            # Remove data URL prefix
+            image_data = image_data.split(',')[1]
+        
+        image_bytes = base64.b64decode(image_data)
+        
+        # Create PIL Image to get format
+        pil_image = Image.open(BytesIO(image_bytes))
+        image_format = (pil_image.format or 'PNG').lower()
+        
+        # Convert to bytes for Gemini
+        img_byte_arr = BytesIO()
+        pil_image.save(img_byte_arr, format=pil_image.format or 'PNG')
+        img_bytes = img_byte_arr.getvalue()
+        
+        # Generate analysis with Gemini 3 Pro using proper format
+        response = client.models.generate_content(
+            model="gemini-3-pro-preview",
+            contents=[
+                types.Content(
+                    parts=[
+                        types.Part(text=prompt),
+                        types.Part(
+                            inline_data=types.Blob(
+                                mime_type=f"image/{image_format}",
+                                data=img_bytes
+                            )
+                        )
+                    ]
+                )
+            ]
+        )
+        
+        # Extract response text
+        response_text = response.text.strip()
+        
+        # Clean up response (remove markdown code blocks if present)
+        if response_text.startswith("```json"):
+            response_text = response_text[7:]
+        if response_text.startswith("```"):
+            response_text = response_text[3:]
+        if response_text.endswith("```"):
+            response_text = response_text[:-3]
+        response_text = response_text.strip()
+        
+        # Parse JSON
+        analysis_data = json.loads(response_text)
+        
+        print(f"✅ Image analysis complete!")
+        
+        return analysis_data
+        
+    except Exception as e:
+        print(f"❌ Gemini analysis error: {str(e)}")
+        raise ValueError(f"Failed to analyze image with Gemini: {str(e)}")
 
 
 def _prepare_image_input(image_input):
@@ -808,7 +885,8 @@ def generate_thumbnail_image(
     output_filename: str = None, 
     content_type_override: str = None, 
     aspect_ratio: str = "9:16",
-    reference_image_path: str = None
+    reference_image_path: str = None,
+    image_model: str = "gemini-2.5-flash-image"
 ) -> dict:
     """
     Generate a thumbnail image using Imagen (nano banana model) with title included in the image.
@@ -829,7 +907,7 @@ def generate_thumbnail_image(
         # Build thumbnail prompt from content data (includes title in the image and aspect ratio)
         prompt = _build_thumbnail_prompt(content_data, aspect_ratio)
         
-        print(f"🎨 Generating thumbnail with Gemini 2.5 Flash Image...")
+        print(f"🎨 Generating thumbnail with {image_model}...")
         print(f"📝 Prompt: {prompt[:100]}...")
         
         client = get_genai_client()
@@ -868,9 +946,9 @@ def generate_thumbnail_image(
                     except Exception as e:
                         print(f"⚠️ Could not load character image: {str(e)}")
         
-        # Generate the thumbnail image with Gemini 2.5 Flash Image using proper ImageConfig
+        # Generate the thumbnail image with specified model using proper ImageConfig
         response = client.models.generate_content(
-            model="gemini-2.5-flash-image",
+            model=image_model,
             contents=contents,
             config=types.GenerateContentConfig(
                 image_config=types.ImageConfig(
@@ -975,6 +1053,17 @@ def _build_thumbnail_prompt(content_data: dict, aspect_ratio: str = "9:16") -> s
     prompt_parts = [
         f"Create a STUNNING, PROFESSIONAL, REALISTIC thumbnail image for a {content_type} video.",
         "",
+        "⚠️ CRITICAL CHARACTER CONSISTENCY RULE:",
+        "If character reference images are provided, use them EXACTLY as shown. DO NOT change, modify, or reinterpret the characters:",
+        "- Keep the EXACT same species/type (if it's a fluffy creature, keep it fluffy; if it's a robot, keep it a robot)",
+        "- Keep the EXACT same colors, patterns, and markings",
+        "- Keep the EXACT same body shape, size, and proportions",
+        "- Keep the EXACT same facial features and expressions style",
+        "- Keep the EXACT same clothing, accessories, or distinctive features",
+        "- DO NOT make the character more realistic, cartoonish, or change its art style",
+        "- DO NOT add or remove any features from the character",
+        "- Character appearance must be IDENTICAL to the reference image",
+        "",
         f"🎯 TITLE TO DISPLAY: '{title}'",
         "- Display the title prominently with BOLD, LARGE text",
         "- Use eye-catching typography (thick, bold fonts)",
@@ -1056,6 +1145,8 @@ def _build_thumbnail_prompt(content_data: dict, aspect_ratio: str = "9:16") -> s
         "- Professional lighting that makes subjects POP",
         "- Avoid placing important elements in corners (platform UI space)",
         "- Add subtle visual effects (glow, sparkles, light rays) for extra appeal",
+        "",
+        "⚠️ REMINDER: If character reference images were provided, the characters in the thumbnail MUST look IDENTICAL to those references. NO modifications to character appearance allowed!",
         "",
         "🎯 GOAL: Create a thumbnail so attractive that viewers CAN'T resist clicking!"
     ])

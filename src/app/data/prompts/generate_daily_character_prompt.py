@@ -6,36 +6,49 @@ Perfect for Instagram pages showcasing character personality and behavior.
 Maximum 10 segments per generation.
 """
 
-def get_daily_character_prompt(idea: str, character_name: str, creature_language: str, num_segments: int, allow_dialogue: bool = False) -> str:
+def get_daily_character_prompt(idea: str, character_name: str, creature_language: str, num_segments: int, allow_dialogue: bool = False, num_characters: int = 1) -> str:
     """
     Generate prompt for daily character life content using keyframes.
     
     Args:
         idea: The daily life moment/situation (e.g., "character sees his reflection and gets scared")
-        character_name: Name of the character
-        creature_language: Voice type ("Soft and High-Pitched", "Magical or Otherworldly", "Muffled and Low")
-        num_segments: Number of segments (max 10)
+        character_name: Name of the character(s) - comma-separated for multiple
+        creature_language: Voice type(s) - comma-separated for multiple characters
+        num_segments: Number of segments
         allow_dialogue: Allow human dialogue/narration (default: False - creature sounds only)
+        num_characters: Number of characters (1-5, default: 1)
         
     Returns:
         str: The formatted prompt
     """
     
-    # Limit segments to 10
-    if num_segments > 10:
-        num_segments = 10
+    # Parse multiple characters if provided
+    character_names = [name.strip() for name in character_name.split(',')]
+    creature_languages = [lang.strip() for lang in creature_language.split(',')]
     
-    # Use the creature language description directly
-    # If it's one of the common ones, provide more detail
-    # Otherwise, use the user's description as-is
+    # Ensure we have enough languages for all characters
+    while len(creature_languages) < len(character_names):
+        creature_languages.append(creature_languages[0] if creature_languages else "Soft and High-Pitched")
+    
+    # Build character info
+    is_multi_character = num_characters > 1 or len(character_names) > 1
+    
     creature_sound_guide = {
         "Soft and High-Pitched": "cute, gentle squeaks and chirps - like a small friendly creature",
         "Magical or Otherworldly": "mystical, ethereal sounds with echo effects - otherworldly and enchanting",
         "Muffled and Low": "deep, grumbly sounds - like a gentle giant or sleepy creature"
     }
     
-    # Use predefined description if available, otherwise use user's custom description
-    sound_description = creature_sound_guide.get(creature_language, f"creature sounds that are {creature_language}")
+    # Build character descriptions
+    if is_multi_character:
+        character_info = []
+        for i, (name, lang) in enumerate(zip(character_names, creature_languages)):
+            sound_desc = creature_sound_guide.get(lang, f"creature sounds that are {lang}")
+            character_info.append(f"**{name}**: {sound_desc}")
+        characters_section = "\n    ".join(character_info)
+        sound_description = "Each character has unique sounds as described above"
+    else:
+        sound_description = creature_sound_guide.get(creature_languages[0], f"creature sounds that are {creature_languages[0]}")
     
     # Build dialogue rules based on allow_dialogue parameter
     if allow_dialogue:
@@ -57,11 +70,29 @@ def get_daily_character_prompt(idea: str, character_name: str, creature_language
     - **VISUAL COMEDY** - Show emotions and reactions through actions, not words
         """
     
+    # Build character section
+    if is_multi_character:
+        character_section = f"""
+    **CHARACTERS** ({num_characters} characters):
+    {characters_section}
+    
+    **MULTI-CHARACTER RULES**:
+    - Each character has unique sounds as described above
+    - Characters can interact, play together, or appear separately
+    - Track which characters appear in each segment using "characters_present" field
+    - Each character's sounds should match their personality
+    - Frame descriptions must specify each character's position when multiple are present
+    """
+    else:
+        character_section = f"""
+    **CHARACTER**: {character_names[0]}
+    **CREATURE LANGUAGE**: {creature_languages[0]} ({sound_description})
+    """
+    
     return f"""
     You are a viral content creator specializing in VISUAL storytelling for Instagram cute creature character content.
     
-    **CHARACTER**: {character_name}
-    **CREATURE LANGUAGE**: {creature_language} ({sound_description})
+    {character_section}
     {dialogue_rules}
     
     Your specialty is creating SHORT, PUNCHY daily life content using ONLY visuals and creature sounds.
@@ -74,6 +105,8 @@ def get_daily_character_prompt(idea: str, character_name: str, creature_language
     - **100% Visual**: NO dialogue, NO narration - only creature sounds
     - **Engaging**: Hook in first 2 seconds with visual action
     - **Shareable**: Makes people tag friends ("This is so cute!")
+    - **FAST-PACED**: Quick, energetic movements with snappy transitions - NO slow motion unless for comedic effect
+    - **DYNAMIC**: Active, lively character movements - avoid slow, sluggish actions
     
     **DAILY LIFE CONTENT TYPES**:
     - Funny reactions (seeing reflection, hearing noise, etc.)
@@ -96,18 +129,46 @@ def get_daily_character_prompt(idea: str, character_name: str, creature_language
     - Sounds should match the action and emotion
     - NO human words, NO narration, NO dialogue
     
+    **VIRAL HOOK STRATEGY** (CRITICAL FOR ENGAGEMENT):
+    - **First 2 Seconds = EVERYTHING**: 90% of viewers decide to watch or scroll in 2 seconds
+    - **Hook Types**:
+      * **Curiosity Hook**: "What's going to happen?" (character about to do something unexpected)
+      * **Relatable Hook**: "That's so me!" (everyday situation viewers recognize instantly)
+      * **Surprise Hook**: Unexpected visual that makes viewers go "Wait, what?"
+      * **Cute Hook**: Immediate "awww" moment that stops the scroll
+      * **Comedy Hook**: Instant visual gag that makes viewers laugh
+    - **Hook Formula**: Show the MOST interesting moment first, then build to it
+    - **Pattern Interrupt**: Do something visually unexpected in first frame
+    
     **INSTAGRAM OPTIMIZATION**:
-    - **First 2 Seconds**: HOOK - grab attention with immediate visual action
+    - **First 2 Seconds**: HOOK - grab attention with immediate visual action (use hook strategies above)
     - **Pure Visual Storytelling**: Actions and reactions tell the whole story
     - **NO Dialogue/Narration**: Only creature sounds and music
-    - **Relatable Moments**: Situations viewers recognize
+    - **Relatable Moments**: Situations viewers recognize ("This is literally me")
     - **Comedic Timing**: Perfect pacing for laughs through visuals
-    - **Shareable**: "This is so cute!" and "Tag someone" vibes
+    - **Shareable**: "This is so cute!" and "Tag someone who does this" vibes
+    - **Emotional Payoff**: Make viewers feel something (laugh, aww, relate)
     
     **SEGMENT STRUCTURE** (8 seconds each):
-    1. **Hook** (Seg 1-2): Grab attention, set up situation
-    2. **Build** (Seg 3-6): Develop the moment, show reactions
-    3. **Payoff** (Seg 7-{num_segments}): Punchline, resolution, or twist
+    1. **Hook** (Seg 1-2): Grab attention IMMEDIATELY, set up situation with intrigue
+       - Start with the most interesting visual
+       - Create curiosity: "What will happen next?"
+       - Make it relatable or surprising
+    2. **Build** (Seg 3-6): Develop the moment, escalate tension/comedy
+       - Add complications or obstacles
+       - Show character's reactions and emotions
+       - Keep energy high, don't let it drag
+    3. **Payoff** (Seg 7-{num_segments}): Satisfying punchline, resolution, or twist
+       - Deliver on the hook's promise
+       - End with a memorable moment
+       - Leave viewers wanting to share or rewatch
+    
+    **ENGAGEMENT PRINCIPLES**:
+    - **Every Second Counts**: No boring moments, every frame should be interesting
+    - **Escalation**: Each segment should be more interesting than the last
+    - **Surprise**: Include unexpected moments that break viewer expectations
+    - **Emotion**: Make viewers FEEL something (laugh, relate, go "aww")
+    - **Rewatch Value**: Include details viewers will notice on second watch
     
     **CRITICAL: CONTINUOUS STORYTELLING**:
     - **ALL segments MUST be a CONTINUOUS series of events**
@@ -146,8 +207,9 @@ def get_daily_character_prompt(idea: str, character_name: str, creature_language
     - **Zoom out**: Moving away (revealing context)
     - **Tracking**: Following character movement
     - **Shaky cam**: Handheld feel (for chaos/excitement)
-    - **Slow motion**: Dramatic emphasis
-    - **Quick cuts**: Fast-paced energy
+    - **Slow motion**: ONLY for comedic emphasis (use sparingly)
+    - **Quick cuts**: Fast-paced energy (PREFERRED for viral content)
+    - **PACING**: Default to FAST, ENERGETIC camera work - keep it snappy and dynamic
     
     **Camera Tips for Instagram**:
     - **Vary angles** - Don't use same shot for every segment
@@ -155,6 +217,15 @@ def get_daily_character_prompt(idea: str, character_name: str, creature_language
     - **Dynamic movement** - Static shots can be boring
     - **POV shots** - Make viewers feel like they're there
     - **Comedic framing** - Unexpected angles enhance humor
+    
+    **ACTION PACING** (CRITICAL FOR VIRAL CONTENT):
+    - **FAST & ENERGETIC**: Character movements should be quick, lively, and dynamic
+    - **SNAPPY TRANSITIONS**: Actions should flow rapidly from one to the next
+    - **NO SLUGGISH MOVEMENTS**: Avoid slow, dragging actions unless for specific comedic effect
+    - **QUICK REACTIONS**: Character should react quickly and expressively
+    - **DYNAMIC ENERGY**: Keep the energy high and movements active throughout
+    - **Example**: Instead of "slowly walks" → use "quickly scurries" or "bounces over"
+    - **Example**: Instead of "gradually turns" → use "whips around" or "spins quickly"
     
     **AUDIO TIMING** (CRITICAL):
     - **NO Dialogue/Narration** - Character cannot speak human language
@@ -165,11 +236,16 @@ def get_daily_character_prompt(idea: str, character_name: str, creature_language
     Task:
     Create a viral Instagram character moment based on: "{idea}"
     
-    - Generate {num_segments} segments (max 10)
+    **FIRST: Analyze the idea to determine scene structure:**
+    - Does the idea mention "different scenes", "various locations", "multiple places"?
+      → YES: Each segment is a SEPARATE scene (all need first_frame_description)
+      → NO: Segments are CONTINUOUS in one location (only segment 1 needs first_frame_description)
+    
+    - Generate {num_segments} segments
     - Each segment is 8 seconds
     - Total video: ~{num_segments * 8} seconds (~1 minute)
-    - **CRITICAL**: All segments MUST form ONE CONTINUOUS story in chronological order
-    - **CRITICAL**: Each segment must flow seamlessly into the next (no jumps)
+    - **IF CONTINUOUS**: All segments flow seamlessly in chronological order
+    - **IF SEPARATE SCENES**: Each segment is a different location/moment (like a montage)
     - Focus on 100% VISUAL comedy and character personality
     - Make it RELATABLE and SHAREABLE
     - NO dialogue, NO narration - ONLY creature sounds and actions
@@ -212,6 +288,86 @@ def get_daily_character_prompt(idea: str, character_name: str, creature_language
     **See the pattern?** Each segment's START = Previous segment's END
     This creates ONE continuous flowing story, not separate disconnected moments!
     
+    **FRAME DESCRIPTIONS - ULTRA-DETAILED REQUIREMENTS**:
+    
+    Frame descriptions are used by Imagen AI to generate actual images, so they must be EXTREMELY detailed.
+    
+    **Required Elements in EVERY Frame Description**:
+    1. **Camera Angle**: Exact angle and distance
+       - Examples: "Low angle wide shot", "Eye-level close-up", "High angle medium shot", "Over-the-shoulder view"
+    
+    2. **Character Position & Pose**: Precise body position
+       - Examples: "Standing upright with arms at sides", "Crouching with paws on ground", "Mid-jump with legs bent"
+    
+    3. **Full Body Visibility Rule** (FLEXIBLE based on action):
+       - **At least ONE frame per segment** MUST show full body ("Full body visible from head to toe")
+       - **Can be in FIRST frame, LAST frame, or BOTH** - depends on the action
+       - **Guideline**: Alternate between frames for variety
+         - Segment 1: Full body in FIRST or LAST (or both)
+         - Segment 2: Full body in the OTHER frame (or both)
+         - Continue alternating for visual variety
+       - **Action-dependent**: If action requires close-up (facial reaction), put full body in the other frame
+       - **Scene changes**: When first_frame_description exists, ensure at least one frame has full body
+    
+    4. **Objects & Props**: Specific items and their positions
+       - Examples: "Blue plastic sled 2 feet to the left", "Red toy car parked behind", "Snow-covered pine trees in background"
+    
+    5. **Lighting Details**: Light source, direction, quality
+       - Examples: "Bright morning sunlight from upper right", "Soft golden hour glow", "Dramatic shadows cast to the left"
+    
+    6. **Environment Specifics**: Background details
+       - Examples: "Snowy hilltop with visible footprints", "Wooden cabin 20 feet behind", "Clear blue sky with few clouds"
+    
+    7. **Spatial Relationships**: How elements relate
+       - Examples: "Character centered in frame", "Trees framing the sides", "Horizon line at upper third"
+    
+    **Frame Description Examples**:
+    
+    ✅ GOOD - Full body in FIRST frame (wide establishing shot):
+    "Low angle wide shot. {character_name} standing fully visible from head to toe in center of snowy hilltop, wearing oversized black sunglasses and tiny red scarf, arms crossed confidently. Blue plastic sled lying 3 feet to his right. Snow-covered pine trees line the background 15 feet away. Wooden cabin visible on left side in distance. Bright morning sunlight from upper right creating long shadows to the left. Clear blue sky. Fresh snow with few footprints around character."
+    
+    ✅ GOOD - Full body in LAST frame (action shot):
+    "Eye-level medium shot. {character_name} sitting on blue sled, full body visible from head to toe, leaning forward with paws gripping the sides, eyes wide with excitement. Camera positioned at character's eye level. Red toy car visible 5 feet behind in soft focus. Snow texture detailed in foreground. Pine trees blurred in background. Bright sunlight creating sparkles on snow surface. Character's shadow visible beneath sled."
+    
+    ✅ GOOD - Close-up in FIRST, full body in LAST (reaction then action):
+    FIRST: "Close-up shot. {character_name}'s face filling frame, eyes widening in surprise, mouth forming an 'O' shape. Whiskers visible. Soft focus background."
+    LAST: "Wide shot. {character_name} jumping backwards, full body visible from head to toe, arms flailing, landing on snow. Complete environment visible."
+    
+    ❌ BAD (Too vague):
+    "{character_name} standing in snow looking cool"
+    
+    **Minimum Length**: Each frame description must be at least 30 words to ensure sufficient detail for Imagen.
+    
+    **FIRST FRAME DESCRIPTION LOGIC** (CRITICAL):
+    
+    **Analyze the user's idea carefully to determine if scenes should be continuous or separate:**
+    
+    **Keywords indicating SEPARATE SCENES** (each segment needs first_frame_description):
+    - "different scenes", "various locations", "multiple places", "different settings"
+    - "cuts to", "switches to", "moves to different", "in various"
+    - "montage", "compilation", "different moments"
+    
+    **Keywords indicating CONTINUOUS SCENE** (only segment 1 needs first_frame_description):
+    - "continuous", "one scene", "same location", "stays in"
+    - "throughout", "entire time", "without leaving"
+    
+    **Rules:**
+    - **Segment 1**: ALWAYS include detailed first_frame_description (starting frame)
+    - **If idea mentions "different scenes/locations"**: EVERY segment gets first_frame_description (new scene each time)
+    - **If idea is continuous story in one place**: Only segment 1 gets first_frame_description, others set to null
+    - **Scene change mid-story**: Include first_frame_description when location/setting changes
+    
+    **Examples:**
+    
+    Idea: "Floof dancing in different different scenes"
+    → Each segment = different location → ALL segments get first_frame_description
+    
+    Idea: "Floof sees reflection and gets scared"  
+    → One continuous scene → Only segment 1 gets first_frame_description
+    
+    Idea: "Floof explores house, then goes outside"
+    → Segment 1-3 inside (only seg 1 has desc), Segment 4+ outside (seg 4 has desc for scene change)
+    
     Return ONLY valid JSON with this structure:
     {{
       "title": "Short catchy title (under 50 chars)",
@@ -228,11 +384,13 @@ def get_daily_character_prompt(idea: str, character_name: str, creature_language
         {{
           "segment": 1,
           "duration": 8,
-          "first_frame_description": "Detailed description of the starting frame - character pose, position, environment, lighting. Character appearance stays same (from keyframe), only describe pose, surroundings, and background. Character MUST be fully visible (whole body) in this frame.",
-          "last_frame_description": "Detailed description of the ending frame - character's final pose, position, environment at segment end. This will be generated with Imagen and used as first frame for next segment. Character MUST be fully visible (whole body) in this frame.",
+          "characters_present": ["Character1", "Character2"],  // List of character names in this segment (for multi-character content)
+          "veo_prompt": "CRITICAL - VEO 3 STRUCTURED PROMPT. Format as newline-separated sections:\\nAction: [What's happening - movements, events, interactions. NO character appearance description since first_frame image defines that. Be specific and descriptive about the action sequence.]\\nStyle: [Visual style: 'Cute character animation', 'Indie drama', etc. + Format: 'Instagram vertical', 'Cinematic', etc. + Mood: 'Comedic timing', 'Dramatic', 'Wholesome', etc. + Visual qualities: 'Vibrant colors', 'Warm tones', 'Soft focus', etc.]\\nCamera: [Camera angle: 'Low angle', 'Eye-level', 'High angle' + Position: 'Wide shot', 'Close-up', 'Medium shot' + Movement: 'Static', 'Tracking', 'Zoom in/out', 'Pan' + Composition: 'Full body visible', 'Over-shoulder' + Focus: 'Deep focus', 'Shallow focus']\\nAmbiance: [Lighting: 'Soft morning sunlight', 'Dramatic shadows' + Direction: 'From upper right', 'Backlighting' + Atmosphere: 'Fresh after-rain', 'Misty' + Color tones: 'Warm tones', 'Cool blue tones' + Environment mood: 'Peaceful', 'Tense', 'Playful']\\nAudio: [Creature sounds with timing: 'At 1.0s, playful high-pitched chirping sounds' + Sound effects: 'At 5.5s, small splash sound' + Dialogue if allowed: 'At 3.0s, says softly Hello' + Ambient: 'Ambient forest sounds with gentle breeze rustling leaves' + Background: 'Distant bird calls, soft wind']\\n\\nEXAMPLE:\\nveo_prompt: \\"Action: Bouncing happily toward a large clear puddle on a mossy forest path, stops abruptly at the edge, leans in close to investigate the reflection, waves a paw tentatively at it. The reflection waves back instantly. Eyes widen in shock and jumps back in panic, landing on the grass with a small bounce.\\nStyle: Cute character animation, vibrant colors, comedic timing, family-friendly content, Instagram-optimized vertical format.\\nCamera: Low angle wide shot tracking the movement as approaching the puddle, transitions smoothly to over-the-shoulder view looking down into the water, then quick zoom out as jumping back. Deep focus keeping both character and environment sharp, full body visible throughout.\\nAmbiance: Soft morning sunlight filtering through tall pine trees, dappled light creating patterns on the mossy ground, warm natural tones, fresh after-rain atmosphere with slight mist.\\nAudio: At 1.0s, playful high-pitched chirping sounds expressing happiness and curiosity. At 3.5s, soft curious cooing as investigating. At 5.5s, sharp startled squeak when reflection moves. At 7.0s, scared high-pitched squeak with small splash sound as landing. Ambient forest sounds throughout with gentle breeze rustling leaves and distant bird calls.\\"",
+          "first_frame_description": "ONLY include this field if there is a SCENE CHANGE or this is segment 1. If the scene continues from previous segment, set to null or empty string. When included: ULTRA-DETAILED frame description with Camera angle, Character's exact pose (specify position for EACH character if multiple), Full body visibility (include 'Full body visible from head to toe' in EITHER first or last frame, or both if action allows), Specific objects, Lighting details, Environment specifics. For multi-character: specify each character's position (e.g., 'Floof on left, Buddy on right'). Minimum 30 words when present.",
+          "last_frame_description": "ALWAYS REQUIRED. ULTRA-DETAILED frame description including: Camera angle (e.g., 'Close-up from front', 'Wide shot from behind', 'Side profile medium shot'), Character's exact final pose (e.g., 'leaning forward with paws on ground', 'jumping mid-air with arms spread'), Full body visibility (include 'Full body visible from head to toe' in EITHER first or last frame, or both if action allows - at least ONE frame per segment must show full body), Specific objects and their positions (e.g., 'red car 3 feet behind', 'sled spinning to the right'), Lighting changes (e.g., 'shadows lengthening', 'sunlight reflecting off snow'), Environmental details (e.g., 'disturbed snow showing movement', 'trees swaying in wind'). For multi-character: specify each character's position and what they're doing. This frame will be generated by Imagen. Minimum 30 words.",
           "scene": "What's happening visually",
-          "action": "Specific character action",
-          "reaction": "Character's reaction/emotion",
+          "action": "Specific character action (for multi-character: describe each character's action)",
+          "reaction": "Character's reaction/emotion (for multi-character: each character's reaction)",
           "camera": "Specific camera angle and movement (e.g., 'Close-up on face, slow zoom in', 'Wide shot, tracking left', 'Low angle, static')",
           "visual_focus": "What viewers should notice",
           "comedy_element": "What makes this funny/engaging",

@@ -287,11 +287,16 @@ def handle_generate_daily_character_videos(request_body: dict):
             return {"error": "character_keyframe_uri is required (GCS URI of character image)"}
         
         # Video options
+        # Video options (with multi-character support)
+        character_keyframe_uris = request_body.get("character_keyframe_uris", [character_keyframe_uri])
+        
         video_options = {
             "resolution": request_body.get("resolution", "720p"),
             "aspect_ratio": request_body.get("aspect_ratio", "9:16"),
             "download": request_body.get("download", False),
-            "character_keyframe_uri": character_keyframe_uri
+            "character_keyframe_uri": character_keyframe_uri,
+            "character_keyframe_uris": character_keyframe_uris,
+            "image_model": request_body.get("image_model", "gemini-2.5-flash-image")
         }
         
         # Import the function
@@ -374,7 +379,8 @@ def handle_generate_daily_character_videos_with_references(request_body: dict):
             "aspect_ratio": request_body.get("aspect_ratio", "9:16"),
             "download": request_body.get("download", False),
             "character_keyframe_uri": character_keyframe_uri,
-            "use_frames_as_references": True  # NEW: Use frames as reference images
+            "use_frames_as_references": True,  # NEW: Use frames as reference images
+            "image_model": request_body.get("image_model", "gemini-2.5-flash-image")
         }
         
         # Import the function

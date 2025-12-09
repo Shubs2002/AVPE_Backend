@@ -521,7 +521,7 @@ def get_meme_segments_prompt(idea: str, num_segments: int, custom_character_rost
           }}}},
           "meme_format": "...", # optional: specific meme template
           "visual_gags": ["..."], # physical comedy, sight gags
-          "background_music":  {
+          "background_music":  {{{{
           "present": true,
           "track_type": "suspenseful strings",
           "start_time": "0s",
@@ -531,16 +531,16 @@ def get_meme_segments_prompt(idea: str, num_segments: int, custom_character_rost
           "volume": "low/high/medium",
           "mood": "tense, peace, etc",
           "continues_to_next_segment": true/false
-          }, 
+          }}}}, 
           "sound_effects": [
-            {
-            "sound_effect_id":"..."
+            {{{{
+            "sound_effect_id":"...",
             "type": "footsteps, thunder,etc",
             "start_time": "time in seconds",
             "duration": "time in seconds or continuos",
             "volume": "low/medium/high",
             "description": "echoing footsteps in hallway, thunder in mountains,etc"
-            }
+            }}}}
           ],
           "facial_expressions": ["..."], # key to meme success
           "timing": "...", # comedic timing notes

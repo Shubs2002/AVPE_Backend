@@ -16,7 +16,7 @@ from PIL import Image
 from app.services.background_removal_service import remove_background
 from app.services.cloudinary_service import upload_image_to_cloudinary
 from app.services.character_repository import CharacterRepository
-from app.connectors.genai_connector import get_genai_client
+from app.connectors.genai_connector import get_genai_client_v1alpha
 from app.data.prompts.analyze_character_prompt import get_character_analysis_prompt
 
 
@@ -32,10 +32,10 @@ def analyze_image_with_gemini(image_data: bytes, character_name: Optional[str] =
         dict: Character analysis data
     """
     try:
-        print("🔍 Analyzing image with Gemini...")
+        print("🔍 Analyzing image with Gemini 3.0 Pro (high-resolution)...")
         
-        # Get Gemini client
-        client = get_genai_client()
+        # Get Gemini client with v1alpha API for high-resolution media
+        client = get_genai_client_v1alpha()
         
         # Load image
         image = Image.open(BytesIO(image_data))
@@ -47,10 +47,32 @@ def analyze_image_with_gemini(image_data: bytes, character_name: Optional[str] =
             character_name=character_name
         )
         
-        # Analyze with Gemini
+        # Convert image to bytes for high-resolution analysis
+        import base64
+        img_byte_arr = BytesIO()
+        image.save(img_byte_arr, format=image.format or 'PNG')
+        img_byte_arr = img_byte_arr.getvalue()
+        
+        # Use v1alpha API for media_resolution parameter
+        from google.genai import types
+        
+        # Analyze with Gemini 3.0 Pro with high-resolution media
         response = client.models.generate_content(
-            model="gemini-2.0-flash-exp",
-            contents=[prompt, image]
+            model="gemini-3-pro-preview",
+            contents=[
+                types.Content(
+                    parts=[
+                        types.Part(text=prompt),
+                        types.Part(
+                            inline_data=types.Blob(
+                                mime_type=f"image/{(image.format or 'png').lower()}",
+                                data=img_byte_arr,
+                            ),
+                            media_resolution={"level": "media_resolution_high"}
+                        )
+                    ]
+                )
+            ]
         )
         
         # Extract text response

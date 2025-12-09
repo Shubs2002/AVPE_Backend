@@ -33,16 +33,35 @@ def ensure_character_ids(custom_character_roster: list) -> list:
     if not custom_character_roster:
         return custom_character_roster
     
-    for character in custom_character_roster:
+    # Validate that roster contains valid character objects
+    valid_characters = []
+    for idx, character in enumerate(custom_character_roster):
+        # Skip invalid entries (empty dicts, or dicts without proper character fields)
+        if not isinstance(character, dict):
+            print(f"⚠️ Skipping invalid character at index {idx}: not a dictionary")
+            continue
+        
+        # Check if it has at least a name or some character-like properties
+        has_valid_fields = any(key in character for key in ['name', 'description', 'physical_appearance', 'personality'])
+        if not has_valid_fields:
+            print(f"⚠️ Skipping invalid character at index {idx}: missing required fields (name, description, etc.)")
+            continue
+        
         # Only generate ID if character doesn't have one or has 'unknown'
         if not character.get('id') or character.get('id') == 'unknown':
             character['id'] = generate_character_id()
-            print(f"🆔 Auto-generated ID for character '{character.get('name', 'Unknown')}': {character['id']}")
+            char_name = str(character.get('name', 'Unknown'))
+            char_id = str(character['id'])
+            print(f"🆔 Auto-generated ID for character: {char_name} -> {char_id}")
         else:
             # User provided an ID, keep it
-            print(f"✅ Using user-provided ID for character '{character.get('name', 'Unknown')}': {character['id']}")
+            char_name = str(character.get('name', 'Unknown'))
+            char_id = str(character['id'])
+            print(f"✅ Using user-provided ID for character: {char_name} -> {char_id}")
+        
+        valid_characters.append(character)
     
-    return custom_character_roster
+    return valid_characters if valid_characters else None
 
 
 def generate_story_segments(idea: str, num_segments: int = 7, custom_character_roster: list = None):
@@ -1935,19 +1954,8 @@ def generate_anime_story_automatically(
                     print(f"🎌 Anime Title: {anime_title}")
                     print(f"🎨 Style: {anime_style}")
                 
-                # Save to file if requested
+                # Files are saved using file storage manager (not here)
                 filepath = None
-                if save_to_files:
-                    safe_title = "".join(c for c in anime_title if c.isalnum() or c in (' ', '-', '_')).rstrip()
-                    safe_title = safe_title.replace(' ', '_')[:50]
-                    
-                    filename = f"{safe_title}_set_{set_number:02d}.json"
-                    filepath = os.path.join(output_directory, filename)
-                    
-                    with open(filepath, 'w', encoding='utf-8') as f:
-                        json.dump(anime_set, f, indent=2, ensure_ascii=False)
-                    
-                    print(f"💾 Saved: {filepath}")
                 
                 return {
                     'set_number': set_number,
@@ -1982,18 +1990,7 @@ def generate_anime_story_automatically(
             print("⏳ Waiting 2 seconds...")
             time.sleep(2)
     
-    # Step 5: Save complete anime metadata
-    if save_to_files and anime_metadata:
-        safe_title = "".join(c for c in anime_title if c.isalnum() or c in (' ', '-', '_')).rstrip()
-        safe_title = safe_title.replace(' ', '_')[:50]
-        
-        metadata_filename = f"{safe_title}_metadata.json"
-        metadata_filepath = os.path.join(output_directory, metadata_filename)
-        
-        with open(metadata_filepath, 'w', encoding='utf-8') as f:
-            json.dump(anime_metadata, f, indent=2, ensure_ascii=False)
-        
-        print(f"📋 Saved anime metadata: {metadata_filepath}")
+    # Metadata is included in the response (file storage handled by caller if needed)
     
     # Step 6: Create summary
     successful_sets = [s for s in all_sets if s.get('status') == 'success']
@@ -2016,8 +2013,8 @@ def generate_anime_story_automatically(
             'segments_per_set': segments_per_set,
             'failed_set_numbers': failed_set_numbers
         },
-        'files_saved': save_to_files,
-        'output_directory': output_directory if save_to_files else None,
+        'files_saved': False,
+        'output_directory': None,
         'sets': all_sets,
         'retry_info': {
             'can_retry': len(failed_sets) > 0,
@@ -2034,11 +2031,135 @@ def generate_anime_story_automatically(
     if failed_sets:
         print(f"❌ Failed sets: {len(failed_sets)} - {failed_set_numbers}")
         print(f"🔄 You can retry failed sets using the retry endpoint")
-    if save_to_files:
-        print(f"💾 Files saved to: {output_directory}")
     
     return summary
 
+
+def _generate_content_in_sets(
+    idea: str,
+    character_name: str,
+    creature_language: str,
+    total_segments: int,
+    allow_dialogue: bool
+) -> dict:
+    """
+    Generate content in sets of 10 segments to avoid response trimming.
+    
+    Args:
+        idea: The daily life moment/situation
+        character_name: Name of the character
+        creature_language: Voice type
+        total_segments: Total number of segments requested
+        allow_dialogue: Allow dialogue/narration
+    
+    Returns:
+        dict: Content with sets array
+    """
+    import json
+    import math
+    from datetime import datetime
+    
+    # Calculate number of sets needed
+    num_sets = math.ceil(total_segments / 10)
+    segments_per_set = 10
+    
+    print(f"📦 Generating {total_segments} segments in {num_sets} sets...")
+    
+    all_sets = []
+    all_segments = []
+    
+    for set_num in range(1, num_sets + 1):
+        # Calculate segments for this set
+        start_segment = (set_num - 1) * 10 + 1
+        end_segment = min(set_num * 10, total_segments)
+        segments_in_set = end_segment - start_segment + 1
+        
+        print(f"\n📝 Generating Set {set_num}/{num_sets} (Segments {start_segment}-{end_segment})...")
+        
+        # Build set-specific idea
+        if set_num == 1:
+            set_idea = f"{idea} (Part {set_num}/{num_sets} - Beginning)"
+        elif set_num == num_sets:
+            set_idea = f"{idea} (Part {set_num}/{num_sets} - Conclusion)"
+        else:
+            set_idea = f"{idea} (Part {set_num}/{num_sets} - Continuation)"
+        
+        # Generate this set
+        prompt = get_daily_character_prompt(set_idea, character_name, creature_language, segments_in_set, allow_dialogue)
+        
+        try:
+            client = get_openai_client()
+            response = client.chat.completions.create(
+                model=settings.SCRIPT_MODEL,
+                messages=[
+                    {
+                        "role": "system",
+                        "content": "You are an expert content creator. Return ONLY valid JSON, no markdown formatting."
+                    },
+                    {
+                        "role": "user",
+                        "content": prompt
+                    }
+                ],
+                temperature=0.8,
+                max_tokens=16000
+            )
+            
+            raw_output = response.choices[0].message.content.strip()
+            
+            # Clean and parse JSON
+            if raw_output.startswith("```json"):
+                raw_output = raw_output[7:]
+            if raw_output.startswith("```"):
+                raw_output = raw_output[3:]
+            if raw_output.endswith("```"):
+                raw_output = raw_output[:-3]
+            
+            set_content = json.loads(raw_output.strip())
+            
+            # Renumber segments to be continuous
+            if "segments" in set_content:
+                for seg in set_content["segments"]:
+                    seg["segment"] = start_segment + seg["segment"] - 1
+                    seg["set_number"] = set_num
+                
+                all_segments.extend(set_content["segments"])
+            
+            all_sets.append({
+                "set_number": set_num,
+                "segments_range": f"{start_segment}-{end_segment}",
+                "content": set_content
+            })
+            
+            print(f"✅ Set {set_num} generated: {len(set_content.get('segments', []))} segments")
+            
+        except Exception as e:
+            print(f"❌ Set {set_num} generation failed: {str(e)}")
+            raise Exception(f"Failed to generate set {set_num}: {str(e)}")
+    
+    # Combine all sets into final response
+    final_content = {
+        "title": all_sets[0]["content"].get("title", "Daily Character Content"),
+        "character_name": character_name,
+        "creature_language": creature_language,
+        "total_segments": total_segments,
+        "total_sets": num_sets,
+        "segments": all_segments,
+        "sets": all_sets,
+        "generation_info": {
+            "generated_at": datetime.now().isoformat(),
+            "idea": idea,
+            "num_segments": total_segments,
+            "num_sets": num_sets,
+            "content_type": "daily_character_life",
+            "platform": "instagram"
+        }
+    }
+    
+    print(f"\n✅ All {num_sets} sets generated successfully!")
+    print(f"📊 Total segments: {len(all_segments)}")
+    
+    return final_content
 
 
 def generate_daily_character_content(
@@ -2046,36 +2167,40 @@ def generate_daily_character_content(
     character_name: str,
     creature_language: str = "Soft and High-Pitched",
     num_segments: int = 7,
-    allow_dialogue: bool = False
+    allow_dialogue: bool = False,
+    num_characters: int = 1
 ):
     """
     Generate daily character life content for Instagram using keyframes.
     
     Creates engaging daily moments. By default uses creature sounds only (NO dialogue/narration).
     Designed for use with character images as keyframes in Veo3.
-    Maximum 10 segments per generation.
+    Generates in sets of 10 if more than 10 segments requested.
+    Supports multi-character content (1-5 characters).
     
     Args:
         idea: The daily life moment/situation
-        character_name: Name of the character
-        creature_language: Voice type ("Soft and High-Pitched", "Magical or Otherworldly", "Muffled and Low")
-        num_segments: Number of segments (max 10, default 7 for ~1 min video)
+        character_name: Name of the character(s) - comma-separated for multiple
+        creature_language: Voice type(s) - comma-separated for multiple characters
+        num_segments: Number of segments (any number, generates in sets of 10)
         allow_dialogue: Allow human dialogue/narration (default: False - creature sounds only)
+        num_characters: Number of characters (1-5, default: 1)
     
     Returns:
-        dict: Generated daily character content
+        dict: Generated daily character content (or list of sets if > 10 segments)
     """
     import json
     from datetime import datetime
     
-    # Limit to 10 segments
-    if num_segments > 10:
-        print(f"⚠️ Limiting segments to 10 (requested: {num_segments})")
-        num_segments = 10
-    
     if num_segments < 1:
         raise ValueError("Number of segments must be at least 1")
     
+    # If more than 10 segments, generate in sets
+    if num_segments > 10:
+        print(f"📦 Generating {num_segments} segments in sets of 10...")
+        return _generate_content_in_sets(idea, character_name, creature_language, num_segments, allow_dialogue)
+    
+    # Single set generation (10 or fewer segments)
     print(f"🎬 Generating daily character content...")
     print(f"👤 Character: {character_name}")
     print(f"🗣️ Creature Language: {creature_language}")
@@ -2083,7 +2208,7 @@ def generate_daily_character_content(
     print(f"📊 Segments: {num_segments} (~{num_segments * 8} seconds)")
     
     # Build the prompt
-    prompt = get_daily_character_prompt(idea, character_name, creature_language, num_segments, allow_dialogue)
+    prompt = get_daily_character_prompt(idea, character_name, creature_language, num_segments, allow_dialogue, num_characters)
     
     # Call OpenAI
     raw_output = None

@@ -1,6 +1,6 @@
-from fastapi import APIRouter, UploadFile, Form
+from fastapi import APIRouter, UploadFile, Form, File, Depends, HTTPException, status
 from fastapi.responses import RedirectResponse
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, EmailStr
 from typing import List, Optional
 
 from app.controllers import (
@@ -14,11 +14,238 @@ from app.utils.story_retry_helper import (
     construct_retry_payload
 )
 from app.services.file_storage_manager import storage_manager, ContentType
+from app.utils.auth_dependencies import get_current_user, get_current_active_user
+from app.services.auth_service import auth_service
 
 router = APIRouter()
 
 
-# ---------- AUTH ROUTES ----------
+# ---------- USER AUTHENTICATION ROUTES ----------
+class SendOTPRequest(BaseModel):
+    email: EmailStr = Field(..., description="User email address")
+
+class VerifyOTPRequest(BaseModel):
+    email: EmailStr = Field(..., description="User email address")
+    otp: str = Field(..., min_length=6, max_length=6, description="6-digit OTP")
+
+class RegisterRequest(BaseModel):
+    email: EmailStr = Field(..., description="User email address (must be verified)")
+    password: str = Field(..., min_length=8, max_length=72, description="Password (8-72 characters)")
+    full_name: str = Field(..., description="User's full name")
+    otp: str = Field(..., min_length=6, max_length=6, description="6-digit OTP for verification")
+
+class LoginRequest(BaseModel):
+    email: EmailStr = Field(..., description="User email address")
+    password: str = Field(..., description="Password")
+
+class RefreshTokenRequest(BaseModel):
+    refresh_token: str = Field(..., description="Refresh token")
+
+@router.post("/auth/send-otp")
+def send_otp(payload: SendOTPRequest) -> dict:
+    """
+    📧 Send OTP to email for verification
+    
+    **Public endpoint - no authentication required**
+    
+    **Step 1 of registration:** Send OTP to email address
+    
+    Sends a 6-digit OTP to the provided email address.
+    OTP expires in 10 minutes.
+    
+    **Example:**
+    ```json
+    {
+      "email": "user@example.com"
+    }
+    ```
+    
+    **Returns:**
+    ```json
+    {
+      "success": true,
+      "message": "OTP sent to user@example.com",
+      "expires_in_minutes": 10
+    }
+    ```
+    """
+    from app.services.email_service import email_service
+    return email_service.send_otp_email(payload.email)
+
+@router.post("/auth/verify-otp")
+def verify_otp(payload: VerifyOTPRequest) -> dict:
+    """
+    ✅ Verify OTP
+    
+    **Public endpoint - no authentication required**
+    
+    **Step 2 of registration:** Verify the OTP sent to email
+    
+    Verifies the 6-digit OTP. Once verified, you can proceed with registration.
+    
+    **Example:**
+    ```json
+    {
+      "email": "user@example.com",
+      "otp": "123456"
+    }
+    ```
+    
+    **Returns:**
+    ```json
+    {
+      "success": true,
+      "message": "Email verified successfully"
+    }
+    ```
+    """
+    from app.services.email_service import email_service
+    return email_service.verify_otp(payload.email, payload.otp)
+
+@router.post("/auth/register")
+def register(payload: RegisterRequest) -> dict:
+    """
+    🔐 Register a new user account
+    
+    **Public endpoint - no authentication required**
+    
+    **Step 3 of registration:** Create account after email verification
+    
+    Creates a new user account with:
+    - Verified email address (OTP must be verified first)
+    - Securely hashed password (bcrypt)
+    - User profile information
+    - Automatic user_id generation (user_xxx format)
+    
+    **Registration Flow:**
+    1. POST /auth/send-otp - Send OTP to email
+    2. POST /auth/verify-otp - Verify OTP
+    3. POST /auth/register - Register with verified email + OTP
+    
+    **Example:**
+    ```json
+    {
+      "email": "user@example.com",
+      "password": "SecurePass123!",
+      "full_name": "John Doe",
+      "otp": "123456"
+    }
+    ```
+    """
+    from app.services.email_service import email_service
+    
+    # Verify OTP before registration (mark as used)
+    otp_result = email_service.verify_otp(payload.email, payload.otp, mark_as_used=True)
+    if not otp_result.get("success"):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=otp_result.get("error", "Invalid or expired OTP")
+        )
+    
+    # Register user
+    user = auth_service.register_user(
+        email=payload.email,
+        password=payload.password,
+        full_name=payload.full_name
+    )
+    
+    # Clean up: Delete OTP after successful registration
+    email_service.delete_otp(payload.email)
+    
+    return {
+        "success": True,
+        "message": "User registered successfully",
+        "user": user
+    }
+
+@router.post("/auth/login")
+def login(payload: LoginRequest) -> dict:
+    """
+    🔑 Login and get access tokens
+    
+    **Public endpoint - no authentication required**
+    
+    Authenticates user and returns:
+    - Access token (30 min expiry) - use for API requests
+    - Refresh token (7 days expiry) - use to get new access token
+    - User profile data
+    
+    **Usage:**
+    1. Login to get tokens
+    2. Use access_token in Authorization header: `Bearer <token>`
+    3. When access_token expires, use refresh_token to get new one
+    
+    **Returns:**
+    ```json
+    {
+      "access_token": "eyJ...",
+      "refresh_token": "eyJ...",
+      "token_type": "bearer",
+      "user": {
+        "user_id": "user_xxx",
+        "email": "user@example.com",
+        "full_name": "John Doe"
+      }
+    }
+    ```
+    """
+    return auth_service.login(
+        email=payload.email,
+        password=payload.password
+    )
+
+@router.post("/auth/refresh")
+def refresh_token(payload: RefreshTokenRequest) -> dict:
+    """
+    🔄 Refresh access token
+    
+    **Public endpoint - no authentication required**
+    
+    Use refresh token to get a new access token when the old one expires.
+    
+    **Usage:**
+    - When you get 401 Unauthorized, use refresh token to get new access token
+    - Refresh tokens are long-lived (7 days)
+    - Access tokens are short-lived (30 minutes)
+    
+    **Returns:**
+    ```json
+    {
+      "access_token": "eyJ...",
+      "token_type": "bearer"
+    }
+    ```
+    """
+    return auth_service.refresh_access_token(payload.refresh_token)
+
+@router.get("/auth/me")
+def get_current_user_info(current_user: dict = Depends(get_current_active_user)) -> dict:
+    """
+    👤 Get current user information
+    
+    **Protected endpoint - requires authentication**
+    
+    Returns the profile of the currently authenticated user.
+    
+    **Headers:**
+    ```
+    Authorization: Bearer <access_token>
+    ```
+    
+    **Returns:**
+    ```json
+    {
+      "user_id": "user_xxx",
+      "email": "user@example.com",
+      "full_name": "John Doe",
+      "is_active": true
+    }
+    ```
+    """
+    return current_user
+
+
+# ---------- YOUTUBE AUTH ROUTES ----------
 @router.get("/yt-auth", response_class=RedirectResponse)
 def authorize() -> RedirectResponse:
     """Redirect user to YouTube OAuth2 authorization page."""
@@ -47,41 +274,53 @@ def upload_video(
 
 # ---------- CONTENT GENERATION ----------
 class GenerateStoryRequest(BaseModel):
-    idea: str
-    segments: Optional[int] = 7
-    custom_character_roster: Optional[List[dict]] = None  # User-provided main character roster
+    idea: str = Field(..., description="Story idea or concept", example="A hero's journey through a magical land")
+    segments: Optional[int] = Field(7, description="Number of segments to generate", ge=1, example=7)
+    custom_character_roster: Optional[List[dict]] = Field(None, description="Detailed character roster with full descriptions, personalities, and roles. Use this for complex stories with detailed characters.")
+    character_names: Optional[str] = Field(None, description="Quick character specification: comma-separated character names (e.g., 'Floof, Buddy'). Alternative to custom_character_roster for simple character setup.", example="Floof, Buddy")
+    creature_languages: Optional[str] = Field(None, description="Comma-separated creature voice types matching character_names order. Options: 'Soft and High-Pitched', 'Deep and Grumbly', 'Magical or Otherworldly'", example="Soft and High-Pitched, Deep and Grumbly")
 
 class GenerateStorySetRequest(BaseModel):
-    idea: str
-    total_segments: int
-    segments_per_set: Optional[int] = 10
-    set_number: Optional[int] = 1
-    custom_character_roster: Optional[List[dict]] = None  # User-provided main character roster
+    idea: str = Field(..., description="Story idea or concept", example="A hero's journey through a magical land")
+    total_segments: int = Field(..., description="Total number of segments in the complete story", ge=1, example=50)
+    segments_per_set: Optional[int] = Field(10, description="Number of segments to generate per set", ge=1, le=20, example=10)
+    set_number: Optional[int] = Field(1, description="Which set to generate (e.g., set 1 = segments 1-10, set 2 = segments 11-20)", ge=1, example=1)
+    custom_character_roster: Optional[List[dict]] = Field(None, description="Detailed character roster with full descriptions, personalities, and roles")
+    character_names: Optional[str] = Field(None, description="Quick character specification: comma-separated names", example="Floof, Buddy")
+    creature_languages: Optional[str] = Field(None, description="Comma-separated creature voice types", example="Soft and High-Pitched, Deep and Grumbly")
 
 class GenerateFullmovieAutoRequest(BaseModel):
-    idea: str
-    total_segments: Optional[int] = None  # Optional - will auto-detect if not provided
-    segments_per_set: Optional[int] = 10
-    custom_character_roster: Optional[List[dict]] = None  # User-provided main character roster
-    no_narration: Optional[bool] = False  # If true, no narration in any segment
-    narration_only_first: Optional[bool] = False  # If true, narration only in first segment
-    cliffhanger_interval: Optional[int] = 0  # Add cliffhangers every N segments (0 = no cliffhangers)
-    content_rating: Optional[str] = "U"  # Content rating: "U" (Universal), "U/A" (Parental Guidance), "A" (Adult)
+    idea: str = Field(..., description="Movie idea or concept", example="A hero's journey through a magical land")
+    total_segments: Optional[int] = Field(None, description="Total number of segments (auto-detected if not provided)", ge=1, example=50)
+    segments_per_set: Optional[int] = Field(10, description="Number of segments to generate per set", ge=1, le=20, example=10)
+    custom_character_roster: Optional[List[dict]] = Field(None, description="Detailed character roster with full descriptions, personalities, and roles")
+    no_narration: Optional[bool] = Field(False, description="If true, no narration in any segment")
+    narration_only_first: Optional[bool] = Field(False, description="If true, narration only in first segment")
+    cliffhanger_interval: Optional[int] = Field(0, description="Add cliffhangers every N segments (0 = no cliffhangers)", ge=0, example=10)
+    content_rating: Optional[str] = Field("U", description="Content rating: 'U' (Universal), 'U/A' (Parental Guidance), 'A' (Adult)", example="U")
+    character_names: Optional[str] = Field(None, description="Quick character specification: comma-separated names", example="Floof, Buddy")
+    creature_languages: Optional[str] = Field(None, description="Comma-separated creature voice types", example="Soft and High-Pitched, Deep and Grumbly")
 
 class GenerateMemeRequest(BaseModel):
-    idea: Optional[str] = None  # Optional - will generate random meme if not provided
-    segments: Optional[int] = 7
-    custom_character_roster: Optional[List[dict]] = None  # User-provided main character roster
+    idea: Optional[str] = Field(None, description="Meme idea (optional - will generate random meme if not provided)", example="Character reacts to Monday morning")
+    segments: Optional[int] = Field(7, description="Number of segments to generate", ge=1, le=10, example=7)
+    custom_character_roster: Optional[List[dict]] = Field(None, description="Detailed character roster")
+    character_names: Optional[str] = Field(None, description="Quick character specification: comma-separated names", example="Floof")
+    creature_languages: Optional[str] = Field(None, description="Comma-separated creature voice types", example="Soft and High-Pitched")
 
 class GenerateFreeContentRequest(BaseModel):
-    idea: Optional[str] = None  # Optional - will generate random content if not provided
-    segments: Optional[int] = 7
-    custom_character_roster: Optional[List[dict]] = None  # User-provided main character roster
+    idea: Optional[str] = Field(None, description="Content idea (optional - will generate random content if not provided)", example="Character discovers something amazing")
+    segments: Optional[int] = Field(7, description="Number of segments to generate", ge=1, le=10, example=7)
+    custom_character_roster: Optional[List[dict]] = Field(None, description="Detailed character roster")
+    character_names: Optional[str] = Field(None, description="Quick character specification: comma-separated names", example="Floof")
+    creature_languages: Optional[str] = Field(None, description="Comma-separated creature voice types", example="Soft and High-Pitched")
 
 class GenerateWhatsAppStoryRequest(BaseModel):
-    idea: str  # Story idea for WhatsApp AI story
-    segments: Optional[int] = 7  # Number of segments (default: 7 for WhatsApp stories)
-    custom_character_roster: Optional[List[dict]] = None  # User-provided main character roster
+    idea: str = Field(..., description="Story idea for WhatsApp AI story with beautiful sceneries", example="A peaceful journey through nature")
+    segments: Optional[int] = Field(7, description="Number of segments (default: 7 for WhatsApp stories)", ge=1, le=10, example=7)
+    custom_character_roster: Optional[List[dict]] = Field(None, description="Detailed character roster")
+    character_names: Optional[str] = Field(None, description="Quick character specification: comma-separated names", example="Floof")
+    creature_languages: Optional[str] = Field(None, description="Comma-separated creature voice types", example="Soft and High-Pitched")
 
 class GenerateMusicVideoRequest(BaseModel):
     song_lyrics: str  # The complete song lyrics
@@ -249,35 +488,6 @@ async def generate_trending_ideas_route(payload: GenerateTrendingIdeasRequest) -
     """Generate 5 trending, creative, and unique content ideas."""
     return screenwriter_controller.generate_trending_ideas(payload.content_type, payload.count)
 
-
-
-@router.post("/analyze-character-image-file")
-async def analyze_character_image_file_route(
-    image: UploadFile,
-    character_name: str = Form(...),
-    save_character: bool = Form(False)
-) -> dict:
-    """Analyze an uploaded image file to generate detailed character roster for video generation.
-    
-    NOTE: This endpoint analyzes SINGLE CHARACTER only (1 person per image).
-    For multiple characters, use /analyze-multiple-character-images-files with separate images.
-    """
-    return screenwriter_controller.analyze_character_image_file(image, character_name, save_character)
-
-
-
-@router.post("/analyze-multiple-character-images-files")
-async def analyze_multiple_character_images_files_route(
-    images: List[UploadFile],
-    character_names: str = Form(...),  # Comma-separated names
-    save_characters: bool = Form(False)
-) -> dict:
-    """Analyze multiple uploaded image files to generate a combined character roster.
-    
-    NOTE: Each image should contain ONLY 1 character.
-    Provide one image per character you want to analyze.
-    """
-    return screenwriter_controller.analyze_multiple_character_images_files(images, character_names, save_characters)
 
 
 @router.post("/create-character-from-image")
@@ -475,53 +685,287 @@ async def download_video_route(payload: DownloadVideoRequest) -> dict:
     return cinematographer_controller.handle_download_video(payload.dict())
 
 
-# ---------- CHARACTER MANAGEMENT (MONGODB-BASED) ----------
+# ---------- CHARACTER MANAGEMENT (NEW FLOW) ----------
+
+# Pydantic Models for Character Management
+class AnalyzeCharacterRequest(BaseModel):
+    character_name: str = Field(..., description="Name of the character to analyze", example="Floof")
+
+
+# Removed CreateCharacterRequest - now using Form data with file upload
+
+
+class UpdateCharacterRequest(BaseModel):
+    character_name: Optional[str] = Field(None, description="Updated character name")
+    voice_type: Optional[str] = Field(None, description="Updated voice type")
+    keywords: Optional[List[str]] = Field(None, description="Updated keywords")
+    metadata: Optional[dict] = Field(None, description="Updated metadata")
+
+
+class SearchCharactersRequest(BaseModel):
+    query: Optional[str] = Field(None, description="Text search query for character name", example="Floof")
+    voice_type: Optional[str] = Field(None, description="Filter by voice type", example="Soft and High-Pitched")
+    keywords: Optional[List[str]] = Field(None, description="Filter by keywords", example=["cute"])
+    skip: Optional[int] = Field(0, description="Number of records to skip", ge=0)
+    limit: Optional[int] = Field(100, description="Maximum number of records to return", ge=1, le=1000)
+
+
+@router.post("/characters/analyze")
+async def analyze_character_route(
+    image: UploadFile = File(..., description="Character image file"),
+    character_name: str = Form(..., description="Name of the character"),
+    can_speak: bool = Form(..., description="Can the character speak human language? true = can speak words, false = only creature sounds"),
+    current_user: dict = Depends(get_current_active_user)
+) -> dict:
+    """
+    🔍 Analyze character image and get AI suggestions
+    
+    **Protected endpoint - requires authentication**
+    
+    **Step 1 of 2-step character creation process**
+    
+    Upload a character image and get AI-powered suggestions for:
+    - Character ID (auto-generated with format: char_charactername_uuid)
+    - Gender detection
+    - Voice description (creative, detailed - format based on can_speak)
+    - Comprehensive keywords (AI-analyzed)
+    
+    **IMPORTANT: can_speak parameter determines voice description format:**
+    - can_speak = true → Voice description includes accent (British, American, etc.)
+    - can_speak = false → Voice description describes creature sounds only
+    
+    The user can then review and edit these suggestions before creating the character.
+    
+    **Headers:**
+    ```
+    Authorization: Bearer <access_token>
+    ```
+    
+    **Input:**
+    ```
+    image: [file]
+    character_name: "Floof"
+    can_speak: false
+    ```
+    
+    **Returns:**
+    ```json
+    {
+      "character_id": "char_floof_a1b2c3d4",
+      "character_name": "Floof",
+      "gender": "creature",
+      "voice_description": "Soft high-pitched and playful creature sounds",
+      "keywords": "cute, fluffy, small, friendly, ...",
+      "can_speak": false
+    }
+    ```
+    """
+    from app.controllers.character_controller import character_controller
+    return await character_controller.analyze_character_image(image, character_name, can_speak)
+
+
+@router.post("/characters/create")
+async def create_character_route(
+    image: UploadFile = File(..., description="Character image file"),
+    character_id: str = Form(..., description="Character ID from analyze step (e.g., char_floof_a1b2c3d4)"),
+    character_name: str = Form(..., description="Name of the character"),
+    gender: str = Form(..., description="Gender: male/female/non-binary/creature/undefined"),
+    voice_description: str = Form(..., description="Voice description (format depends on can_speak: with accent if true, creature sounds if false)"),
+    keywords: str = Form(..., description="Comma-separated keywords string (max 500 chars)"),
+    is_private: bool = Form(True, description="Private (true) = only you can see, Public (false) = everyone can see"),
+    can_speak: bool = Form(False, description="Can speak human language (true) or only creature sounds (false, default)"),
+    current_user: dict = Depends(get_current_active_user)
+) -> dict:
+    """
+    💾 Create a new character with encrypted storage
+    
+    **Protected endpoint - requires authentication**
+    
+    **Step 2 of 2-step character creation process**
+    
+    After analyzing the character (Step 1), create the character with:
+    - Character ID from analyze step (format: char_charactername_uuid)
+    - User-reviewed/edited data
+    - Image upload to Cloudinary
+    - Encrypted storage in MongoDB
+    - **user_id automatically extracted from auth token**
+    
+    **Headers:**
+    ```
+    Authorization: Bearer <access_token>
+    ```
+    
+    **Input Format (matches analyze output):**
+    ```
+    character_id: "char_floof_a1b2c3d4"
+    character_name: "Floof"
+    gender: "creature"
+    voice_description: "Soft high-pitched and playful creature sounds"
+    keywords: "cute, fluffy, small, friendly, ..."
+    can_speak: false
+    is_private: true
+    ```
+    
+    **What happens:**
+    1. user_id extracted from JWT token (automatic)
+    2. Image uploaded to Cloudinary (with thumbnail generation)
+    3. Sensitive data encrypted (character_id, cloudinary_public_id)
+    4. Character saved to MongoDB with user_id
+    5. Returns character data with public URLs
+    
+    **Security:**
+    - character_id: Encrypted with Fernet
+    - cloudinary_public_id: Encrypted with Fernet
+    - user_id: Automatically from authenticated user
+    - Only decrypted for authorized requests
+    """
+    from app.controllers.character_controller import character_controller
+    
+    # Extract user_id from authenticated user
+    user_id = current_user["user_id"]
+    
+    return await character_controller.create_character(
+        image=image,
+        character_id=character_id,
+        character_name=character_name,
+        gender=gender,
+        voice_description=voice_description,
+        keywords=keywords,
+        is_private=is_private,
+        can_speak=can_speak,
+        user_id=user_id
+    )
+
 
 @router.get("/characters")
-async def get_all_characters_route(skip: int = 0, limit: int = 100) -> dict:
-    """Get list of all saved characters from MongoDB with pagination"""
-    return screenwriter_controller.get_all_saved_characters(skip, limit)
+async def get_all_characters_route(
+    skip: int = 0,
+    limit: int = 100,
+    user_id: Optional[str] = None,
+    current_user: Optional[dict] = Depends(get_current_user)
+) -> dict:
+    """
+    📋 Get all characters with pagination and privacy filtering
+    
+    **Public endpoint - authentication optional**
+    
+    Returns characters based on privacy settings:
+    - **Authenticated users**: See their own characters (private + public) + all public characters from others
+    - **Unauthenticated users**: See only public characters
+    
+    **Privacy Logic:**
+    - Private characters (is_private=true): Only visible to creator
+    - Public characters (is_private=false): Visible to everyone
+    
+    **Pagination:**
+    - skip: Number of records to skip (default: 0)
+    - limit: Maximum records to return (default: 100, max: 1000)
+    
+    **Filtering:**
+    - user_id: Optional filter by specific user (shows only that user's characters)
+    
+    **Headers (optional):**
+    ```
+    Authorization: Bearer <access_token>
+    ```
+    
+    **Example Responses:**
+    
+    Authenticated user sees:
+    - Their own private characters
+    - Their own public characters
+    - All public characters from other users
+    
+    Unauthenticated user sees:
+    - Only public characters from all users
+    """
+    from app.controllers.character_controller import character_controller
+    
+    # Extract current_user_id if authenticated
+    current_user_id = current_user.get("user_id") if current_user else None
+    
+    return character_controller.get_all_characters(
+        skip=skip,
+        limit=limit,
+        user_id=user_id,
+        current_user_id=current_user_id
+    )
 
 
 @router.get("/characters/{character_id}")
 async def get_character_route(character_id: str) -> dict:
-    """Get a specific character by MongoDB ID"""
-    return screenwriter_controller.get_character_by_id(character_id)
-
-
-class UpdateCharacterRequest(BaseModel):
-    updated_data: dict  # Character data to update
+    """
+    🔍 Get a specific character by ID
+    
+    Returns complete character data including:
+    - Decrypted character_id and cloudinary_public_id
+    - Full metadata
+    - Image URLs
+    - Keywords and voice type
+    
+    **Note:** character_id is the decrypted UUID, not the MongoDB _id
+    """
+    from app.controllers.character_controller import character_controller
+    return character_controller.get_character_by_id(character_id)
 
 
 @router.put("/characters/{character_id}")
-async def update_character_route(character_id: str, payload: UpdateCharacterRequest) -> dict:
-    """Update a saved character in MongoDB"""
-    return screenwriter_controller.update_saved_character(character_id, payload.updated_data)
+async def update_character_route(
+    character_id: str,
+    payload: UpdateCharacterRequest
+) -> dict:
+    """
+    ✏️ Update a character
+    
+    Update character information:
+    - character_name
+    - voice_type
+    - keywords
+    - metadata
+    
+    **Note:** Image updates not yet implemented (coming soon)
+    """
+    from app.controllers.character_controller import character_controller
+    return await character_controller.update_character(
+        character_id=character_id,
+        updated_data=payload.dict(exclude_none=True)
+    )
 
 
 @router.delete("/characters/{character_id}")
 async def delete_character_route(character_id: str) -> dict:
-    """Delete a saved character from MongoDB"""
-    return screenwriter_controller.delete_saved_character(character_id)
-
-
-class SearchCharactersRequest(BaseModel):
-    query: Optional[str] = None
-    gender: Optional[str] = None
-    age_range: Optional[str] = None
-    skip: Optional[int] = 0
-    limit: Optional[int] = 100
+    """
+    🗑️ Delete a character
+    
+    Deletes character from:
+    1. Cloudinary (removes image)
+    2. MongoDB (removes document)
+    
+    **Note:** This action cannot be undone
+    """
+    from app.controllers.character_controller import character_controller
+    return await character_controller.delete_character(character_id)
 
 
 @router.post("/characters/search")
 async def search_characters_route(payload: SearchCharactersRequest) -> dict:
-    """Search characters by name or filters in MongoDB"""
-    return screenwriter_controller.search_saved_characters(
-        payload.query,
-        payload.gender,
-        payload.age_range,
-        payload.skip,
-        payload.limit
+    """
+    🔎 Search characters
+    
+    Search characters by:
+    - Text query (searches character_name)
+    - Voice type filter
+    - Keywords filter
+    
+    **Returns:** Paginated list of matching characters
+    """
+    from app.controllers.character_controller import character_controller
+    return character_controller.search_characters(
+        query=payload.query,
+        voice_type=payload.voice_type,
+        keywords=payload.keywords,
+        skip=payload.skip,
+        limit=payload.limit
     )
 
 
@@ -721,16 +1165,210 @@ async def generate_anime_auto_route(payload: GenerateAnimeAutoRequest) -> dict:
 
 # ---------- DAILY CHARACTER LIFE CONTENT ----------
 class GenerateDailyCharacterRequest(BaseModel):
-    idea: str  # The daily life moment (e.g., "character sees reflection and gets scared")
-    character_name: str  # Name of the character (e.g., "Floof")
-    creature_language: Optional[str] = "Soft and High-Pitched"  # Voice description: Any description (e.g., "Soft and High-Pitched", "Deep and Grumbly", "Magical and mystical")
-    num_segments: Optional[int] = 7  # Number of segments (max 10, default 7 for ~1 min)
-    allow_dialogue: Optional[bool] = False  # Allow human dialogue/narration (default: False - creature sounds only)
+    idea: str = Field(
+        ..., 
+        description="The daily life moment or situation for the character(s) to experience", 
+        example="Character sees his reflection in a puddle and gets scared"
+    )
+    character_id: Optional[str] = Field(
+        None,
+        description="Character ID from database (e.g., char_xxx). Required for single character. System automatically fetches: character_name, voice_description, gender, keywords, cloudinary_url, can_speak. Checks privacy permissions.",
+        example="char_a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+    )
+    character_ids: Optional[List[str]] = Field(
+        None,
+        description="Array of character IDs for multi-character stories. Required for multiple characters. System fetches all details automatically for each character including speech capabilities.",
+        example=["char_xxx", "char_yyy"]
+    )
+    num_segments: Optional[int] = Field(
+        7, 
+        description="Number of video segments to generate. Each segment is ~8 seconds. Default 7 = ~1 minute video. Can generate unlimited segments.", 
+        ge=1, 
+        example=7
+    )
 
 @router.post("/generate-daily-character")
-async def generate_daily_character_route(payload: GenerateDailyCharacterRequest) -> dict:
+async def generate_daily_character_route(
+    payload: GenerateDailyCharacterRequest,
+    current_user: Optional[dict] = Depends(get_current_user)
+) -> dict:
     """
-    Generate daily character life content for Instagram using keyframe images.
+    Generate daily character life content for Instagram.
+    
+    **NEW: Character ID Support - Simplified Input!**
+    
+    Now you can just provide a character_id and the system automatically fetches:
+    - Character name
+    - Voice description (creature_language)
+    - Gender
+    - Keywords
+    - Cloudinary URL (for video generation)
+    
+    **Two Ways to Use:**
+    
+    **Option 1: Character ID (Recommended - Simple!)**
+    ```json
+    {
+      "idea": "Character sees reflection and gets scared",
+      "character_id": "char_xxx",
+      "num_segments": 7
+    }
+    ```
+    
+    **Option 2: Multiple Character IDs**
+    ```json
+    {
+      "idea": "Two characters have an adventure",
+      "character_ids": ["char_xxx", "char_yyy"],
+      "num_segments": 7
+    }
+    ```
+    
+    **Option 3: Manual Input (Legacy)**
+    ```json
+    {
+      "idea": "Character sees reflection and gets scared",
+      "character_name": "Floof",
+      "creature_language": "Soft and High-Pitched",
+      "num_segments": 7
+    }
+    ```
+    
+    **Privacy Rules:**
+    - Public characters: Anyone can use
+    - Private characters: Only owner can use
+    - Unauthenticated users: Can only use public characters
+    
+    **Headers (optional for public characters):**
+    ```
+    Authorization: Bearer <access_token>
+    ```
+    
+    Response includes:
+    - Story segments with character details
+    - Character metadata (for video generation)
+    - Creature sound descriptions
+    - Scene descriptions
+    """
+    from app.services.character_service import character_service
+    
+    # Get user_id if authenticated
+    user_id = current_user.get("user_id") if current_user else None
+    
+    # character_id or character_ids is required
+    if not payload.character_id and not payload.character_ids:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="character_id (single character) or character_ids (multiple characters) is required. Please create a character first using /api/characters/create"
+        )
+    
+    try:
+        # Determine which character IDs to use
+        if payload.character_ids:
+            character_ids = payload.character_ids
+        elif payload.character_id:
+            character_ids = [payload.character_id]
+        else:
+            character_ids = []
+        
+        # Fetch and validate each character
+        characters = []
+        character_names = []
+        creature_languages = []
+        
+        for char_id in character_ids:
+            try:
+                # Get character from database
+                character = character_service.get_character_by_id(char_id)
+            except ValueError as e:
+                # Character not found
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail=f"Character '{char_id}' not found in database. Please create the character first using /api/characters/create or verify the character_id is correct. If the character exists but still cannot be fetched, please contact support."
+                )
+            
+            # Check privacy permissions
+            if character.get("is_private"):
+                if not user_id:
+                    raise HTTPException(
+                        status_code=status.HTTP_401_UNAUTHORIZED,
+                        detail=f"Character '{char_id}' is private. Authentication required."
+                    )
+                if character.get("user_id") != user_id:
+                    raise HTTPException(
+                        status_code=status.HTTP_403_FORBIDDEN,
+                        detail=f"Character '{char_id}' is private and belongs to another user."
+                    )
+            
+            # Character is accessible - extract details
+            characters.append(character)
+            character_names.append(character["character_name"])
+            creature_languages.append(character["voice_description"])
+            
+            print(f"✅ Using character: {character['character_name']} ({char_id})")
+        
+        # Build character_name and creature_language strings
+        character_name = ", ".join(character_names)
+        creature_language = ", ".join(creature_languages)
+        
+        # Determine if ANY character can speak (if any can, allow dialogue)
+        allow_dialogue = any(char.get("can_speak", False) for char in characters)
+        
+        print(f"🗣️  Speech capability: {'Enabled' if allow_dialogue else 'Disabled (creature sounds only)'}")
+        
+        # Generate content with character details
+        content = screenwriter_controller.generate_daily_character_content(
+            idea=payload.idea,
+            character_name=character_name,
+            creature_language=creature_language,
+            num_segments=payload.num_segments,
+            allow_dialogue=allow_dialogue,  # Automatically determined from character
+            num_characters=len(characters)  # Pass the actual number of characters
+        )
+        
+        # Add character metadata to response for video generation
+        result["character_metadata"] = {
+            "character_ids": character_ids,
+            "characters": [
+                {
+                    "character_id": char["character_id"],
+                    "character_name": char["character_name"],
+                    "cloudinary_url": char["cloudinary_url"],
+                    "gender": char["gender"],
+                    "voice_description": char["voice_description"],
+                    "can_speak": char.get("can_speak", False)
+                }
+                for char in characters
+            ]
+        }
+        
+        return result
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to generate content: {str(e)}. If this persists, please contact support."
+        )
+
+
+@router.post("/v2/generate-daily-character")
+async def generate_daily_character_v2_route(
+    payload: GenerateDailyCharacterRequest,
+    current_user: Optional[dict] = Depends(get_current_user)
+) -> dict:
+    """
+    Generate daily character life content using Gemini 3 Pro with thinking mode (V2).
+    
+    🚀 ENHANCED VERSION with Gemini 3 Pro's extended thinking capabilities!
+    
+    Improvements over v1:
+    - 🧠 Gemini 3 Pro with high thinking budget for better reasoning
+    - 🎨 More creative and engaging content
+    - 📈 Better story flow and character consistency
+    - ♾️ Supports unlimited segments (auto-splits into sets)
+    - ⚡ Faster response with optimized processing
     
     Perfect for Instagram pages showcasing a recurring character's daily life.
     Creates relatable, funny, engaging moments with NO dialogue/narration - only creature sounds.
@@ -738,17 +1376,15 @@ async def generate_daily_character_route(payload: GenerateDailyCharacterRequest)
     Features:
     - Simple: Just provide idea, character name, and voice type
     - Visual: Pure visual storytelling with creature sounds only
-    - Quick: Maximum 10 segments (~1 minute video)
+    - Unlimited: Any number of segments (auto-splits into sets of 10)
     - Keyframe-Ready: Designed for use with character images as keyframes
     - Viral: Optimized for Instagram engagement
     
-    Character Voice Examples (you can use any description):
+    Character Voice Examples:
     - "Soft and High-Pitched" - Cute, gentle creature sounds
     - "Magical or Otherworldly" - Mystical, ethereal sounds
     - "Muffled and Low" - Deep, grumbly creature sounds
-    - "Soft and High-Pitched and mystical" - Custom combination
-    - "Deep and Grumbly with echoes" - Your own description
-    - Any description that fits your character!
+    - Any custom description that fits your character!
     
     Use Cases:
     - Funny reactions (seeing reflection, hearing noise)
@@ -758,73 +1394,258 @@ async def generate_daily_character_route(payload: GenerateDailyCharacterRequest)
     - Emotional moments (happy, sad, confused)
     
     Example:
-        POST /api/generate-daily-character
+        POST /api/v2/generate-daily-character
         {
-            "idea": "Character sees his own reflection in a puddle and gets scared",
+            "idea": "Character discovers a mysterious glowing object in the park",
             "character_name": "Floof",
-            "creature_language": "Soft and High-Pitched",
-            "num_segments": 7
+            "creature_language": "Soft and High-Pitched with mystical undertones",
+            "num_segments": 15
         }
     
     Response includes:
-    - 7-10 segments (8 seconds each)
-    - Pure visual storytelling (NO dialogue/narration)
+    - Unlimited segments (8 seconds each)
+    - Pure visual storytelling (NO dialogue/narration by default)
     - Creature sound descriptions and timing
     - Scene descriptions for keyframe generation
     - Instagram optimization tips
+    - Enhanced creativity from Gemini 3 Pro thinking
     
     Note: Use the character's image as keyframe when generating videos with Veo3
+    
+    **NEW: Now supports character_id for simplified input!**
+    ```json
+    {
+      "idea": "Character discovers a mysterious glowing object",
+      "character_id": "char_xxx",
+      "num_segments": 15
+    }
+    ```
     """
-    return screenwriter_controller.generate_daily_character_content(
-        idea=payload.idea,
-        character_name=payload.character_name,
-        creature_language=payload.creature_language,
-        num_segments=payload.num_segments,
-        allow_dialogue=payload.allow_dialogue
-    )
+    from app.services.character_service import character_service
+    
+    # Get user_id if authenticated
+    user_id = current_user.get("user_id") if current_user else None
+    
+    # character_id or character_ids is required
+    if not payload.character_id and not payload.character_ids:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="character_id (single character) or character_ids (multiple characters) is required. Please create a character first using /api/characters/create"
+        )
+    
+    try:
+        # Determine which character IDs to use
+        if payload.character_ids:
+            character_ids = payload.character_ids
+        elif payload.character_id:
+            character_ids = [payload.character_id]
+        else:
+            character_ids = []
+        
+        # Fetch and validate each character
+        characters = []
+        character_names = []
+        creature_languages = []
+        
+        for char_id in character_ids:
+            try:
+                # Get character from database
+                character = character_service.get_character_by_id(char_id)
+            except ValueError as e:
+                # Character not found
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail=f"Character '{char_id}' not found in database. Please create the character first using /api/characters/create or verify the character_id is correct. If the character exists but still cannot be fetched, please contact support."
+                )
+            
+            # Check privacy permissions
+            if character.get("is_private"):
+                if not user_id:
+                    raise HTTPException(
+                        status_code=status.HTTP_401_UNAUTHORIZED,
+                        detail=f"Character '{char_id}' is private. Authentication required."
+                    )
+                if character.get("user_id") != user_id:
+                    raise HTTPException(
+                        status_code=status.HTTP_403_FORBIDDEN,
+                        detail=f"Character '{char_id}' is private and belongs to another user."
+                    )
+            
+            # Character is accessible - extract details
+            characters.append(character)
+            character_names.append(character["character_name"])
+            creature_languages.append(character["voice_description"])
+            
+            print(f"✅ Using character: {character['character_name']} ({char_id})")
+        
+        # Build character_name and creature_language strings
+        character_name = ", ".join(character_names)
+        creature_language = ", ".join(creature_languages)
+        
+        # Determine if ANY character can speak (if any can, allow dialogue)
+        allow_dialogue = any(char.get("can_speak", False) for char in characters)
+        
+        print(f"🗣️  Speech capability: {'Enabled' if allow_dialogue else 'Disabled (creature sounds only)'}")
+        
+        # Generate content with character details
+        content = screenwriter_controller.generate_daily_character_content_v2(
+            idea=payload.idea,
+            character_name=character_name,
+            creature_language=creature_language,
+            num_segments=payload.num_segments,
+            allow_dialogue=allow_dialogue,  # Automatically determined from character
+            num_characters=len(characters)  # Pass the actual number of characters
+        )
+        
+        # Add character metadata to response for video generation
+        result["character_metadata"] = {
+            "character_ids": character_ids,
+            "characters": [
+                {
+                    "character_id": char["character_id"],
+                    "character_name": char["character_name"],
+                    "cloudinary_url": char["cloudinary_url"],
+                    "gender": char["gender"],
+                    "voice_description": char["voice_description"],
+                    "can_speak": char.get("can_speak", False)
+                }
+                for char in characters
+            ]
+        }
+        
+        return result
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to generate content: {str(e)}. If this persists, please contact support."
+        )
 
 
 class GenerateDailyCharacterVideosRequest(BaseModel):
-    content_data: dict  # Output from /generate-daily-character
-    character_keyframe_uri: str  # Image URI: GCS (gs://...), HTTP/HTTPS URL (https://...), or Cloudinary URL
-    resolution: Optional[str] = "720p"
-    aspect_ratio: Optional[str] = "9:16"
-    download: Optional[bool] = False
-    auto_merge: Optional[bool] = False  # Automatically merge segments into final video
-    cleanup_segments: Optional[bool] = True  # Delete individual segments after merge
+    content_data: dict = Field(
+        ..., 
+        description="Content from /generate-daily-character-v2. If it contains character_metadata, character images are extracted automatically. No other character fields needed!"
+    )
+    character_id: Optional[str] = Field(
+        None,
+        description="[OPTIONAL] Only needed if content_data lacks character_metadata. Character ID from database.",
+        example="char_a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+    )
+    character_ids: Optional[List[str]] = Field(
+        None,
+        description="[OPTIONAL] Only needed if content_data lacks character_metadata. Array of character IDs for multi-character content.",
+        example=["char_xxx", "char_yyy"]
+    )
+    character_keyframe_uri: Optional[str] = Field(
+        None, 
+        description="[DEPRECATED - NOT NEEDED] System extracts from character_metadata automatically.", 
+        example="gs://your-bucket/characters/floof.png"
+    )
+    character_keyframe_uris: Optional[List[str]] = Field(
+        None, 
+        description="[DEPRECATED - NOT NEEDED] System extracts from character_metadata automatically.", 
+        example=["gs://bucket/floof.png", "gs://bucket/buddy.png"]
+    )
+    resolution: Optional[str] = Field(
+        "720p", 
+        description="Video resolution. Options: '480p' (854x480), '720p' (1280x720, recommended), '1080p' (1920x1080), '4K' (3840x2160)", 
+        example="720p"
+    )
+    aspect_ratio: Optional[str] = Field(
+        "9:16", 
+        description="Video aspect ratio. Options: '9:16' (vertical/portrait for Instagram/TikTok), '16:9' (horizontal/landscape for YouTube), '1:1' (square for Instagram feed)", 
+        example="9:16"
+    )
+    download: Optional[bool] = Field(
+        False, 
+        description="Download generated videos to local storage after generation. Useful for backup or local processing."
+    )
+    auto_merge: Optional[bool] = Field(
+        False, 
+        description="Automatically merge all segment videos into a single final video after generation. Requires all segments to generate successfully."
+    )
+    cleanup_segments: Optional[bool] = Field(
+        True, 
+        description="Delete individual segment video files after successful merge (only applies if auto_merge=true). Saves storage space."
+    )
+    image_model: Optional[str] = Field(
+        "gemini-2.5-flash-image",
+        description="Image generation model for creating first and last frames. Options: 'gemini-2.5-flash-image' (stable, recommended, good quality) or 'gemini-3-pro-image-preview' (experimental, latest, may have better quality but less stable)",
+        example="gemini-2.5-flash-image"
+    )
 
 @router.post("/generate-daily-character-videos")
-async def generate_daily_character_videos_route(payload: GenerateDailyCharacterVideosRequest) -> dict:
+async def generate_daily_character_videos_route(
+    payload: GenerateDailyCharacterVideosRequest,
+    current_user: Optional[dict] = Depends(get_current_user)
+) -> dict:
     """
-    Generate videos for daily character content using keyframes.
+    Generate videos for daily character content using character IDs or direct URIs.
     
-    Takes the output from /generate-daily-character and generates videos for each segment
-    using the character's image as the first keyframe for consistency.
+    **NEW: Character ID Support with Privacy Checking**
     
-    Features:
-    - Automatic keyframe application for character consistency
-    - Generates videos for all segments
-    - Optional auto-merge into final video
-    - Progress tracking for each segment
+    Now you can use character IDs instead of direct URIs. The system will:
+    1. Fetch character from database
+    2. Check privacy permissions (private characters only accessible by owner)
+    3. Decrypt Cloudinary URL automatically
+    4. Use the URL for video generation
     
-    Example:
-        POST /api/generate-daily-character-videos
-        {
-            "content_data": {
-                "title": "First Mirror Fumble",
-                "character_name": "Floof",
-                "segments": [...]
-            },
-            "character_keyframe_uri": "https://res.cloudinary.com/.../floof.png",
-            "resolution": "720p",
-            "aspect_ratio": "9:16",
-            "auto_merge": true
-        }
+    **Privacy Rules:**
+    - Public characters (is_private=false): Anyone can use
+    - Private characters (is_private=true): Only the owner can use
+    - Unauthenticated users: Can only use public characters
     
-    Supported Image URIs:
-    - GCS: "gs://your-bucket/characters/floof.png"
-    - HTTP/HTTPS: "https://example.com/floof.png"
-    - Cloudinary: "https://res.cloudinary.com/.../floof.png"
+    **Two Ways to Specify Characters:**
+    
+    **Option 1: Character ID (Recommended)**
+    ```json
+    {
+      "content_data": {...},
+      "character_id": "char_xxx",  // Single character
+      "resolution": "720p"
+    }
+    ```
+    
+    **Option 2: Multiple Character IDs**
+    ```json
+    {
+      "content_data": {...},
+      "character_ids": ["char_xxx", "char_yyy"],  // Multiple characters
+      "resolution": "720p"
+    }
+    ```
+    
+    **Option 3: Direct URI (Legacy)**
+    ```json
+    {
+      "content_data": {...},
+      "character_keyframe_uri": "https://res.cloudinary.com/.../floof.png",
+      "resolution": "720p"
+    }
+    ```
+    
+    **Example with Character ID:**
+    ```json
+    {
+      "content_data": {
+        "title": "First Mirror Fumble",
+        "character_name": "Floof",
+        "segments": [...]
+      },
+      "character_id": "char_a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+      "resolution": "720p",
+      "aspect_ratio": "9:16",
+      "auto_merge": true
+    }
+    ```
+    
+    **Headers (optional for public characters):**
+    ```
+    Authorization: Bearer <access_token>
+    ```
     
     Response includes:
     - Video URLs for each segment
@@ -832,18 +1653,254 @@ async def generate_daily_character_videos_route(payload: GenerateDailyCharacterV
     - Optional merged final video
     - Failed segments for retry
     """
-    return cinematographer_controller.handle_generate_daily_character_videos(payload.dict())
+    from app.services.character_service import character_service
+    
+    # Get user_id if authenticated
+    user_id = current_user.get("user_id") if current_user else None
+    
+    # Unwrap content_data if it's wrapped in "content" key
+    content_data = payload.content_data
+    print(f"🔍 Initial content_data keys: {list(content_data.keys())[:10]}")
+    
+    # Check if character_metadata exists at the top level before unwrapping
+    character_metadata_at_top = content_data.get("character_metadata") if "character_metadata" in content_data else None
+    
+    if "content" in content_data and isinstance(content_data["content"], dict):
+        print("📦 Unwrapping content_data from nested 'content' key")
+        content_data = content_data["content"]
+        print(f"🔍 After unwrap, content_data keys: {list(content_data.keys())[:10]}")
+        
+        # If character_metadata was at top level, add it back after unwrapping
+        if character_metadata_at_top:
+            content_data["character_metadata"] = character_metadata_at_top
+            print("✅ Preserved character_metadata from top level")
+    
+    # Check if content_data has character_metadata (from new flow)
+    print(f"🔍 Has character_metadata: {'character_metadata' in content_data}")
+    
+    if "character_metadata" in content_data and content_data["character_metadata"]:
+        # New flow: character IDs already resolved in script generation
+        character_metadata = content_data["character_metadata"]
+        character_ids = character_metadata.get("character_ids", [])
+        characters = character_metadata.get("characters", [])
+        
+        print(f"🎭 Found {len(characters)} character(s) in metadata")
+        
+        # Build character name to URL mapping
+        character_map = {}
+        for char in characters:
+            char_name = char["character_name"]
+            char_url = char["cloudinary_url"]
+            character_map[char_name] = char_url
+            print(f"   📸 {char_name}: {char_url[:60]}...")
+        
+        # Process each segment and assign character images based on characters_present
+        segments = content_data.get("segments", [])
+        for segment in segments:
+            characters_present = segment.get("characters_present", [])
+            
+            if characters_present:
+                # Get URLs for characters present in this segment
+                segment_character_urls = []
+                for char_name in characters_present:
+                    if char_name in character_map:
+                        segment_character_urls.append(character_map[char_name])
+                    else:
+                        print(f"⚠️  Warning: Character '{char_name}' in segment {segment.get('segment', '?')} not found in metadata")
+                
+                # Store character URLs in segment for video generation
+                if len(segment_character_urls) == 1:
+                    segment["character_keyframe_uri"] = segment_character_urls[0]
+                    print(f"   ✅ Segment {segment.get('segment', '?')}: Using {characters_present[0]}")
+                elif len(segment_character_urls) > 1:
+                    segment["character_keyframe_uris"] = segment_character_urls  # FIX: Use full array, not just first element
+                    print(f"   ✅ Segment {segment.get('segment', '?')}: Using {len(segment_character_urls)} characters: {', '.join(characters_present)}")
+        
+        # Extract all unique character URLs for top-level parameter
+        all_character_urls = list(character_map.values())
+        
+        # Update payload with processed content_data and character URIs
+        payload_dict = payload.dict()
+        payload_dict["content_data"] = content_data
+        
+        # Add top-level character_keyframe_uri(s) for controller
+        if len(all_character_urls) == 1:
+            payload_dict["character_keyframe_uri"] = all_character_urls[0]
+            print(f"🔑 Added character_keyframe_uri: {all_character_urls[0][:60]}...")
+        else:
+            payload_dict["character_keyframe_uri"] = all_character_urls[0]  # Primary character
+            payload_dict["character_keyframe_uris"] = all_character_urls
+            print(f"🔑 Added character_keyframe_uri (primary): {all_character_urls[0][:60]}...")
+            print(f"🔑 Added character_keyframe_uris: {len(all_character_urls)} URLs")
+        
+        print(f"🎬 Ready to generate videos for {len(segments)} segment(s)")
+        print(f"🔍 Payload keys being sent: {list(payload_dict.keys())}")
+        return cinematographer_controller.handle_generate_daily_character_videos(payload_dict)
+    
+    # Resolve character IDs to URIs if provided directly
+    elif payload.character_id or payload.character_ids:
+        try:
+            # Determine which character IDs to use
+            if payload.character_ids:
+                character_ids = payload.character_ids
+            elif payload.character_id:
+                character_ids = [payload.character_id]
+            else:
+                character_ids = []
+            
+            # Fetch and validate each character
+            character_uris = []
+            for char_id in character_ids:
+                # Get character from database
+                character = character_service.get_character_by_id(char_id)
+                
+                # Check privacy permissions
+                if character.get("is_private"):
+                    # Private character - only owner can use
+                    if not user_id:
+                        raise HTTPException(
+                            status_code=status.HTTP_401_UNAUTHORIZED,
+                            detail=f"Character '{char_id}' is private. Authentication required."
+                        )
+                    if character.get("user_id") != user_id:
+                        raise HTTPException(
+                            status_code=status.HTTP_403_FORBIDDEN,
+                            detail=f"Character '{char_id}' is private and belongs to another user."
+                        )
+                
+                # Character is accessible - use the decrypted Cloudinary URL
+                character_uris.append(character["cloudinary_url"])
+                print(f"✅ Character '{char_id}' authorized for user: {user_id or 'public'}")
+            
+            # Update payload with resolved URIs
+            payload_dict = payload.dict()
+            if len(character_uris) == 1:
+                payload_dict["character_keyframe_uri"] = character_uris[0]
+            else:
+                payload_dict["character_keyframe_uris"] = character_uris
+            
+            return cinematographer_controller.handle_generate_daily_character_videos(payload_dict)
+            
+        except HTTPException:
+            raise
+        except Exception as e:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Failed to resolve character: {str(e)}"
+            )
+    else:
+        # Legacy mode - direct URIs provided
+        return cinematographer_controller.handle_generate_daily_character_videos(payload.dict())
 
+
+@router.post("/generate-daily-character-videos-with-refs")
+async def generate_daily_character_videos_with_refs_route(
+    content_data: str = Form(...),  # JSON string of content data
+    character_keyframe_uri: str = Form(...),
+    resolution: str = Form("720p"),
+    aspect_ratio: str = Form("9:16"),
+    download: bool = Form(False),
+    auto_merge: bool = Form(False),
+    cleanup_segments: bool = Form(True),
+    reference_images: List[UploadFile] = []  # Multiple reference images
+) -> dict:
+    """
+    Generate videos with additional reference images for better frame generation.
+    
+    This endpoint accepts multiple reference images (JPG, PNG, WEBP) that will be used
+    by Imagen to generate more accurate and consistent frames.
+    
+    Form Data:
+    - content_data: JSON string of content from /generate-daily-character
+    - character_keyframe_uri: Main character image URL
+    - reference_images: Multiple image files (optional)
+    - resolution: Video resolution (default: "720p")
+    - aspect_ratio: Video aspect ratio (default: "9:16")
+    - download: Download videos locally (default: false)
+    - auto_merge: Auto-merge segments (default: false)
+    - cleanup_segments: Cleanup after merge (default: true)
+    
+    Example (using curl):
+        curl -X POST "http://localhost:8000/api/generate-daily-character-videos-with-refs" \\
+          -F "content_data=@content.json" \\
+          -F "character_keyframe_uri=https://cloudinary.com/.../char.png" \\
+          -F "reference_images=@ref1.jpg" \\
+          -F "reference_images=@ref2.png" \\
+          -F "reference_images=@ref3.webp" \\
+          -F "aspect_ratio=16:9"
+    """
+    import json
+    
+    # Parse content_data JSON
+    try:
+        content_data_dict = json.loads(content_data)
+    except json.JSONDecodeError:
+        return {"error": "Invalid JSON in content_data"}
+    
+    # Read reference images into memory
+    reference_images_data = []
+    if reference_images:
+        print(f"📥 Received {len(reference_images)} reference images")
+        for idx, img_file in enumerate(reference_images):
+            try:
+                img_data = await img_file.read()
+                reference_images_data.append(img_data)
+                print(f"✅ Reference image {idx+1}: {img_file.filename} ({len(img_data)} bytes)")
+            except Exception as e:
+                print(f"⚠️ Failed to read reference image {idx+1}: {str(e)}")
+    
+    # Build payload
+    payload = {
+        "content_data": content_data_dict,
+        "character_keyframe_uri": character_keyframe_uri,
+        "resolution": resolution,
+        "aspect_ratio": aspect_ratio,
+        "download": download,
+        "auto_merge": auto_merge,
+        "cleanup_segments": cleanup_segments,
+        "reference_images": reference_images_data  # Add reference images
+    }
+    
+    return cinematographer_controller.handle_generate_daily_character_videos(payload)
 
 
 class GenerateDailyCharacterVideosWithReferencesRequest(BaseModel):
-    content_data: dict  # Output from /generate-daily-character
-    character_keyframe_uri: str  # Character image URI for reference
-    resolution: Optional[str] = "720p"
-    aspect_ratio: Optional[str] = "9:16"
-    download: Optional[bool] = False
-    auto_merge: Optional[bool] = False
-    cleanup_segments: Optional[bool] = True
+    content_data: dict = Field(
+        ..., 
+        description="Complete output from /generate-daily-character or /generate-daily-character-v2 endpoint containing all segments and character information"
+    )
+    character_keyframe_uri: str = Field(
+        ..., 
+        description="Character image URI used as reference image for character consistency. Supports: GCS (gs://bucket/image.png), HTTP/HTTPS URLs, Cloudinary URLs", 
+        example="gs://your-bucket/characters/floof.png"
+    )
+    resolution: Optional[str] = Field(
+        "720p", 
+        description="Video resolution. Options: '480p' (854x480), '720p' (1280x720, recommended), '1080p' (1920x1080), '4K' (3840x2160)", 
+        example="720p"
+    )
+    aspect_ratio: Optional[str] = Field(
+        "9:16", 
+        description="Video aspect ratio. Options: '9:16' (vertical/portrait for Instagram/TikTok), '16:9' (horizontal/landscape for YouTube), '1:1' (square for Instagram feed)", 
+        example="9:16"
+    )
+    download: Optional[bool] = Field(
+        False, 
+        description="Download generated videos to local storage after generation"
+    )
+    auto_merge: Optional[bool] = Field(
+        False, 
+        description="Automatically merge all segment videos into a single final video after generation"
+    )
+    cleanup_segments: Optional[bool] = Field(
+        True, 
+        description="Delete individual segment video files after successful merge (only applies if auto_merge=true)"
+    )
+    image_model: Optional[str] = Field(
+        "gemini-2.5-flash-image",
+        description="Image generation model for creating frames. Options: 'gemini-2.5-flash-image' (stable, recommended) or 'gemini-3-pro-image-preview' (experimental, latest)",
+        example="gemini-2.5-flash-image"
+    )
 
 @router.post("/generate-daily-character-videos-with-references")
 async def generate_daily_character_videos_with_references_route(payload: GenerateDailyCharacterVideosWithReferencesRequest) -> dict:

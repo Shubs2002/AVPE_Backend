@@ -753,21 +753,23 @@ def generate_daily_character_content(
     character_name: str,
     creature_language: str = "Soft and High-Pitched",
     num_segments: int = 7,
-    allow_dialogue: bool = False
+    allow_dialogue: bool = False,
+    num_characters: int = 1
 ):
     """
     Generate daily character life content for Instagram using keyframes.
     
     Simple service for creating engaging daily moments.
     By default uses creature sounds only (NO dialogue/narration).
-    Maximum 10 segments per generation.
+    Supports multi-character content (1-5 characters).
     
     Args:
         idea: The daily life moment/situation
-        character_name: Name of the character
-        creature_language: Voice type ("Soft and High-Pitched", "Magical or Otherworldly", "Muffled and Low")
-        num_segments: Number of segments (max 10)
+        character_name: Name of the character(s) - comma-separated for multiple
+        creature_language: Voice type(s) - comma-separated for multiple characters
+        num_segments: Number of segments
         allow_dialogue: Allow human dialogue/narration (default: False - creature sounds only)
+        num_characters: Number of characters (1-5, default: 1)
     
     Returns:
         dict: Generated content
@@ -791,12 +793,6 @@ def generate_daily_character_content(
             detail="creature_language is required. Describe your character's voice (e.g., 'Soft and High-Pitched', 'Deep and Grumbly', 'Magical and Ethereal')"
         )
     
-    if num_segments > 10:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Maximum 10 segments allowed for daily character content"
-        )
-    
     if num_segments < 1:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -809,11 +805,98 @@ def generate_daily_character_content(
             character_name=character_name,
             creature_language=creature_language,
             num_segments=num_segments,
-            allow_dialogue=allow_dialogue
+            allow_dialogue=allow_dialogue,
+            num_characters=num_characters
         )
         return {"content": content}
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Daily character content generation failed: {str(e)}"
+        )
+
+
+def generate_daily_character_content_v2(
+    idea: str,
+    character_name: str,
+    creature_language: str = "Soft and High-Pitched",
+    num_segments: int = 7,
+    allow_dialogue: bool = False,
+    num_characters: int = 1
+):
+    """
+    Generate daily character life content using Gemini 3 Pro with thinking mode (V2).
+    
+    This is the enhanced version that uses Gemini 3 Pro's extended thinking
+    for better reasoning and more creative content generation.
+    
+    Features:
+    - Gemini 3 Pro with high thinking budget
+    - Better reasoning and creativity
+    - Supports unlimited segments (auto-splits into sets)
+    - Pure visual storytelling by default
+    - Multi-character support (1-5 characters)
+    
+    Args:
+        idea: The daily life moment/situation
+        character_name: Name of the character(s) - comma-separated for multiple
+        creature_language: Voice type description
+        num_segments: Number of segments (unlimited)
+        allow_dialogue: Allow human dialogue/narration (default: False)
+    
+    Returns:
+        dict: Generated content with enhanced quality
+    """
+    if not idea:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Missing idea for daily character content"
+        )
+    
+    if not character_name:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Missing character name"
+        )
+    
+    if not creature_language or not creature_language.strip():
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="creature_language is required. Describe your character's voice"
+        )
+    
+    if num_segments < 1:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Number of segments must be at least 1"
+        )
+    
+    try:
+        from app.services import gemini_service
+        
+        # For large segment counts, use set-wise generation
+        if num_segments > 10:
+            content = gemini_service.generate_daily_character_content_in_sets_v2(
+                idea=idea,
+                character_name=character_name,
+                creature_language=creature_language,
+                total_segments=num_segments,
+                allow_dialogue=allow_dialogue,
+                num_characters=num_characters
+            )
+        else:
+            content = gemini_service.generate_daily_character_content_v2(
+                idea=idea,
+                character_name=character_name,
+                creature_language=creature_language,
+                num_segments=num_segments,
+                allow_dialogue=allow_dialogue,
+                num_characters=num_characters
+            )
+        
+        return {"content": content}
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Daily character content generation (v2) failed: {str(e)}"
         )

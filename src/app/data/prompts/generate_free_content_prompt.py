@@ -557,7 +557,7 @@ def get_free_content_prompt(idea: str, num_segments: int, custom_character_roste
             "video_prompt_background": "..." # Complete background description for video generation
           }}}},
           "transitions": "...", # how to transition to next segment
-          "background_music":  {
+          "background_music":  {{{{
           "present": true,
           "track_type": "suspenseful strings",
           "start_time": "0s",
@@ -567,16 +567,16 @@ def get_free_content_prompt(idea: str, num_segments: int, custom_character_roste
           "volume": "low/high/medium",
           "mood": "tense, peace, etc",
           "continues_to_next_segment": true/false
-          }, 
+          }}}}, 
           "sound_effects": [
-            {
-            "sound_effect_id":"..."
+            {{{{
+            "sound_effect_id":"...",
             "type": "footsteps, thunder,etc",
             "start_time": "time in seconds",
             "duration": "time in seconds or continuos",
             "volume": "low/medium/high",
             "description": "echoing footsteps in hallway, thunder in mountains,etc"
-            }
+            }}}}
           ],
           "visual_effects": ["..."], # text animations, highlights
           "props_needed": ["..."], # any items to demonstrate with

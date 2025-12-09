@@ -553,7 +553,7 @@ def get_story_segments_prompt(idea: str, num_segments: int, custom_character_ros
             "continuity_notes": "...", # what must remain consistent across segments
             "video_prompt_background": "..." # Complete background description for video generation
           }}}},
-         "background_music":  {
+         "background_music":  {{{{
           "present": true,
           "track_type": "suspenseful strings",
           "start_time": "0s",
@@ -563,16 +563,16 @@ def get_story_segments_prompt(idea: str, num_segments: int, custom_character_ros
           "volume": "low/high/medium",
           "mood": "tense, peace, etc",
           "continues_to_next_segment": true/false
-          }, 
+          }}}}, 
           "sound_effects": [
-            {
-            "sound_effect_id":"..."
+            {{{{
+            "sound_effect_id":"...",
             "type": "footsteps, thunder,etc",
             "start_time": "time in seconds",
             "duration": "time in seconds or continuos",
             "volume": "low/medium/high",
             "description": "echoing footsteps in hallway, thunder in mountains,etc"
-            }
+            }}}}
           ],
           "visual_style": "...", # optional
           "transitions": "...", # optional
@@ -1388,7 +1388,7 @@ def get_story_segments_in_sets_prompt(
             "continuity_notes": "...", 
             "video_prompt_background": "..." 
           }}}},
-          "background_music":  {
+          "background_music":  {{{{
           "present": true,
           "track_type": "suspenseful strings",
           "start_time": "0s",
@@ -1398,16 +1398,16 @@ def get_story_segments_in_sets_prompt(
           "volume": "low/high/medium",
           "mood": "tense, peace, etc",
           "continues_to_next_segment": true/false
-          }, 
+          }}}}, 
           "sound_effects": [
-            {
-            "sound_effect_id":"..."
+            {{{{
+            "sound_effect_id":"...",
             "type": "footsteps, thunder,etc",
             "start_time": "time in seconds",
             "duration": "time in seconds or continuos",
             "volume": "low/medium/high",
             "description": "echoing footsteps in hallway, thunder in mountains,etc"
-            }
+            }}}}
           ], 
           "visual_style": "...", 
           "transitions": "...", 

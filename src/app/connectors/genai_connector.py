@@ -30,6 +30,20 @@ def get_genai_client() -> genai.Client:
     return _genai_client
 
 
+def get_genai_client_v1alpha() -> genai.Client:
+    """
+    Get Google GenAI client with v1alpha API version for advanced features
+    (e.g., high-resolution media analysis)
+    
+    Returns:
+        genai.Client: Configured Google GenAI client with v1alpha API
+    """
+    return genai.Client(
+        api_key=settings.GOOGLE_STUDIO_API_KEY,
+        http_options={'api_version': 'v1alpha'}
+    )
+
+
 def reset_genai_client():
     """
     Reset the Google GenAI client instance (useful for testing or reconfiguration)

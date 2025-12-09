@@ -46,6 +46,28 @@ class Settings(BaseSettings):
     CLOUDINARY_API_KEY: str | None = None
     CLOUDINARY_API_SECRET: str | None = None
 
+    # 🔐 JWT Authentication
+    JWT_SECRET_KEY: str | None = None
+    JWT_ALGORITHM: str = "HS256"
+    JWT_ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
+    JWT_REFRESH_TOKEN_EXPIRE_DAYS: int = 7
+
+    # 🔒 Character Encryption
+    CHARACTER_ENCRYPTION_KEY: str | None = None
+
+    # 📧 Email Configuration (for OTP)
+    SMTP_HOST: str = "smtp.gmail.com"
+    SMTP_PORT: int = 587
+    SMTP_USER: str | None = None
+    SMTP_PASSWORD: str | None = None
+    SMTP_FROM_EMAIL: str | None = None
+    SMTP_FROM_NAME: str = "AVPE"
+
+    # 🔢 OTP Configuration
+    OTP_EXPIRE_MINUTES: int = 10
+    OTP_LENGTH: int = 6
+    CHARACTER_ENCRYPTION_KEY: str | None = None
+
     # Define CORS origins for different environments
     DEV_ORIGINS: ClassVar[list[str]] = ["*"]
     PROD_ORIGINS: ClassVar[list[str]] = ["*"]

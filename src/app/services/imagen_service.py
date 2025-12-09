@@ -13,20 +13,26 @@ from app.connectors.genai_connector import get_genai_client
 
 
 def generate_first_frame_with_imagen(
-    character_image_url: str,
-    frame_description: str,
+    character_image_url: str = None,
+    frame_description: str = None,
     aspect_ratio: str = "9:16",
-    output_dir: str = "frames"
+    output_dir: str = "frames",
+    additional_reference_images: list = None,
+    image_model: str = "gemini-2.5-flash-image",
+    character_image_urls: list = None  # NEW: Support multiple character URLs
 ) -> tuple[Image.Image, str]:
     """
     Generate the first frame using Imagen (nano banana model).
     Downloads the generated frame to the frames folder.
     
     Args:
-        character_image_url: URL of the character image
+        character_image_url: URL of the character image (single character - deprecated, use character_image_urls)
         frame_description: Description of the scene, pose, environment
         aspect_ratio: Aspect ratio for the generated frame (default: "9:16")
         output_dir: Directory to save the frame (default: "frames")
+        additional_reference_images: Optional list of additional reference image data (bytes or PIL Images)
+        image_model: Image generation model to use
+        character_image_urls: List of character image URLs (for multi-character support)
     
     Returns:
         tuple: (PIL.Image, filepath) - Generated image and path where it was saved
@@ -40,16 +46,31 @@ def generate_first_frame_with_imagen(
     # Create frames directory if it doesn't exist
     os.makedirs(output_dir, exist_ok=True)
     
-    # Download character image if it's a URL
-    character_image = None
-    if character_image_url.startswith("http://") or character_image_url.startswith("https://"):
-        print(f"📥 Downloading character image from: {character_image_url[:50]}...")
-        response = requests.get(character_image_url, timeout=30)
-        response.raise_for_status()
-        character_image = Image.open(BytesIO(response.content))
-        print(f"✅ Character image loaded: {character_image.size}")
+    # Handle both old (single URL) and new (multiple URLs) formats
+    urls_to_download = []
+    if character_image_urls:
+        # New format: list of URLs
+        urls_to_download = character_image_urls if isinstance(character_image_urls, list) else [character_image_urls]
+        print(f"👥 Loading {len(urls_to_download)} character image(s)...")
+    elif character_image_url:
+        # Old format: single URL (backward compatibility)
+        urls_to_download = [character_image_url]
+        print(f"👤 Loading 1 character image...")
     else:
-        raise ValueError(f"Unsupported character_image_url format: {character_image_url}")
+        raise ValueError("Either character_image_url or character_image_urls must be provided")
+    
+    # Download all character images
+    character_images = []
+    for idx, url in enumerate(urls_to_download, 1):
+        if url.startswith("http://") or url.startswith("https://"):
+            print(f"📥 Downloading character {idx}/{len(urls_to_download)} from: {url[:50]}...")
+            response = requests.get(url, timeout=30)
+            response.raise_for_status()
+            img = Image.open(BytesIO(response.content))
+            character_images.append(img)
+            print(f"✅ Character {idx} loaded: {img.size}")
+        else:
+            raise ValueError(f"Unsupported URL format: {url}")
     
     # Map aspect ratio to dimensions
     aspect_ratio_dimensions = {
@@ -61,32 +82,70 @@ def generate_first_frame_with_imagen(
     
     target_size = aspect_ratio_dimensions.get(aspect_ratio, (720, 1280))
     
-    # Build prompt for Imagen (cleaner without aspect ratio details)
+    # Build prompt for Imagen with proper character reference handling
+    num_chars = len(character_images)
+    char_refs_text = "characters" if num_chars > 1 else "character"
+    
     prompt = f"""Create a high-quality image.
 
 Scene: {frame_description}
 
-Style: Maintain the character's exact appearance from the reference image. Focus on the pose, environment, and background described. Keep the character's colors, features, and style consistent.
+⚠️ CRITICAL CHARACTER CONSISTENCY RULE:
+Use the reference image(s) EXACTLY as provided. DO NOT change, modify, or reinterpret the {char_refs_text}:
+- Keep the EXACT same species/type (if it's a fluffy creature, keep it fluffy; if it's a robot, keep it a robot)
+- Keep the EXACT same colors, patterns, and markings
+- Keep the EXACT same body shape, size, and proportions
+- Keep the EXACT same facial features and expressions style
+- Keep the EXACT same clothing, accessories, or distinctive features
+- DO NOT make the character more realistic, cartoonish, or change its art style
+- DO NOT add or remove any features from the character
+
+Style: Maintain the exact appearance of ALL {char_refs_text} from the reference image(s). Focus on the pose, environment, and background described. Keep each character's colors, features, and style consistent.
 
 Requirements:
 - High quality, detailed rendering
-- Consistent character appearance
+- ZERO changes to character appearance - use reference images AS-IS
+- Each character should be clearly visible and distinct
 - Clear, vibrant colors
 - Professional composition"""
     
     print(f"🎨 Generating frame with Imagen...")
     print(f"📐 Aspect ratio: {aspect_ratio}")
+    print(f"👥 Using {num_chars} character reference(s)")
     
     try:
         # Get Gemini client
         client = get_genai_client()
         
-        # Use Gemini 2.5 Flash Image with proper ImageConfig
-        print(f"🎨 Generating image with Gemini 2.5 Flash Image...")
+        # Prepare contents with ALL character images first, then additional references
+        contents = [prompt] + character_images
+        
+        # Add additional reference images if provided
+        if additional_reference_images:
+            print(f"🖼️ Adding {len(additional_reference_images)} additional reference images...")
+            for idx, ref_img_data in enumerate(additional_reference_images):
+                try:
+                    # Convert bytes to PIL Image if needed
+                    if isinstance(ref_img_data, bytes):
+                        ref_img = Image.open(BytesIO(ref_img_data))
+                    elif isinstance(ref_img_data, Image.Image):
+                        ref_img = ref_img_data
+                    else:
+                        print(f"⚠️ Skipping reference image {idx+1}: unsupported type")
+                        continue
+                    
+                    contents.append(ref_img)
+                    print(f"✅ Reference image {idx+1} added: {ref_img.size}")
+                except Exception as e:
+                    print(f"⚠️ Failed to add reference image {idx+1}: {str(e)}")
+        
+        # Use specified image generation model
+        total_refs = len(character_images) + (len(additional_reference_images) if additional_reference_images else 0)
+        print(f"🎨 Generating image with {image_model} ({total_refs} reference images)...")
         
         response = client.models.generate_content(
-            model="gemini-2.5-flash-image",
-            contents=[prompt, character_image],
+            model=image_model,
+            contents=contents,
             config=types.GenerateContentConfig(
                 image_config=types.ImageConfig(
                     aspect_ratio=aspect_ratio
@@ -200,22 +259,28 @@ def _resize_to_aspect_ratio(
 
 
 def generate_last_frame_with_imagen(
-    character_image_url: str,
-    first_frame_path: str,
-    last_frame_description: str,
+    character_image_url: str = None,
+    first_frame_path: str = None,
+    last_frame_description: str = None,
     aspect_ratio: str = "9:16",
-    output_dir: str = "frames"
+    output_dir: str = "frames",
+    additional_reference_images: list = None,
+    image_model: str = "gemini-2.5-flash-image",
+    character_image_urls: list = None  # NEW: Support multiple character URLs
 ) -> tuple[Image.Image, str]:
     """
     Generate the last frame using Imagen with BOTH character reference and first frame reference.
     This ensures character consistency AND environment/lighting consistency.
     
     Args:
-        character_image_url: URL of the character image (for character consistency)
+        character_image_url: URL of the character image (single character - deprecated, use character_image_urls)
         first_frame_path: Path to the first frame of this segment (for environment consistency)
         last_frame_description: Description of the ending pose, position, environment
         aspect_ratio: Aspect ratio for the generated frame (default: "9:16")
         output_dir: Directory to save the frame (default: "frames")
+        additional_reference_images: Optional list of additional reference image data (bytes or PIL Images)
+        image_model: Image generation model to use
+        character_image_urls: List of character image URLs (for multi-character support)
     
     Returns:
         tuple: (PIL.Image, filepath) - Generated image and path where it was saved
@@ -229,16 +294,34 @@ def generate_last_frame_with_imagen(
     # Create frames directory if it doesn't exist
     os.makedirs(output_dir, exist_ok=True)
     
-    # Download character image if it's a URL
-    character_image = None
-    if character_image_url.startswith("http://") or character_image_url.startswith("https://"):
-        print(f"📥 Downloading character image from: {character_image_url[:50]}...")
-        response = requests.get(character_image_url, timeout=30)
-        response.raise_for_status()
-        character_image = Image.open(BytesIO(response.content))
-        print(f"✅ Character image loaded: {character_image.size}")
+    # Handle both old (single URL) and new (multiple URLs) formats
+    urls_to_download = []
+    if character_image_urls:
+        # New format: list of URLs
+        urls_to_download = character_image_urls if isinstance(character_image_urls, list) else [character_image_urls]
+        print(f"👥 Loading {len(urls_to_download)} character image(s)...")
+    elif character_image_url:
+        # Old format: single URL (backward compatibility)
+        urls_to_download = [character_image_url]
+        print(f"👤 Loading 1 character image...")
     else:
-        raise ValueError(f"Unsupported character_image_url format: {character_image_url}")
+        raise ValueError("Either character_image_url or character_image_urls must be provided")
+    
+    # Download all character images
+    character_images = []
+    for idx, url in enumerate(urls_to_download, 1):
+        if url.startswith("http://") or url.startswith("https://"):
+            print(f"📥 Downloading character {idx}/{len(urls_to_download)} from: {url[:50]}...")
+            response = requests.get(url, timeout=30)
+            response.raise_for_status()
+            img = Image.open(BytesIO(response.content))
+            character_images.append(img)
+            print(f"✅ Character {idx} loaded: {img.size}")
+        else:
+            raise ValueError(f"Unsupported URL format: {url}")
+    
+    # Use first character as primary
+    character_image = character_images[0]
     
     # Load first frame
     first_frame_image = Image.open(first_frame_path)
@@ -254,41 +337,78 @@ def generate_last_frame_with_imagen(
     
     target_size = aspect_ratio_dimensions.get(aspect_ratio, (720, 1280))
     
-    # Build prompt for Imagen with BOTH references (cleaner without aspect ratio details)
+    # Build prompt for Imagen with ALL character references
+    num_chars = len(character_images)
+    char_refs_text = "character references" if num_chars > 1 else "character reference"
+    
     prompt = f"""Create a high-quality image.
 
 Scene: {last_frame_description}
 
+⚠️ CRITICAL CHARACTER CONSISTENCY RULE:
+Use the FIRST {num_chars} reference image(s) EXACTLY as provided. DO NOT change, modify, or reinterpret ANY character:
+- Keep the EXACT same species/type for each character (if it's a fluffy creature, keep it fluffy; if it's a robot, keep it a robot)
+- Keep the EXACT same colors, patterns, and markings for each character
+- Keep the EXACT same body shape, size, and proportions for each character
+- Keep the EXACT same facial features and expressions style for each character
+- Keep the EXACT same clothing, accessories, or distinctive features for each character
+- DO NOT make any character more realistic, cartoonish, or change its art style
+- DO NOT add or remove any features from any character
+- Each character must remain COMPLETELY IDENTICAL to their reference image
+
 CRITICAL REQUIREMENTS:
-1. Character Appearance: Use the FIRST reference image (character) to maintain exact character appearance (colors, features, style)
-2. Environment & Lighting: Use the SECOND reference image (first frame) to maintain consistent environment, lighting, and background
+1. Character Appearance: Use the FIRST {num_chars} reference image(s) ({char_refs_text}) AS-IS with ZERO modifications
+2. Environment & Lighting: Use the NEXT reference image (first frame) to maintain consistent environment, lighting, and background
 3. Pose & Position: Follow the scene description for the character's final pose and position
 
-The character should look EXACTLY like in the character reference image, but in the environment and lighting from the first frame reference image, with the pose described in the scene.
+ALL characters should look EXACTLY like in their respective character reference images, but in the environment and lighting from the first frame reference image, with the poses described in the scene.
 
-Style: High quality, detailed rendering with consistent character and environment.
+Style: High quality, detailed rendering with consistent characters and environment.
 
 Requirements:
-- Character MUST be fully visible (whole body in frame)
-- Maintain character's exact appearance from character reference
+- ALL characters MUST be fully visible (whole body in frame)
+- ZERO changes to any character's appearance - use reference images AS-IS
 - Maintain environment/lighting from first frame reference
 - Clear, vibrant colors
 - Professional composition"""
     
     print(f"🎨 Generating last frame with Imagen...")
     print(f"📐 Aspect ratio: {aspect_ratio}")
-    print(f"🖼️ Using character reference + first frame reference")
+    print(f"🖼️ Using {num_chars} character reference(s) + first frame reference")
     
     try:
         # Get Gemini client
         client = get_genai_client()
         
-        # Use Gemini 2.5 Flash Image with BOTH references and proper ImageConfig
-        print(f"🎨 Generating image with Gemini 2.5 Flash Image (dual reference)...")
+        # Prepare contents with ALL character images, first frame, and additional references
+        contents = [prompt] + character_images + [first_frame_image]
+        
+        # Add additional reference images if provided
+        if additional_reference_images:
+            print(f"🖼️ Adding {len(additional_reference_images)} additional reference images...")
+            for idx, ref_img_data in enumerate(additional_reference_images):
+                try:
+                    # Convert bytes to PIL Image if needed
+                    if isinstance(ref_img_data, bytes):
+                        ref_img = Image.open(BytesIO(ref_img_data))
+                    elif isinstance(ref_img_data, Image.Image):
+                        ref_img = ref_img_data
+                    else:
+                        print(f"⚠️ Skipping reference image {idx+1}: unsupported type")
+                        continue
+                    
+                    contents.append(ref_img)
+                    print(f"✅ Reference image {idx+1} added: {ref_img.size}")
+                except Exception as e:
+                    print(f"⚠️ Failed to add reference image {idx+1}: {str(e)}")
+        
+        # Use specified image generation model with ALL references
+        total_refs = len(character_images) + 1 + (len(additional_reference_images) if additional_reference_images else 0)
+        print(f"🎨 Generating image with {image_model} ({total_refs} reference images)...")
         
         response = client.models.generate_content(
-            model="gemini-2.5-flash-image",
-            contents=[prompt, character_image, first_frame_image],
+            model=image_model,
+            contents=contents,
             config=types.GenerateContentConfig(
                 image_config=types.ImageConfig(
                     aspect_ratio=aspect_ratio
@@ -400,7 +520,12 @@ Requirements:
         # Generate image with Gemini 2.5 Flash Image
         response = client.models.generate_content(
             model="gemini-2.5-flash-image",
-            contents=contents
+            contents=contents,
+            config=types.GenerateContentConfig(
+                image_config=types.ImageConfig(
+                    image_size="4K"
+                )
+            )
         )
         
         # Extract image

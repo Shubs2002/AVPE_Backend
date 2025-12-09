@@ -849,33 +849,42 @@ def execute_daily_character_video_generation(content_data: dict, video_options: 
         is_first_segment = (idx == 0)
         is_last_segment = (idx == len(segments) - 1)
         
-        # Build comprehensive prompt from segment data
-        scene = segment.get("scene", "")
-        action = segment.get("action", "")
-        reaction = segment.get("reaction", "")
-        camera = segment.get("camera", "")
-        visual_focus = segment.get("visual_focus", "")
+        # Check for Veo 3 structured prompt first
+        veo_prompt = segment.get("veo_prompt")
         
-        # Get background details
-        background = segment.get("background", {})
-        video_prompt_background = background.get("video_prompt_background", "")
-        
-        # Combine all visual elements into prompt
-        prompt_parts = []
-        if scene:
-            prompt_parts.append(scene)
-        if action:
-            prompt_parts.append(action)
-        if reaction:
-            prompt_parts.append(f"Character shows {reaction}.")
-        if visual_focus:
-            prompt_parts.append(f"Focus on: {visual_focus}.")
-        if camera:
-            prompt_parts.append(f"Camera: {camera}.")
-        if video_prompt_background:
-            prompt_parts.append(f"Background: {video_prompt_background}")
-        
-        prompt = " ".join(prompt_parts)
+        if veo_prompt:
+            # Use the new Veo 3 structured prompt with audio cues
+            prompt = veo_prompt
+            print(f"✅ Using Veo 3 structured prompt with integrated audio")
+        else:
+            # Fallback: Build prompt from individual fields (old method)
+            scene = segment.get("scene", "")
+            action = segment.get("action", "")
+            reaction = segment.get("reaction", "")
+            camera = segment.get("camera", "")
+            visual_focus = segment.get("visual_focus", "")
+            
+            # Get background details
+            background = segment.get("background", {})
+            video_prompt_background = background.get("video_prompt_background", "")
+            
+            # Combine all visual elements into prompt
+            prompt_parts = []
+            if scene:
+                prompt_parts.append(scene)
+            if action:
+                prompt_parts.append(action)
+            if reaction:
+                prompt_parts.append(f"Character shows {reaction}.")
+            if visual_focus:
+                prompt_parts.append(f"Focus on: {visual_focus}.")
+            if camera:
+                prompt_parts.append(f"Camera: {camera}.")
+            if video_prompt_background:
+                prompt_parts.append(f"Background: {video_prompt_background}")
+            
+            prompt = " ".join(prompt_parts)
+            print(f"⚠️  Using legacy prompt format (no integrated audio)")
         
         segment_result = {
             "segment_number": segment_num,
@@ -905,12 +914,18 @@ def execute_daily_character_video_generation(content_data: dict, video_options: 
                 try:
                     from app.services.imagen_service import generate_first_frame_with_imagen
                     
+                    # Get character URLs for this segment (support multi-character)
+                    segment_char_urls = segment.get("character_keyframe_uris")
+                    if not segment_char_urls:
+                        segment_char_urls = [segment.get("character_keyframe_uri", character_keyframe_uri)]
+                    
                     # Generate and download the first frame
                     generated_image, frame_filepath = generate_first_frame_with_imagen(
-                        character_image_url=character_keyframe_uri,
+                        character_image_urls=segment_char_urls,
                         frame_description=first_frame_desc,
                         aspect_ratio=video_options.get("aspect_ratio", "9:16"),
-                        output_dir="frames"
+                        output_dir="frames",
+                        image_model=video_options.get("image_model", "gemini-2.5-flash-image")
                     )
                     
                     # Use the downloaded frame file path
@@ -1092,17 +1107,27 @@ def execute_daily_character_video_generation(content_data: dict, video_options: 
             frames_dir = os.path.join(content_dir, "frames")
             
             if os.path.exists(frames_dir):
-                # Delete all frame files
-                for frame_info in results["frame_chain"]:
+                # Delete all frame files EXCEPT the last one
+                frame_chain = results["frame_chain"]
+                last_frame_path = frame_chain[-1].get("last_frame") if frame_chain else None
+                
+                for frame_info in frame_chain:
                     frame_path = frame_info.get("last_frame")
                     if frame_path and os.path.exists(frame_path):
-                        os.remove(frame_path)
-                        print(f"🗑️ Deleted: {os.path.basename(frame_path)}")
+                        # Keep the last frame, delete all others
+                        if frame_path != last_frame_path:
+                            os.remove(frame_path)
+                            print(f"🗑️ Deleted: {os.path.basename(frame_path)}")
+                        else:
+                            print(f"💾 Kept last frame: {os.path.basename(frame_path)}")
                 
-                # Remove frames directory if empty
-                if not os.listdir(frames_dir):
+                # Don't remove frames directory since we're keeping the last frame
+                remaining_files = os.listdir(frames_dir)
+                if not remaining_files:
                     os.rmdir(frames_dir)
                     print(f"🗑️ Removed empty frames directory")
+                else:
+                    print(f"📁 Frames directory kept with {len(remaining_files)} file(s)")
                 
                 print(f"✅ Cleanup complete")
         except Exception as e:
@@ -1162,6 +1187,9 @@ def build_daily_character_video_prompt(segment: dict) -> str:
     comedy = segment.get('comedy_element', '')
     if comedy:
         prompt_parts.append(f"Comedy: {comedy}")
+    
+    # Add pacing instruction for faster, more dynamic videos
+    prompt_parts.append("Pacing: Fast-paced, energetic movement with quick transitions. Dynamic and snappy action")
     
     # Join all parts
     return ". ".join(prompt_parts) if prompt_parts else "Daily character moment"
@@ -1252,36 +1280,53 @@ def execute_daily_character_video_generation(content_data: dict, video_options: 
             is_last_segment = (i == len(segments))
             
             # STEP 1: Determine IMAGE parameter (first frame for video)
-            # For segment 1: Generate with Imagen
-            # For segment 2+: Use generated last frame from previous segment
+            # Logic:
+            # - If first_frame_description exists (scene change): Generate new frame with Imagen
+            # - If no first_frame_description (continuous scene): Use previous segment's last frame
+            # - Segment 1 always needs a first frame (either generated or character keyframe)
             first_frame = None
             first_frame_description = segment.get('first_frame_description')
             
-            if i == 1:
-                # First segment: Generate first frame with Imagen
-                if first_frame_description:
-                    print(f"🎨 Segment {i}: Generating first frame with Imagen (character reference)...")
-                    print(f"📝 Frame description: {first_frame_description[:100]}...")
-                    try:
-                        generated_image, frame_path = generate_first_frame_with_imagen(
-                            character_image_url=character_keyframe_uri,
-                            frame_description=first_frame_description,
-                            aspect_ratio=video_options.get("aspect_ratio", "9:16"),
-                            output_dir=frames_dir
-                        )
-                        first_frame = frame_path
-                        segment_result["first_frame_generated"] = frame_path
-                        print(f"✅ First frame generated: {frame_path}")
-                    except Exception as e:
-                        print(f"⚠️ Imagen generation failed: {str(e)}, using character keyframe")
-                        first_frame = character_keyframe_uri
-                else:
-                    first_frame = character_keyframe_uri
-                    print(f"⚠️ No first_frame_description, using character keyframe")
+            # Check if first_frame_description is provided and not empty
+            has_first_frame_desc = first_frame_description and first_frame_description.strip()
+            
+            if has_first_frame_desc:
+                # Scene change detected: Generate new first frame with Imagen
+                print(f"🎨 Segment {i}: Scene change detected - Generating first frame with Imagen...")
+                print(f"📝 Frame description: {first_frame_description[:100]}...")
+                try:
+                    # Get character URLs for this segment (support multi-character)
+                    segment_char_urls = segment.get("character_keyframe_uris")
+                    if not segment_char_urls:
+                        segment_char_urls = [segment.get("character_keyframe_uri", character_keyframe_uri)]
+                    
+                    generated_image, frame_path = generate_first_frame_with_imagen(
+                        character_image_urls=segment_char_urls,
+                        frame_description=first_frame_description,
+                        aspect_ratio=video_options.get("aspect_ratio", "9:16"),
+                        output_dir=frames_dir,
+                        additional_reference_images=video_options.get("reference_images"),
+                        image_model=video_options.get("image_model", "gemini-2.5-flash-image")
+                    )
+                    first_frame = frame_path
+                    segment_result["first_frame_generated"] = frame_path
+                    segment_result["scene_change"] = True
+                    print(f"✅ First frame generated for scene change: {frame_path}")
+                except Exception as e:
+                    print(f"⚠️ Imagen generation failed: {str(e)}, using fallback")
+                    # Fallback: use previous frame if available, otherwise character keyframe
+                    first_frame = previous_frame if previous_frame else character_keyframe_uri
             else:
-                # Subsequent segments: Use generated last frame from previous segment
-                if previous_frame:
+                # Continuous scene: Use previous segment's last frame
+                if i == 1:
+                    # First segment with no description: use character keyframe
+                    first_frame = character_keyframe_uri
+                    print(f"📸 Segment 1: Using character keyframe as first frame")
+                elif previous_frame:
+                    # Continuous scene: use previous last frame
                     first_frame = previous_frame
+                    segment_result["scene_change"] = False
+                    print(f"🔗 Segment {i}: Continuous scene - Using previous segment's last frame")
                     print(f"🔗 Segment {i}: Using generated last frame from previous segment: {first_frame}")
                 else:
                     # Fallback: Use character keyframe
@@ -1298,12 +1343,19 @@ def execute_daily_character_video_generation(content_data: dict, video_options: 
                 try:
                     from app.services.imagen_service import generate_last_frame_with_imagen
                     
+                    # Get character URLs for this segment (support multi-character)
+                    segment_char_urls = segment.get("character_keyframe_uris")
+                    if not segment_char_urls:
+                        segment_char_urls = [segment.get("character_keyframe_uri", character_keyframe_uri)]
+                    
                     generated_image, last_frame_path = generate_last_frame_with_imagen(
-                        character_image_url=character_keyframe_uri,
+                        character_image_urls=segment_char_urls,
                         first_frame_path=first_frame,
                         last_frame_description=last_frame_description,
                         aspect_ratio=video_options.get("aspect_ratio", "9:16"),
-                        output_dir=frames_dir
+                        output_dir=frames_dir,
+                        additional_reference_images=video_options.get("reference_images"),
+                        image_model=video_options.get("image_model", "gemini-2.5-flash-image")
                     )
                     last_frame = last_frame_path
                     segment_result["last_frame_generated"] = last_frame_path
@@ -1486,11 +1538,17 @@ def execute_daily_character_video_generation_with_references(content_data: dict,
                     frames_dir = "frames"
                     os.makedirs(frames_dir, exist_ok=True)
                     
+                    # Get character URLs for this segment (support multi-character)
+                    segment_char_urls = segment.get("character_keyframe_uris")
+                    if not segment_char_urls:
+                        segment_char_urls = [segment.get("character_keyframe_uri", character_keyframe_uri)]
+                    
                     generated_image, frame_path = generate_first_frame_with_imagen(
-                        character_image_url=character_keyframe_uri,
+                        character_image_urls=segment_char_urls,
                         frame_description=frame_description,
                         aspect_ratio=video_options.get("aspect_ratio", "9:16"),
-                        output_dir=frames_dir
+                        output_dir=frames_dir,
+                        image_model=video_options.get("image_model", "gemini-2.5-flash-image")
                     )
                     # Use the saved frame path as first_frame (will be used as reference)
                     first_frame = frame_path

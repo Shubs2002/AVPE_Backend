@@ -1,0 +1,690 @@
+{
+  "content": {
+    "title": "Floof's Snowy Ski Disaster",
+    "short_summary": "",
+    "description": "",
+    "hashtags": [
+      "#Floof",
+      "#SnowDay",
+      "#SkiFails",
+      "#CuteCreature",
+      "#WinterVibes",
+      "#Relatable"
+    ],
+    "character_name": "Floof",
+    "creature_language": "Cute and baby",
+    "allow_dialogue": true,
+    "total_segments": 150,
+    "generated_at": "2025-11-22T00:22:02.462190",
+    "generation_method": "gemini-3-pro-thinking-v2",
+    "segments": [
+     
+      {
+        "segment": 31,
+        "duration": 8,
+        "first_frame_description": "Floof sitting inside a tiny red convertible car parked on a snowy hill, wearing a small knitted scarf. Background shows a cozy wooden villa and pine trees covered in snow. Bright winter sunlight. Full body visible inside the open-top car.",
+        "last_frame_description": "Floof standing in the snow next to the tiny red car, looking amazed at the view, paws slightly raised. Full body visible, sinking slightly into the snow.",
+        "scene": "Arrival at the holiday spot",
+        "action": "Floof hops out of the car and takes in the view",
+        "reaction": "Pure amazement and excitement",
+        "camera": "Wide shot, static, establishing the scene",
+        "visual_focus": "The contrast of the tiny car and the vast snowy landscape",
+        "comedy_element": "Floof sinking slightly into the deep snow upon exiting",
+        "creature_sounds": [
+          {
+            "time": "1s",
+            "sound_type": "engine sputter",
+            "emotion": "neutral",
+            "description": "Cute toy car engine turning off"
+          },
+          {
+            "time": "4s",
+            "sound_type": "excited gasp",
+            "emotion": "amazement",
+            "description": "High-pitched gasp of wonder"
+          }
+        ],
+        "background": {
+          "location": "Snowy Hilltop",
+          "setting": "Winter landscape with a wooden cabin in background",
+          "time_of_day": "morning",
+          "lighting": "bright natural sunlight",
+          "props": [
+            "tiny red car",
+            "snow",
+            "pine trees"
+          ],
+          "atmosphere": "crisp and magical",
+          "video_prompt_background": "Snowy hill with pine trees and a wooden cabin in the distance, bright blue sky"
+        },
+        "audio_timing": {
+          "creature_sounds": {
+            "present": true,
+            "sound_count": 2,
+            "sounds": [
+              {
+                "time": "4s",
+                "type": "gasp",
+                "emotion": "amazed"
+              }
+            ]
+          },
+          "background_music": {
+            "present": true,
+            "track_type": "upbeat",
+            "start_time": "0s",
+            "end_time": "continuous",
+            "volume": "medium",
+            "mood": "happy",
+            "continues_to_next_segment": true
+          },
+          "sound_effects": [
+            {
+              "type": "snow crunch",
+              "start_time": "2s",
+              "duration": "1s",
+              "volume": "medium",
+              "description": "Crunchy snow sound as he steps out"
+            }
+          ]
+        },
+        "instagram_note": "Strong visual hook with the cute car setup"
+      },
+      {
+        "segment": 32,
+        "duration": 8,
+        "first_frame_description": "Floof standing in the snow next to the tiny red car, looking amazed. Full body visible. Same environment.",
+        "last_frame_description": "Floof waddling through deep snow toward a round blue plastic sled lying a few feet away. Full body visible, struggling slightly.",
+        "scene": "Spotting the adventure gear",
+        "action": "Floof sees a sled and tries to walk to it",
+        "reaction": "Determination mixed with physical struggle",
+        "camera": "Tracking shot, low angle, moving with Floof",
+        "visual_focus": "The difficulty of walking in deep snow",
+        "comedy_element": "The waddle walk is exaggerated by the deep snow",
+        "creature_sounds": [
+          {
+            "time": "2s",
+            "sound_type": "curious chirp",
+            "emotion": "curiosity",
+            "description": "Noticing the sled"
+          },
+          {
+            "time": "5s",
+            "sound_type": "effort grunt",
+            "emotion": "struggle",
+            "description": "Cute grunts while walking in deep snow"
+          }
+        ],
+        "background": {
+          "location": "Snowy Hilltop",
+          "setting": "Open snow area near the car",
+          "time_of_day": "morning",
+          "lighting": "bright natural sunlight",
+          "props": [
+            "blue sled",
+            "snow"
+          ],
+          "atmosphere": "playful",
+          "video_prompt_background": "Snowy ground with texture details"
+        },
+        "audio_timing": {
+          "creature_sounds": {
+            "present": true,
+            "sound_count": 2,
+            "sounds": [
+              {
+                "time": "5s",
+                "type": "grunt",
+                "emotion": "effort"
+              }
+            ]
+          },
+          "background_music": {
+            "present": true,
+            "track_type": "comedic",
+            "start_time": "continuous",
+            "end_time": "continuous",
+            "volume": "medium",
+            "mood": "playful",
+            "continues_to_next_segment": true
+          },
+          "sound_effects": [
+            {
+              "type": "heavy snow footsteps",
+              "start_time": "3s",
+              "duration": "4s",
+              "volume": "loud",
+              "description": "Rhythmic crunching"
+            }
+          ]
+        },
+        "instagram_note": "Relatable struggle of walking in deep snow"
+      },
+      {
+        "segment": 33,
+        "duration": 8,
+        "first_frame_description": "Floof standing right next to the blue round sled in the snow. Full body visible. He looks proud.",
+        "last_frame_description": "Floof sitting awkwardly on top of the blue sled, trying to balance, wobbling. Full body visible.",
+        "scene": "Getting on the ride",
+        "action": "Floof climbs onto the sled",
+        "reaction": "Focused balancing act",
+        "camera": "Medium shot, static, focusing on the balancing act",
+        "visual_focus": "The wobbling motion",
+        "comedy_element": "Floof is almost too round for the sled",
+        "creature_sounds": [
+          {
+            "time": "3s",
+            "sound_type": "nervous hum",
+            "emotion": "concentration",
+            "description": "Low hum while balancing"
+          },
+          {
+            "time": "7s",
+            "sound_type": "squeak",
+            "emotion": "mild panic",
+            "description": "Small slip squeak"
+          }
+        ],
+        "background": {
+          "location": "Snowy Hilltop",
+          "setting": "Top of a small slope",
+          "time_of_day": "morning",
+          "lighting": "bright natural sunlight",
+          "props": [
+            "blue sled"
+          ],
+          "atmosphere": "anticipation",
+          "video_prompt_background": "Snowy slope beginning to angle downwards"
+        },
+        "audio_timing": {
+          "creature_sounds": {
+            "present": true,
+            "sound_count": 2,
+            "sounds": [
+              {
+                "time": "3s",
+                "type": "hum",
+                "emotion": "focus"
+              }
+            ]
+          },
+          "background_music": {
+            "present": true,
+            "track_type": "comedic",
+            "start_time": "continuous",
+            "end_time": "continuous",
+            "volume": "low",
+            "mood": "tense",
+            "continues_to_next_segment": true
+          },
+          "sound_effects": [
+            {
+              "type": "plastic scraping",
+              "start_time": "2s",
+              "duration": "3s",
+              "volume": "medium",
+              "description": "Plastic sled shifting on snow"
+            }
+          ]
+        },
+        "instagram_note": "Physical comedy moment"
+      },
+      {
+        "segment": 34,
+        "duration": 8,
+        "first_frame_description": "Floof sitting on the blue sled, balanced and looking at the camera with a confident smirk. Full body visible.",
+        "last_frame_description": "Floof on the sled, leaning forward, pushing off the snow with paws. Full body visible.",
+        "scene": "The Launch",
+        "action": "Floof pushes off to start the ride",
+        "reaction": "Over-confidence",
+        "camera": "Close-up on face (4th wall break) then zoom out slightly",
+        "visual_focus": "The confident expression before disaster",
+        "comedy_element": "The 'I got this' look",
+        "creature_sounds": [
+          {
+            "time": "2s",
+            "sound_type": "confident trill",
+            "emotion": "confidence",
+            "description": "Ta-da style sound"
+          },
+          {
+            "time": "6s",
+            "sound_type": "exertion grunt",
+            "emotion": "effort",
+            "description": "Pushing off sound"
+          }
+        ],
+        "background": {
+          "location": "Snowy Hilltop",
+          "setting": "Top of the slope",
+          "time_of_day": "morning",
+          "lighting": "bright natural sunlight",
+          "props": [
+            "blue sled"
+          ],
+          "atmosphere": "exciting",
+          "video_prompt_background": "Snowy background"
+        },
+        "audio_timing": {
+          "creature_sounds": {
+            "present": true,
+            "sound_count": 2,
+            "sounds": [
+              {
+                "time": "2s",
+                "type": "trill",
+                "emotion": "proud"
+              }
+            ]
+          },
+          "background_music": {
+            "present": true,
+            "track_type": "upbeat",
+            "start_time": "continuous",
+            "end_time": "continuous",
+            "volume": "medium",
+            "mood": "building",
+            "continues_to_next_segment": true
+          },
+          "sound_effects": [
+            {
+              "type": "woosh",
+              "start_time": "6s",
+              "duration": "1s",
+              "volume": "medium",
+              "description": "Sled starting to move"
+            }
+          ]
+        },
+        "instagram_note": "Perfect setup for the fall"
+      },
+      {
+        "segment": 35,
+        "duration": 8,
+        "first_frame_description": "Floof on the sled, moving slowly forward down the gentle slope. Full body visible.",
+        "last_frame_description": "Floof on the sled, moving much faster, eyes widening, paws gripping the sides. Full body visible.",
+        "scene": "Picking up speed",
+        "action": "Gravity takes over and the sled accelerates",
+        "reaction": "Realization that this is faster than expected",
+        "camera": "Tracking shot, side profile, keeping pace with Floof",
+        "visual_focus": "The transition from happy to concerned",
+        "comedy_element": "The slow realization of danger",
+        "creature_sounds": [
+          {
+            "time": "4s",
+            "sound_type": "worried oh-oh",
+            "emotion": "concern",
+            "description": "Short questioning sound"
+          }
+        ],
+        "background": {
+          "location": "Snowy Slope",
+          "setting": "Mid-slope, trees blurring slightly",
+          "time_of_day": "morning",
+          "lighting": "bright natural sunlight",
+          "props": [
+            "blue sled"
+          ],
+          "atmosphere": "speedy",
+          "video_prompt_background": "Blurry snow passing by"
+        },
+        "audio_timing": {
+          "creature_sounds": {
+            "present": true,
+            "sound_count": 1,
+            "sounds": [
+              {
+                "time": "4s",
+                "type": "oh-oh",
+                "emotion": "concern"
+              }
+            ]
+          },
+          "background_music": {
+            "present": true,
+            "track_type": "fast",
+            "start_time": "continuous",
+            "end_time": "continuous",
+            "volume": "high",
+            "mood": "chaotic",
+            "continues_to_next_segment": true
+          },
+          "sound_effects": [
+            {
+              "type": "wind rush",
+              "start_time": "0s",
+              "duration": "8s",
+              "volume": "increasing",
+              "description": "Wind noise getting louder"
+            }
+          ]
+        },
+        "instagram_note": "Building tension visually"
+      },
+      {
+        "segment": 36,
+        "duration": 8,
+        "first_frame_description": "Floof on the sled, moving fast, eyes wide, paws gripping sides. Full body visible.",
+        "last_frame_description": "Floof on the sled, spinning in a circle while moving down the hill. Full body visible.",
+        "scene": "Spinning out of control",
+        "action": "The sled hits a patch of ice and spins",
+        "reaction": "Dizziness and panic",
+        "camera": "Shaky cam, tracking the spinning movement",
+        "visual_focus": "The chaotic spinning",
+        "comedy_element": "Floof looks like a spinning top",
+        "creature_sounds": [
+          {
+            "time": "2s",
+            "sound_type": "dizzy warble",
+            "emotion": "dizzy",
+            "description": "Wobbling vocalization"
+          }
+        ],
+        "background": {
+          "location": "Snowy Slope",
+          "setting": "Steeper part of slope",
+          "time_of_day": "morning",
+          "lighting": "bright natural sunlight",
+          "props": [
+            "blue sled"
+          ],
+          "atmosphere": "chaos",
+          "video_prompt_background": "Spinning background of snow and trees"
+        },
+        "audio_timing": {
+          "creature_sounds": {
+            "present": true,
+            "sound_count": 1,
+            "sounds": [
+              {
+                "time": "2s",
+                "type": "warble",
+                "emotion": "dizzy"
+              }
+            ]
+          },
+          "background_music": {
+            "present": true,
+            "track_type": "chaotic",
+            "start_time": "continuous",
+            "end_time": "continuous",
+            "volume": "high",
+            "mood": "frantic",
+            "continues_to_next_segment": true
+          },
+          "sound_effects": [
+            {
+              "type": "spinning whoosh",
+              "start_time": "1s",
+              "duration": "6s",
+              "volume": "high",
+              "description": "Whooshing sound modulating with spin"
+            }
+          ]
+        },
+        "instagram_note": "Chaos energy peak"
+      },
+      {
+        "segment": 37,
+        "duration": 8,
+        "first_frame_description": "Floof on the spinning sled, facing backwards now. Full body visible.",
+        "last_frame_description": "Floof and sled hitting a small snow ramp/bump, launching into the air. Full body visible, mid-air.",
+        "scene": "The Jump",
+        "action": "Floof hits a bump and goes airborne",
+        "reaction": "Total shock",
+        "camera": "Low angle, looking up at Floof flying over camera",
+        "visual_focus": "Floof in the air",
+        "comedy_element": "The freeze-frame feel of the jump",
+        "creature_sounds": [
+          {
+            "time": "4s",
+            "sound_type": "long scream squeak",
+            "emotion": "fear",
+            "description": "High pitched continuous squeak"
+          }
+        ],
+        "background": {
+          "location": "Snowy Slope",
+          "setting": "Base of slope with a bump",
+          "time_of_day": "morning",
+          "lighting": "bright natural sunlight",
+          "props": [
+            "blue sled"
+          ],
+          "atmosphere": "dramatic",
+          "video_prompt_background": "Sky and tree tops visible from low angle"
+        },
+        "audio_timing": {
+          "creature_sounds": {
+            "present": true,
+            "sound_count": 1,
+            "sounds": [
+              {
+                "time": "4s",
+                "type": "squeak",
+                "emotion": "fear"
+              }
+            ]
+          },
+          "background_music": {
+            "present": true,
+            "track_type": "dramatic",
+            "start_time": "continuous",
+            "end_time": "continuous",
+            "volume": "high",
+            "mood": "suspense",
+            "continues_to_next_segment": true
+          },
+          "sound_effects": [
+            {
+              "type": "jump boing",
+              "start_time": "3s",
+              "duration": "1s",
+              "volume": "loud",
+              "description": "Cartoonish launch sound"
+            }
+          ]
+        },
+        "instagram_note": "The 'Oh no' moment everyone waits for"
+      },
+      {
+        "segment": 38,
+        "duration": 8,
+        "first_frame_description": "Floof and sled mid-air, beginning to descend. Full body visible.",
+        "last_frame_description": "Floof separated from sled, tumbling into a large pile of soft powder snow. Full body visible (mostly obscured by snow cloud).",
+        "scene": "The Crash",
+        "action": "Floof lands softly but dramatically in a snowbank",
+        "reaction": "Bracing for impact",
+        "camera": "Slow motion, wide shot to show the size of the snow pile",
+        "visual_focus": "The explosion of snow upon impact",
+        "comedy_element": "The harmless but dramatic poof of snow",
+        "creature_sounds": [
+          {
+            "time": "5s",
+            "sound_type": "muted thud",
+            "emotion": "impact",
+            "description": "Soft thud sound"
+          }
+        ],
+        "background": {
+          "location": "Bottom of Slope",
+          "setting": "Huge snow drift",
+          "time_of_day": "morning",
+          "lighting": "bright natural sunlight",
+          "props": [
+            "snow pile",
+            "flying sled"
+          ],
+          "atmosphere": "impactful",
+          "video_prompt_background": "White snow filling the frame"
+        },
+        "audio_timing": {
+          "creature_sounds": {
+            "present": false,
+            "sound_count": 0,
+            "sounds": []
+          },
+          "background_music": {
+            "present": true,
+            "track_type": "silence",
+            "start_time": "4s",
+            "end_time": "8s",
+            "volume": "off",
+            "mood": "silence for effect",
+            "continues_to_next_segment": true
+          },
+          "sound_effects": [
+            {
+              "type": "snow poof",
+              "start_time": "4s",
+              "duration": "2s",
+              "volume": "loud",
+              "description": "Heavy snow displacement sound"
+            }
+          ]
+        },
+        "instagram_note": "Satisfying visual impact"
+      },
+      {
+        "segment": 39,
+        "duration": 8,
+        "first_frame_description": "A large pile of disturbed snow. Floof is buried, only his feet/tail are sticking out wiggling. Full body implied (feet visible).",
+        "last_frame_description": "Floof's head popping out of the top of the snow pile, covered in white powder like a sugar donut. Full body buried, head visible.",
+        "scene": "The Aftermath",
+        "action": "Floof digs his way out",
+        "reaction": "Confused blinking",
+        "camera": "Static medium shot, waiting for the movement",
+        "visual_focus": "The wiggling feet then the head pop",
+        "comedy_element": "He looks like a snowman",
+        "creature_sounds": [
+          {
+            "time": "2s",
+            "sound_type": "muffled protest",
+            "emotion": "confusion",
+            "description": "Muffled sounds from under snow"
+          },
+          {
+            "time": "6s",
+            "sound_type": "pop sound",
+            "emotion": "surprise",
+            "description": "Mouth pop sound as head emerges"
+          }
+        ],
+        "background": {
+          "location": "Bottom of Slope",
+          "setting": "Snow drift",
+          "time_of_day": "morning",
+          "lighting": "bright natural sunlight",
+          "props": [
+            "snow"
+          ],
+          "atmosphere": "quiet",
+          "video_prompt_background": "Textured snow pile"
+        },
+        "audio_timing": {
+          "creature_sounds": {
+            "present": true,
+            "sound_count": 2,
+            "sounds": [
+              {
+                "time": "2s",
+                "type": "mumble",
+                "emotion": "confused"
+              }
+            ]
+          },
+          "background_music": {
+            "present": false,
+            "track_type": "none",
+            "start_time": "0s",
+            "end_time": "8s",
+            "volume": "off",
+            "mood": "none",
+            "continues_to_next_segment": false
+          },
+          "sound_effects": [
+            {
+              "type": "shuffling",
+              "start_time": "1s",
+              "duration": "3s",
+              "volume": "medium",
+              "description": "Snow shifting sound"
+            }
+          ]
+        },
+        "instagram_note": "Cute reveal"
+      },
+      {
+        "segment": 40,
+        "duration": 8,
+        "first_frame_description": "Floof's head sticking out of the snow pile, covered in snow. Full body buried, head visible.",
+        "last_frame_description": "Floof shaking the snow off his face and smiling/chirping happily. Full body emerging from snow.",
+        "scene": "Resolution",
+        "action": "Floof shakes off and decides he liked it",
+        "reaction": "Happy and ready for more",
+        "camera": "Close-up on face, slight zoom in",
+        "visual_focus": "The facial expression change from confused to happy",
+        "comedy_element": "Immediate recovery and joy",
+        "creature_sounds": [
+          {
+            "time": "2s",
+            "sound_type": "shake noise",
+            "emotion": "relief",
+            "description": "Brrr-rrr-rrr sound while shaking"
+          },
+          {
+            "time": "5s",
+            "sound_type": "happy giggle",
+            "emotion": "joy",
+            "description": "Cute baby giggle"
+          }
+        ],
+        "background": {
+          "location": "Bottom of Slope",
+          "setting": "Snow drift",
+          "time_of_day": "morning",
+          "lighting": "bright natural sunlight",
+          "props": [
+            "snow"
+          ],
+          "atmosphere": "joyful",
+          "video_prompt_background": "Bright snow background"
+        },
+        "audio_timing": {
+          "creature_sounds": {
+            "present": true,
+            "sound_count": 2,
+            "sounds": [
+              {
+                "time": "5s",
+                "type": "giggle",
+                "emotion": "happy"
+              }
+            ]
+          },
+          "background_music": {
+            "present": true,
+            "track_type": "chill",
+            "start_time": "0s",
+            "end_time": "8s",
+            "volume": "medium",
+            "mood": "happy ending",
+            "continues_to_next_segment": false
+          },
+          "sound_effects": [
+            {
+              "type": "sparkle ding",
+              "start_time": "5s",
+              "duration": "1s",
+              "volume": "low",
+              "description": "Subtle audio sweetener for the smile"
+            }
+          ]
+        },
+        "instagram_note": "End on a high note for replayability"
+      }
+      
+    ],
+    "total_segments_generated": 150
+  }
+}

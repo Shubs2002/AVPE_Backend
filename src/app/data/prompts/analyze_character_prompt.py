@@ -17,217 +17,157 @@ Functions:
 """
 
 
-def get_character_analysis_prompt(character_count: int, character_name: str = None) -> str:
+def get_character_analysis_prompt(character_count: int, character_name: str = None, can_speak: bool = False) -> str:
     """
-    Generate the prompt for analyzing characters from an image.
+    Generate a prompt for analyzing characters from an image.
     
-    This function creates a prompt for extracting detailed character information
-    from images, which is essential for:
-    - Creating consistent character descriptions for video generation
-    - Maintaining visual continuity across multiple video segments
-    - Inferring personality traits and voice characteristics
-    - Generating complete character rosters
+    Returns character data in the exact format needed:
+    - Character name
+    - Gender
+    - Keywords (descriptive traits)
+    - Voice description (creative, detailed sound description)
     
     Args:
         character_count: Number of characters to identify in the image
         character_name: Optional specific name to use for the main character
+        can_speak: Whether character can speak human language (guides voice description format)
         
     Returns:
         str: The formatted prompt for character analysis
     """
     
+    # Determine voice description instructions based on can_speak
+    if can_speak:
+        voice_instruction = """
+    **VOICE DESCRIPTION FORMAT (can_speak = TRUE):**
+    This character CAN SPEAK human language, so voice_description MUST include accent!
+    Format: "[tone] and [ACCENT] and [quality] and [characteristic]"
+    
+    Examples:
+    - "Deep resonant and British accent and powerful commanding and authoritative bass"
+    - "Sweet melodic and American accent and cheerful high-pitched and innocent"
+    - "Gentle aged and Scottish accent and warm grandfatherly and comforting wisdom"
+    
+    CRITICAL: MUST include accent (British, American, French, Scottish, Irish, etc.)
+    """
+    else:
+        voice_instruction = """
+    **VOICE DESCRIPTION FORMAT (can_speak = FALSE):**
+    This character CANNOT SPEAK human language, only makes creature sounds!
+    Format: "[sound type] and [quality] and [characteristic] and [emotion]"
+    
+    Examples:
+    - "Cute creature vocalization and baby animal cooing and high-pitched fantasy squeak"
+    - "Guttural roar and primal growling and savage snarling and beast-like rumbling"
+    - "Mechanical beeps and boops and robotic monotone and electronic processing"
+    
+    CRITICAL: NO accent! Only describe sounds (roars, chirps, beeps, meows, etc.)
+    """
+    
     return f"""
-    You are a professional character designer and visual analyst for film production.
+    You are a character analyst. Analyze this image and provide character information.
     
-    **CRITICAL CONSISTENCY REQUIREMENT**:
-    The video generation model (Veo3) creates each segment independently. To ensure the SAME character appears identically across ALL segments, you MUST provide EXTREMELY DETAILED character descriptions covering EVERY visible feature. Even slight variations in description will result in different-looking characters between segments. Analyze and describe characters with forensic-level detail - every skin tone nuance, every facial feature measurement, every clothing item specification. Think of it as creating a police sketch that must match perfectly across 100 different artists.
+    Task: Analyze this image for {character_count} character(s).
     
-    Task: Analyze this image and create detailed character roster(s) for video generation.
+    {f"Use '{character_name}' as the character name." if character_name else ""}
     
-    Instructions:
-    - Identify and analyze {character_count} character(s) in this image
-    - If there are fewer than {character_count} characters visible, analyze all visible characters
-    - If there are more than {character_count} characters, focus on the most prominent ones
-    - Create detailed descriptions suitable for consistent video generation
-    - Each character should be described in enough detail to maintain visual consistency across multiple video segments
-    {f"- Use '{character_name}' as the character name for the main character" if character_name else ""}
+    {voice_instruction}
     
-    For each character, provide:
-    - Character name (can be descriptive like "Mysterious Woman", "Young Warrior", etc.)
-    - Complete physical appearance details
-    - Clothing and style information
-    - Personality traits (inferred from appearance/pose)
-    - Role suggestions (protagonist, antagonist, supporting, etc.)
-    - Voice and mannerism suggestions
-    - Complete video generation prompt description
+    For the character, provide:
+    1. **name** - Character name
+    2. **gender** - male/female/non-binary/creature/undefined
+    3. **keywords** - Comprehensive string of descriptive keywords (max 500 characters)
+    4. **can_speak** - Boolean: true if character can speak human language, false if only creature sounds
+    5. **voice_description** - Creative, detailed voice/sound description (format depends on can_speak)
     
-    NOTE: Do NOT include an "id" field - it will be automatically generated.
+    **SPEECH DETECTION (can_speak) - CRITICAL:**
+    Analyze the character and determine if they can speak human language:
     
-    Return ONLY valid JSON with this EXACT structure (ONLY characters_roster, nothing else):
+    **can_speak = TRUE** (Can speak words/dialogue):
+    - ✅ Humans (any age, gender, ethnicity)
+    - ✅ Humanoids (elves, dwarves, orcs, aliens with human-like features)
+    - ✅ Anthropomorphic characters (if they look like they can talk)
+    - ✅ Robots/AI with speaking capability (if they have speakers/mouth)
+    - ✅ Magical beings that appear intelligent (wizards, witches, fairies)
+    - ✅ Any character that looks like they could have conversations
+    
+    **can_speak = FALSE** (Only creature sounds/noises):
+    - ❌ Animals (dogs, cats, birds, fish, etc.)
+    - ❌ Monsters (beasts, dragons, demons without human features)
+    - ❌ Creatures (fantasy creatures, mythical beasts)
+    - ❌ Non-speaking robots (R2-D2 style, only beeps)
+    - ❌ Babies/infants (only crying/cooing)
+    - ❌ Any character that would only make sounds, not words
+    
+    **When in doubt:** If the character has a human-like mouth/face and appears intelligent → can_speak = true
+    
+    **Keywords Guidelines:**
+    Analyze the image and generate a comprehensive keyword string covering ALL relevant aspects:
+    - **Species/Type**: human, monster, dragon, cat, dog, robot, alien, fairy, demon, angel, etc.
+    - **Colors**: red, blue, green, golden, silver, black, white, rainbow, multicolored, etc.
+    - **Size**: tiny, small, medium, large, huge, gigantic, towering, etc.
+    - **Nature/Personality**: friendly, aggressive, playful, serious, mysterious, cheerful, grumpy, wise, etc.
+    - **Physical Traits**: fluffy, scaly, furry, smooth, spiky, soft, rough, shiny, etc.
+    - **Appearance**: cute, scary, elegant, rugged, beautiful, ugly, majestic, adorable, etc.
+    - **Age**: young, old, ancient, baby, child, adult, elderly, etc.
+    - **Style**: fantasy, modern, futuristic, medieval, tribal, magical, technological, etc.
+    - **Special Features**: winged, horned, tailed, armored, glowing, transparent, etc.
+    
+    Create a comma-separated string with ALL relevant keywords you observe (max 500 characters).
+    Example: "human, male, warrior, tall, muscular, brown-hair, blue-eyes, armored, medieval, brave, strong, confident, battle-worn, scarred, experienced, adult, serious, determined"
+    
+    **Voice Description Guidelines:**
+    The format DEPENDS on can_speak value:
+    
+    **IF can_speak = TRUE (Speaking Characters):**
+    - Format: "[tone] and [ACCENT] and [quality] and [characteristic]"
+    - MUST include accent (British, American, French, Scottish, Irish, Australian, etc.)
+    - Use " and " to separate phrases (NOT commas)
+    - Include 4-6 descriptive phrases
+    - Focus on how they would SPEAK words
+    
+    Examples:
+    - Male Hero: "Deep resonant and British accent and powerful commanding and authoritative bass"
+    - Young Girl: "Sweet melodic and American accent and cheerful high-pitched and innocent"
+    - Wise Elder: "Gentle aged and Scottish accent and warm grandfatherly and comforting wisdom"
+    - Villain: "Sinister raspy and German accent and menacing low growl and dark threatening"
+    - Princess: "Elegant refined and French accent and soft melodic and graceful"
+    - Warrior: "Strong confident and Irish accent and bold assertive and battle-hardened"
+    - Scientist: "Intelligent precise and German accent and analytical methodical and calm"
+    
+    **IF can_speak = FALSE (Non-Speaking Characters):**
+    - Format: "[sound type] and [quality] and [characteristic] and [emotion]"
+    - NO accent needed (they don't speak human language)
+    - Use " and " to separate phrases (NOT commas)
+    - Include 4-6 descriptive phrases
+    - Focus on SOUNDS they make (roars, chirps, beeps, etc.)
+    
+    Examples:
+    - Cute Creature: "Cute creature vocalization and baby animal cooing and high-pitched fantasy squeak and soft melodic chirp"
+    - Monster: "Guttural roar and primal growling and savage snarling and beast-like rumbling"
+    - Robot: "Mechanical synthesized and digital beeps and boops and robotic monotone and electronic processing"
+    - Dragon: "Deep thunderous roar and ancient rumbling and powerful echoing and majestic beast sounds"
+    - Cat: "Soft meowing and gentle purring and playful chirping and contented trilling"
+    - Dog: "Excited barking and happy panting and playful yipping and friendly woofing"
+    
+    Return ONLY valid JSON with this EXACT structure:
     {{{{
-      "characters_roster": [
-        {{{{
-          "name": "Character Name",
-          "physical_appearance": {{{{
-            "gender": "male/female/non-binary/unknown - be explicit",
-            "estimated_age": "exact age like '28 years old' or narrow range '25-27'",
-            "height": "exact measurement like '5\\'8\\\" / 173cm' or '6\\'2\\\" / 188cm'",
-            "weight_build": "specific like '165 lbs, athletic build' or '180 lbs, muscular'",
-            "body_type": "very specific: 'lean athletic', 'muscular mesomorph', 'slim ectomorph', 'curvy hourglass', etc.",
-            "skin_details": {{{{
-              "skin_tone": "ultra-specific: 'warm honey beige', 'cool porcelain', 'deep mahogany', 'olive tan', 'fair with pink undertones'",
-              "skin_texture": "smooth/textured/freckled/clear/etc.",
-              "skin_undertone": "warm/cool/neutral - specify",
-              "complexion_details": "any blemishes, freckles, beauty marks - exact locations",
-              "skin_condition": "matte/dewy/oily/dry appearance"
-            }}}},
-            "face_structure": {{{{
-              "face_shape": "oval/round/square/heart/diamond/oblong - be precise",
-              "forehead": "high/medium/low, wide/narrow, any lines",
-              "eyebrows": "exact shape: 'thick straight', 'arched thin', 'bushy natural', color, thickness",
-              "eyes_detailed": {{{{
-                "eye_color": "ultra-specific: 'hazel with gold flecks', 'steel blue-gray', 'warm chocolate brown'",
-                "eye_shape": "almond/round/hooded/monolid/deep-set/protruding",
-                "eye_size": "large/medium/small relative to face",
-                "eyelid_type": "single/double/hooded",
-                "eyelashes": "long/short/thick/sparse, natural/mascara",
-                "eye_spacing": "close-set/wide-set/average",
-                "under_eye": "bags/dark circles/smooth - describe"
-              }}}},
-              "nose_detailed": {{{{
-                "nose_shape": "straight/aquiline/button/roman/snub/bulbous",
-                "nose_size": "small/medium/large relative to face",
-                "nose_bridge": "high/low/wide/narrow",
-                "nostrils": "flared/narrow/round"
-              }}}},
-              "cheeks_detailed": {{{{
-                "cheekbone_prominence": "high/low/prominent/subtle",
-                "cheek_fullness": "full/hollow/average",
-                "dimples": "yes/no, location if yes"
-              }}}},
-              "mouth_lips_detailed": {{{{
-                "lip_shape": "full/thin/bow-shaped/heart-shaped/wide",
-                "lip_size": "upper and lower - be specific",
-                "lip_color": "natural pink/rose/brown/red tones",
-                "mouth_width": "wide/narrow/proportionate",
-                "teeth": "visible/hidden, straight/gap/etc.",
-                "smile_type": "wide/subtle/crooked/symmetric"
-              }}}},
-              "jaw_chin_detailed": {{{{
-                "jawline": "sharp/soft/square/rounded/defined",
-                "jaw_width": "wide/narrow/proportionate",
-                "chin_shape": "pointed/rounded/square/cleft",
-                "chin_prominence": "receding/prominent/average"
-              }}}},
-              "ears": {{{{
-                "ear_size": "small/medium/large",
-                "ear_shape": "attached/detached lobes, etc."
-              }}}}
-            }}}},
-            "head_skull_shape": {{{{
-              "head_size": "large/medium/small relative to body",
-              "head_shape": "round/oval/square/long/etc.",
-              "skull_prominence": "flat back/rounded/prominent occipital bone",
-              "cranium_height": "high/medium/low crown"
-            }}}},
-            "hair_details": {{{{
-              "hair_presence": "full head of hair/thinning/balding/completely bald",
-              "baldness_pattern": "if applicable: 'male pattern baldness with receding temples', 'bald crown with side hair', 'completely smooth bald', 'thinning on top', 'no baldness'",
-              "hair_density": "thick coverage/normal/sparse/very thin/bald patches",
-              "hair_color": "ultra-specific: 'ash blonde with platinum highlights', 'jet black with blue undertones', 'auburn with copper tones', 'silver-gray', 'salt and pepper', 'dyed vs natural'",
-              "hair_color_variations": "roots showing, highlights, lowlights, gray streaks, fading",
-              "hair_length": "exact: 'shoulder-length', 'mid-back', 'chin-length bob', 'buzz cut 1/4 inch', 'completely shaved/bald'",
-              "hair_texture": "straight/wavy/curly/coily - specify curl pattern like 2A, 3B, 4C, or 'no hair/bald'",
-              "hair_thickness": "fine/medium/thick/coarse strands, or 'no hair'",
-              "hair_volume": "flat/voluminous/medium, or 'bald/no volume'",
-              "hair_style": "exact description: 'center-parted long layers', 'side-swept bangs with ponytail', 'slicked back undercut', 'buzz cut', 'completely bald and shaved', 'bald with horseshoe pattern'",
-              "hair_condition": "shiny/matte/frizzy/sleek/greasy/dry, or 'smooth bald scalp'",
-              "hairline": "straight/widow\\'s peak/receding/high/low/completely receded/no hairline if bald",
-              "hair_part": "center/side/no part/zigzag, or 'no part - bald'",
-              "scalp_visibility": "scalp showing through hair/no scalp visible/completely visible if bald",
-              "scalp_condition": "if visible or bald: smooth/textured/shiny/matte/freckled/scarred",
-              "facial_hair": "if applicable - exact style: 'full beard', 'goatee', 'mustache', 'stubble', 'clean shaven', length, color, coverage, thickness, grooming style",
-              "facial_hair_pattern": "even/patchy/sparse/thick, exact areas covered",
-              "eyebrow_hair": "ensure consistency with head hair color"
-            }}}},
-            "neck_shoulders": {{{{
-              "neck_length": "long/short/average",
-              "neck_width": "thin/thick/proportionate",
-              "shoulder_width": "broad/narrow/average",
-              "shoulder_shape": "rounded/square/sloped"
-            }}}},
-            "hands_arms": {{{{
-              "arm_length": "long/short/proportionate",
-              "arm_musculature": "toned/soft/muscular/thin",
-              "hand_size": "large/small/proportionate",
-              "finger_length": "long/short/average",
-              "nails": "short/long, manicured/natural, color"
-            }}}},
-            "distinctive_marks": {{{{
-              "scars": "location, size, shape, color",
-              "tattoos": "exact design, location, size, colors",
-              "birthmarks": "location, size, shape, color",
-              "moles_beauty_marks": "exact facial/body locations",
-              "piercings": "type, location, jewelry description",
-              "other_identifiers": "any other unique features"
-            }}}},
-            "facial_expression": "current expression in the image - be very specific",
-            "pose_and_posture": "how they're positioned/standing/sitting - exact description"
-          }}}},
-          "clothing_style": {{{{
-            "primary_outfit": {{{{
-              "top_garment": "exact type, fit, fabric, color, pattern, condition",
-              "bottom_garment": "exact type, fit, fabric, color, pattern, length",
-              "outerwear": "jacket/coat - exact style, length, color, material",
-              "footwear": "exact type, color, material, condition, heel height if applicable",
-              "undergarments_visible": "if any parts visible - straps, waistbands, etc."
-            }}}},
-            "clothing_details": {{{{
-              "fabric_type": "cotton/silk/leather/denim/wool - be specific",
-              "fabric_texture": "smooth/rough/shiny/matte/textured",
-              "fit_style": "tight/loose/fitted/oversized/tailored",
-              "clothing_condition": "new/worn/vintage/distressed/pristine",
-              "layering": "describe each visible layer from inner to outer",
-              "closures": "buttons/zippers/laces - describe",
-              "pockets": "visible pockets, flaps, etc.",
-              "seams_stitching": "visible details, decorative stitching"
-            }}}},
-            "color_palette": {{{{
-              "primary_colors": "exact shades: 'navy blue #001f3f', 'burgundy red', 'forest green'",
-              "secondary_colors": "accent colors, patterns",
-              "color_combinations": "how colors work together",
-              "color_wear_patterns": "fading, stains, variations"
-            }}}},
-            "accessories": {{{{
-              "jewelry": "exact pieces: 'silver chain necklace 18 inches', 'gold hoop earrings 1 inch diameter'",
-              "watches_timepieces": "brand style, wrist, exact appearance",
-              "bags_carried": "type, size, color, material, how carried",
-              "belts": "width, color, buckle style, material",
-              "hats_headwear": "exact style, color, how worn",
-              "scarves_neckwear": "material, color, how tied/worn",
-              "glasses_eyewear": "frame style, color, lens type",
-              "gloves": "if worn - material, length, color",
-              "weapons_tools": "exact type, how carried/worn, condition"
-            }}}},
-            "style_characteristics": {{{{
-              "overall_aesthetic": "modern/vintage/fantasy/professional/casual/etc.",
-              "fashion_era": "if period-specific - exact era and region",
-              "cultural_influences": "specific cultural elements in clothing",
-              "personal_style_markers": "signature pieces, unique combinations",
-              "formality_level": "very formal/business/casual/athletic/etc.",
-              "weather_appropriateness": "summer/winter/all-season wear"
-            }}}},
-            "clothing_consistency_notes": "which items never change, which might vary, how clothing moves"
-          }}}},
-          "personality": "key personality traits inferred from appearance (e.g., 'confident, mysterious, friendly')",
-          "role": "suggested role in story (e.g., 'protagonist', 'antagonist', 'mentor', 'comic relief')",
-          "voice_mannerisms": {{{{
-            "speaking_style": "confident/shy/authoritative/playful/etc.",
-            "accent_or_tone": "neutral/regional/foreign/etc.",
-            "typical_expressions": "facial expressions and gestures they might use"
-          }}}},
-          "video_prompt_description": "ULTRA-COMPLETE description combining ALL above details in a single comprehensive paragraph for video generation - must include EVERY physical feature, skin detail, facial feature, hair characteristic, and clothing item to ensure ZERO variation between segments. This should be a complete, standalone description that can be used directly for video generation."
-        }}}}
-      ]
+      "name": "Character Name",
+      "gender": "male",
+      "keywords": "human, male, warrior, tall, muscular, brown-hair, blue-eyes, armored, medieval, brave, strong, confident",
+      "voice_description": "{('Deep resonant and British accent and powerful commanding and authoritative bass' if can_speak else 'Cute creature vocalization and baby animal cooing and high-pitched fantasy squeak')}"
     }}}}
+    
+    CRITICAL RULES: 
+    1. **voice_description** - Format based on can_speak parameter (already provided):
+       - Follow the format instructions above
+       - Always use " and " to separate phrases (NOT commas)
+       - Include 4-6 descriptive phrases
+    
+    2. **keywords** - SINGLE STRING (not array) with comma-separated descriptors, max 500 characters
+       - Include ALL relevant aspects: species, colors, size, nature, traits, appearance, age, style, features
+    
+    3. **JSON format** - Do NOT return "characters_roster" array, just return the single character object
+    
+    4. **Do NOT include can_speak in response** - It's already provided as input parameter
     """
