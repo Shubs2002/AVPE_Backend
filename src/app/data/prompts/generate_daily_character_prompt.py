@@ -6,7 +6,7 @@ Perfect for Instagram pages showcasing character personality and behavior.
 Maximum 10 segments per generation.
 """
 
-def get_daily_character_prompt(idea: str, character_name: str, creature_language: str, num_segments: int, allow_dialogue: bool = False, num_characters: int = 1) -> str:
+def get_daily_character_prompt(idea: str, character_name: str, creature_language: str, num_segments: int = None, allow_dialogue: bool = False, num_characters: int = 1) -> str:
     """
     Generate prompt for daily character life content using keyframes.
     
@@ -14,7 +14,7 @@ def get_daily_character_prompt(idea: str, character_name: str, creature_language
         idea: The daily life moment/situation (e.g., "character sees his reflection and gets scared")
         character_name: Name of the character(s) - comma-separated for multiple
         creature_language: Voice type(s) - comma-separated for multiple characters
-        num_segments: Number of segments
+        num_segments: Number of segments. If None, Gemini decides automatically based on story needs.
         allow_dialogue: Allow human dialogue/narration (default: False - creature sounds only)
         num_characters: Number of characters (1-5, default: 1)
         
@@ -89,6 +89,23 @@ def get_daily_character_prompt(idea: str, character_name: str, creature_language
     **CREATURE LANGUAGE**: {creature_languages[0]} ({sound_description})
     """
     
+    # Build segment count instruction
+    if num_segments is None:
+        segment_instruction = """
+    **SEGMENT COUNT**: Determine the optimal number of segments (2-10) based on the story.
+    - Simple moments: 2-3 segments
+    - Standard stories: 4-7 segments  
+    - Complex narratives: 8-10 segments
+    - Each segment is 8 seconds
+    - Choose the count that best serves the story without padding or rushing"""
+        total_duration_text = "varies based on segment count"
+    else:
+        segment_instruction = f"""
+    **SEGMENT COUNT**: Generate exactly {num_segments} segments
+    - Each segment is 8 seconds
+    - Total video: ~{num_segments * 8} seconds"""
+        total_duration_text = f"~{num_segments * 8} seconds"
+    
     return f"""
     You are a viral content creator specializing in VISUAL storytelling for Instagram cute creature character content.
     
@@ -96,7 +113,7 @@ def get_daily_character_prompt(idea: str, character_name: str, creature_language
     {dialogue_rules}
     
     Your specialty is creating SHORT, PUNCHY daily life content using ONLY visuals and creature sounds.
-    Each video is ~1 minute total (8 seconds per segment × {num_segments} segments)
+    {segment_instruction}
 
     **CONTENT STYLE - INSTAGRAM VIRAL**:
     - **Relatable**: Everyday situations people recognize
@@ -150,15 +167,15 @@ def get_daily_character_prompt(idea: str, character_name: str, creature_language
     - **Emotional Payoff**: Make viewers feel something (laugh, aww, relate)
     
     **SEGMENT STRUCTURE** (8 seconds each):
-    1. **Hook** (Seg 1-2): Grab attention IMMEDIATELY, set up situation with intrigue
+    1. **Hook** (First 1-2 segments): Grab attention IMMEDIATELY, set up situation with intrigue
        - Start with the most interesting visual
        - Create curiosity: "What will happen next?"
        - Make it relatable or surprising
-    2. **Build** (Seg 3-6): Develop the moment, escalate tension/comedy
+    2. **Build** (Middle segments): Develop the moment, escalate tension/comedy
        - Add complications or obstacles
        - Show character's reactions and emotions
        - Keep energy high, don't let it drag
-    3. **Payoff** (Seg 7-{num_segments}): Satisfying punchline, resolution, or twist
+    3. **Payoff** (Final segments): Satisfying punchline, resolution, or twist
        - Deliver on the hook's promise
        - End with a memorable moment
        - Leave viewers wanting to share or rewatch
@@ -172,12 +189,12 @@ def get_daily_character_prompt(idea: str, character_name: str, creature_language
     
     **CRITICAL: CONTINUOUS STORYTELLING**:
     - **ALL segments MUST be a CONTINUOUS series of events**
-    - **Segments 1 → {num_segments} flow in CHRONOLOGICAL ORDER**
+    - **Segments flow in CHRONOLOGICAL ORDER from first to last**
     - **Each segment picks up EXACTLY where the previous ended**
     - **NO time jumps, NO scene changes, NO disconnected moments**
     - **ONE continuous story from start to finish**
     - **Character's position/pose at END of segment N = START of segment N+1**
-    - **Think of it as ONE video split into {num_segments} parts, NOT {num_segments} separate videos**
+    - **Think of it as ONE video split into multiple parts, NOT separate videos**
     
     **Continuity Examples**:
     - ✅ GOOD: Seg 1 ends with character reaching for object → Seg 2 starts with character touching object
@@ -241,9 +258,10 @@ def get_daily_character_prompt(idea: str, character_name: str, creature_language
       → YES: Each segment is a SEPARATE scene (all need first_frame_description)
       → NO: Segments are CONTINUOUS in one location (only segment 1 needs first_frame_description)
     
-    - Generate {num_segments} segments
+    **SEGMENT COUNT**:
+    {f"- Generate exactly {num_segments} segments" if num_segments else "- Determine optimal segment count (2-10) based on story complexity"}
     - Each segment is 8 seconds
-    - Total video: ~{num_segments * 8} seconds (~1 minute)
+    - Total video: {total_duration_text}
     - **IF CONTINUOUS**: All segments flow seamlessly in chronological order
     - **IF SEPARATE SCENES**: Each segment is a different location/moment (like a montage)
     - Focus on 100% VISUAL comedy and character personality

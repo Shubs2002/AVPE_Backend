@@ -820,7 +820,7 @@ def generate_daily_character_content_v2(
     idea: str,
     character_name: str,
     creature_language: str = "Soft and High-Pitched",
-    num_segments: int = 7,
+    num_segments: int = None,
     allow_dialogue: bool = False,
     num_characters: int = 1
 ):
@@ -836,13 +836,15 @@ def generate_daily_character_content_v2(
     - Supports unlimited segments (auto-splits into sets)
     - Pure visual storytelling by default
     - Multi-character support (1-5 characters)
+    - Auto-determines optimal segment count if not specified
     
     Args:
         idea: The daily life moment/situation
         character_name: Name of the character(s) - comma-separated for multiple
         creature_language: Voice type description
-        num_segments: Number of segments (unlimited)
+        num_segments: Number of segments (unlimited). If None, Gemini decides automatically.
         allow_dialogue: Allow human dialogue/narration (default: False)
+        num_characters: Number of characters in the story
     
     Returns:
         dict: Generated content with enhanced quality
@@ -865,7 +867,7 @@ def generate_daily_character_content_v2(
             detail="creature_language is required. Describe your character's voice"
         )
     
-    if num_segments < 1:
+    if num_segments is not None and num_segments < 1:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Number of segments must be at least 1"
@@ -875,7 +877,7 @@ def generate_daily_character_content_v2(
         from app.services import gemini_service
         
         # For large segment counts, use set-wise generation
-        if num_segments > 10:
+        if num_segments is not None and num_segments > 10:
             content = gemini_service.generate_daily_character_content_in_sets_v2(
                 idea=idea,
                 character_name=character_name,
@@ -885,11 +887,12 @@ def generate_daily_character_content_v2(
                 num_characters=num_characters
             )
         else:
+            # Use single-pass generation (Gemini decides segment count if None)
             content = gemini_service.generate_daily_character_content_v2(
                 idea=idea,
                 character_name=character_name,
                 creature_language=creature_language,
-                num_segments=num_segments,
+                num_segments=num_segments,  # Can be None - Gemini will decide
                 allow_dialogue=allow_dialogue,
                 num_characters=num_characters
             )

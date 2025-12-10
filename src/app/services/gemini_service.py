@@ -31,7 +31,7 @@ def generate_daily_character_content_v2(
     idea: str,
     character_name: str,
     creature_language: str = "Soft and High-Pitched",
-    num_segments: int = 7,
+    num_segments: int = None,
     allow_dialogue: bool = False,
     num_characters: int = 1
 ) -> dict:
@@ -45,7 +45,7 @@ def generate_daily_character_content_v2(
         idea: The daily life moment/situation
         character_name: Name of the character(s) - comma-separated for multiple
         creature_language: Voice type description(s) - comma-separated for multiple
-        num_segments: Number of segments to generate
+        num_segments: Number of segments to generate. If None, Gemini decides automatically.
         allow_dialogue: Allow human dialogue/narration (default: False)
         num_characters: Number of characters (1-5, default: 1)
     
@@ -57,7 +57,7 @@ def generate_daily_character_content_v2(
         print(f"💡 Idea: {idea}")
         print(f"🎭 Character(s): {character_name}")
         print(f"👥 Number of characters: {num_characters}")
-        print(f"🔢 Segments: {num_segments}")
+        print(f"🔢 Segments: {num_segments if num_segments else 'Auto (Gemini decides)'}")
         
         # Get the prompt
         prompt = get_daily_character_prompt(

@@ -1181,8 +1181,8 @@ class GenerateDailyCharacterRequest(BaseModel):
         example=["char_xxx", "char_yyy"]
     )
     num_segments: Optional[int] = Field(
-        7, 
-        description="Number of video segments to generate. Each segment is ~8 seconds. Default 7 = ~1 minute video. Can generate unlimited segments.", 
+        None, 
+        description="Number of video segments to generate. Each segment is ~8 seconds. If not provided, Gemini will automatically determine the optimal number based on the story. Can generate unlimited segments.", 
         ge=1, 
         example=7
     )
@@ -1488,7 +1488,8 @@ async def generate_daily_character_v2_route(
         print(f"🗣️  Speech capability: {'Enabled' if allow_dialogue else 'Disabled (creature sounds only)'}")
         
         # Generate content with character details
-        content = screenwriter_controller.generate_daily_character_content_v2(
+        # Note: This returns {"content": {...}}
+        content_response = screenwriter_controller.generate_daily_character_content_v2(
             idea=payload.idea,
             character_name=character_name,
             creature_language=creature_language,
@@ -1497,20 +1498,26 @@ async def generate_daily_character_v2_route(
             num_characters=len(characters)  # Pass the actual number of characters
         )
         
-        # Add character metadata to response for video generation
-        result["character_metadata"] = {
-            "character_ids": character_ids,
-            "characters": [
-                {
-                    "character_id": char["character_id"],
-                    "character_name": char["character_name"],
-                    "cloudinary_url": char["cloudinary_url"],
-                    "gender": char["gender"],
-                    "voice_description": char["voice_description"],
-                    "can_speak": char.get("can_speak", False)
+        # Build result with content_data containing both content and character_metadata
+        # content_response already has {"content": {...}}, so we merge it with character_metadata
+        result = {
+            "content_data": {
+                **content_response,  # This adds "content": {...}
+                "character_metadata": {
+                    "character_ids": character_ids,
+                    "characters": [
+                        {
+                            "character_id": char["character_id"],
+                            "character_name": char["character_name"],
+                            "cloudinary_url": char["cloudinary_url"],
+                            "gender": char["gender"],
+                            "voice_description": char["voice_description"],
+                            "can_speak": char.get("can_speak", False)
+                        }
+                        for char in characters
+                    ]
                 }
-                for char in characters
-            ]
+            }
         }
         
         return result
