@@ -23,6 +23,7 @@ def get_character_analysis_prompt(character_count: int, character_name: str = No
     
     Returns character data in the exact format needed:
     - Character name
+    - Subject (what the character is - AI-detected from image)
     - Gender
     - Keywords (descriptive traits)
     - Voice description (creative, detailed sound description)
@@ -75,10 +76,11 @@ def get_character_analysis_prompt(character_count: int, character_name: str = No
     
     For the character, provide:
     1. **name** - Character name
-    2. **gender** - male/female/non-binary/creature/undefined
-    3. **keywords** - Comprehensive string of descriptive keywords (max 500 characters)
-    4. **can_speak** - Boolean: true if character can speak human language, false if only creature sounds
-    5. **voice_description** - Creative, detailed voice/sound description (format depends on can_speak)
+    2. **subject** - DETAILED description of how the character looks (appearance, colors, features, style)
+    3. **gender** - male/female/non-binary/creature/undefined
+    4. **keywords** - Comprehensive string of descriptive keywords (max 500 characters)
+    5. **can_speak** - Boolean: true if character can speak human language, false if only creature sounds
+    6. **voice_description** - Creative, detailed voice/sound description (format depends on can_speak)
     
     **SPEECH DETECTION (can_speak) - CRITICAL:**
     Analyze the character and determine if they can speak human language:
@@ -150,24 +152,47 @@ def get_character_analysis_prompt(character_count: int, character_name: str = No
     - Cat: "Soft meowing and gentle purring and playful chirping and contented trilling"
     - Dog: "Excited barking and happy panting and playful yipping and friendly woofing"
     
+    **Subject Guidelines - DETAILED APPEARANCE DESCRIPTION:**
+    The subject field should be a DETAILED description of how the character looks, including:
+    - **Type/Species**: What kind of character (human, creature, robot, animal, fantasy being, etc.)
+    - **Physical Features**: Size, body shape, distinctive features
+    - **Colors**: Main colors, patterns, color combinations
+    - **Style/Aesthetic**: Overall visual style (cute, scary, elegant, futuristic, etc.)
+    - **Key Visual Elements**: Most noticeable visual characteristics
+    
+    **Length**: 10-30 words (detailed but concise)
+    
+    **Examples:**
+    - "A fluffy pink creature with big round eyes, small body, soft fur, and adorable innocent expression"
+    - "A tall muscular human warrior with brown hair, blue eyes, wearing medieval armor with battle scars"
+    - "A sleek silver humanoid robot with glowing blue circuits, mechanical joints, and futuristic design"
+    - "A majestic red dragon with golden scales, large wings, sharp claws, and fierce yellow eyes"
+    - "A small orange tabby cat with white paws, green eyes, fluffy tail, and playful demeanor"
+    - "An ethereal fairy with translucent wings, flowing white dress, glowing aura, and delicate features"
+    
+    Focus on VISUAL APPEARANCE that helps identify and describe the character for video generation.
+    
     Return ONLY valid JSON with this EXACT structure:
     {{{{
       "name": "Character Name",
+      "subject": "A fluffy pink creature with big round eyes, small body, soft fur, and adorable innocent expression",
       "gender": "male",
       "keywords": "human, male, warrior, tall, muscular, brown-hair, blue-eyes, armored, medieval, brave, strong, confident",
       "voice_description": "{('Deep resonant and British accent and powerful commanding and authoritative bass' if can_speak else 'Cute creature vocalization and baby animal cooing and high-pitched fantasy squeak')}"
     }}}}
     
     CRITICAL RULES: 
-    1. **voice_description** - Format based on can_speak parameter (already provided):
+    1. **subject** - MUST be a DETAILED visual description (10-30 words) of how the character looks, including type, features, colors, and style
+    
+    2. **voice_description** - Format based on can_speak parameter (already provided):
        - Follow the format instructions above
        - Always use " and " to separate phrases (NOT commas)
        - Include 4-6 descriptive phrases
     
-    2. **keywords** - SINGLE STRING (not array) with comma-separated descriptors, max 500 characters
+    3. **keywords** - SINGLE STRING (not array) with comma-separated descriptors, max 500 characters
        - Include ALL relevant aspects: species, colors, size, nature, traits, appearance, age, style, features
     
-    3. **JSON format** - Do NOT return "characters_roster" array, just return the single character object
+    4. **JSON format** - Do NOT return "characters_roster" array, just return the single character object
     
-    4. **Do NOT include can_speak in response** - It's already provided as input parameter
+    5. **Do NOT include can_speak in response** - It's already provided as input parameter
     """

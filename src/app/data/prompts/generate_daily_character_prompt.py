@@ -6,7 +6,7 @@ Perfect for Instagram pages showcasing character personality and behavior.
 Maximum 10 segments per generation.
 """
 
-def get_daily_character_prompt(idea: str, character_name: str, creature_language: str, num_segments: int = None, allow_dialogue: bool = False, num_characters: int = 1) -> str:
+def get_daily_character_prompt(idea: str, character_name: str, creature_language: str, character_subject: str = "creature", num_segments: int = None, allow_dialogue: bool = False, num_characters: int = 1) -> str:
     """
     Generate prompt for daily character life content using keyframes.
     
@@ -14,6 +14,7 @@ def get_daily_character_prompt(idea: str, character_name: str, creature_language
         idea: The daily life moment/situation (e.g., "character sees his reflection and gets scared")
         character_name: Name of the character(s) - comma-separated for multiple
         creature_language: Voice type(s) - comma-separated for multiple characters
+        character_subject: What the character is (e.g., "fluffy pink creature, small robot")
         num_segments: Number of segments. If None, Gemini decides automatically based on story needs.
         allow_dialogue: Allow human dialogue/narration (default: False - creature sounds only)
         num_characters: Number of characters (1-5, default: 1)
@@ -70,11 +71,26 @@ def get_daily_character_prompt(idea: str, character_name: str, creature_language
     - **VISUAL COMEDY** - Show emotions and reactions through actions, not words
         """
     
-    # Build character section
+    # Build character section with subject handling
+    # Parse character subjects for multi-character
+    character_subjects = [subj.strip() for subj in character_subject.split(',')]
+    while len(character_subjects) < len(character_names):
+        character_subjects.append(character_subjects[0] if character_subjects else "creature")
+    
     if is_multi_character:
+        # Build detailed character descriptions with name, appearance, and voice
+        character_details = []
+        for name, subj, lang in zip(character_names, character_subjects, creature_languages):
+            sound_desc = creature_sound_guide.get(lang, f"creature sounds that are {lang}")
+            character_details.append(f"**{name}**: Appearance: {subj} | Voice: {sound_desc}")
+        character_details_section = "\n    ".join(character_details)
+        
         character_section = f"""
     **CHARACTERS** ({num_characters} characters):
     {characters_section}
+    
+    **CHARACTER DETAILS** (appearance + voice for each character):
+    {character_details_section}
     
     **MULTI-CHARACTER RULES**:
     - Each character has unique sounds as described above
@@ -82,11 +98,26 @@ def get_daily_character_prompt(idea: str, character_name: str, creature_language
     - Track which characters appear in each segment using "characters_present" field
     - Each character's sounds should match their personality
     - Frame descriptions must specify each character's position when multiple are present
+    
+    **SUBJECT FIELD FOR VEO_PROMPT** (CRITICAL - Include name, appearance AND voice):
+    - In EVERY veo_prompt, include a detailed subject description for EACH character present
+    - Format: "[Name] ([appearance description]) with [voice description]"
+    - Example for 2 characters: "Floof (fluffy pink creature with big curious eyes) with soft high-pitched chirps, and Poof (small blue robot with glowing antenna) with mechanical beeping sounds"
+    - This helps Veo understand WHO each character is, what they LOOK like, and how they SOUND
+    - Include voice descriptions so Veo can generate appropriate audio for each character
     """
     else:
         character_section = f"""
     **CHARACTER**: {character_names[0]}
-    **CREATURE LANGUAGE**: {creature_languages[0]} ({sound_description})
+    **CHARACTER APPEARANCE**: {character_subjects[0]}
+    **CHARACTER VOICE**: {creature_languages[0]} ({sound_description})
+    
+    **SUBJECT FIELD FOR VEO_PROMPT** (CRITICAL - Include name, appearance AND voice):
+    - In EVERY veo_prompt, include the character's name, appearance, and voice description
+    - Format: "{character_names[0]} ([appearance]) with [voice description]"
+    - Example: "{character_names[0]} ({character_subjects[0]}) with {sound_description}"
+    - This helps Veo understand WHO the character is, what they LOOK like, and how they SOUND
+    - Include voice description so Veo can generate appropriate audio
     """
     
     # Build segment count instruction
@@ -101,10 +132,15 @@ def get_daily_character_prompt(idea: str, character_name: str, creature_language
         total_duration_text = "varies based on segment count"
     else:
         segment_instruction = f"""
-    **SEGMENT COUNT**: Generate exactly {num_segments} segments
+    **SEGMENT COUNT - CRITICAL REQUIREMENT**: 
+    - You MUST generate EXACTLY {num_segments} segments - NO MORE, NO LESS
+    - This is a STRICT requirement - do NOT generate fewer segments
+    - If the story feels too short, expand scenes with more detail and moments
+    - If the story feels too long, that's fine - use all {num_segments} segments
     - Each segment is 8 seconds
-    - Total video: ~{num_segments * 8} seconds"""
-        total_duration_text = f"~{num_segments * 8} seconds"
+    - Total video: ~{num_segments * 8} seconds (~{num_segments * 8 / 60:.1f} minutes)
+    - VALIDATION: Your response MUST contain exactly {num_segments} segment objects in the segments array"""
+        total_duration_text = f"~{num_segments * 8} seconds (~{num_segments * 8 / 60:.1f} minutes)"
     
     return f"""
     You are a viral content creator specializing in VISUAL storytelling for Instagram cute creature character content.
@@ -204,36 +240,73 @@ def get_daily_character_prompt(idea: str, character_name: str, creature_language
     - ❌ BAD: Seg 2 ends standing → Seg 3 starts sitting (position jump)
     - ❌ BAD: Seg 4 ends scared → Seg 5 starts happy with no transition (emotion jump)
     
-    **CAMERA WORK** (CRITICAL FOR VISUAL STORYTELLING):
+    **CAMERA POSITIONING AND MOTION** (CRITICAL FOR CINEMATIC STORYTELLING):
     
-    **Camera Angles**:
-    - **Close-up**: Face/eyes for emotions and reactions (great for comedy)
-    - **Medium shot**: Upper body, shows actions and gestures
-    - **Wide shot**: Full body and environment, establishes scene
-    - **Extreme close-up**: Specific detail (eyes widening, paw reaching, etc.)
-    - **Over-the-shoulder**: POV perspective, immersive
-    - **Low angle**: Looking up at character (makes them look bigger/powerful)
-    - **High angle**: Looking down at character (makes them look small/vulnerable)
-    - **Eye level**: Neutral, relatable perspective
+    Create smooth, cinematic camera movements that enhance the visual narrative. Use descriptive, flowing language.
     
-    **Camera Movements**:
-    - **Static**: No movement, stable shot (for calm moments)
-    - **Pan**: Horizontal movement (following action)
-    - **Tilt**: Vertical movement (up/down)
-    - **Zoom in**: Moving closer (building tension/focus)
-    - **Zoom out**: Moving away (revealing context)
-    - **Tracking**: Following character movement
-    - **Shaky cam**: Handheld feel (for chaos/excitement)
-    - **Slow motion**: ONLY for comedic emphasis (use sparingly)
-    - **Quick cuts**: Fast-paced energy (PREFERRED for viral content)
-    - **PACING**: Default to FAST, ENERGETIC camera work - keep it snappy and dynamic
+    **Camera Positioning (Shot Types)**:
+    - **Aerial view**: Bird's eye perspective from above
+    - **Eye-level**: Neutral, relatable perspective at character's eye height
+    - **Top-down shot**: Directly overhead, looking straight down
+    - **Low angle / Worm's eye**: Looking up from ground level (makes subject appear powerful/imposing)
+    - **High angle**: Looking down at subject (makes subject appear small/vulnerable)
+    - **Close-up shot**: Tight framing on face or specific detail
+    - **Medium shot**: Waist-up or upper body framing
+    - **Wide shot**: Full body and environment visible
+    - **Extreme close-up**: Macro detail (eyes, water drops, textures)
+    - **Over-the-shoulder**: POV perspective from behind character
+    - **POV shot**: First-person view from character's perspective
+    - **Tracking drone view**: Following subject from aerial perspective
     
-    **Camera Tips for Instagram**:
-    - **Vary angles** - Don't use same shot for every segment
-    - **Match emotion** - Close-ups for reactions, wide for action
-    - **Dynamic movement** - Static shots can be boring
-    - **POV shots** - Make viewers feel like they're there
-    - **Comedic framing** - Unexpected angles enhance humor
+    **Camera Movements (Cinematic Techniques)**:
+    - **Dolly in/out**: Camera moves forward toward or backward away from subject
+      Example: "The camera dollies in, revealing the tension in his jaw and desperation etched on his face"
+    - **Pull back**: Camera slowly moves backward to reveal more of the scene
+      Example: "The camera slowly pulls back to a medium-wide shot, revealing the breathtaking scene"
+    - **Pan**: Smooth horizontal sweep across the scene
+      Example: "The camera slowly pans across the whimsical, sunlit scene"
+    - **Tilt**: Vertical movement up or down
+    - **Zoom in/out**: Lens zooms to change focal length
+      Example: "Zoomed in maintaining close-up detail of water drips"
+    - **Tracking shot**: Camera follows subject's movement smoothly
+    - **Orbiting**: Camera circles around the subject
+    - **Crane shot**: Camera moves up or down on a vertical axis
+    - **Handheld**: Slight natural camera shake for realism
+    - **Smooth glide**: Steady, flowing camera movement
+    - **Static hold**: Camera remains still, letting action unfold
+    
+    **Cinematic Camera Description Format**:
+    Write camera movements as flowing, descriptive sentences that paint the visual:
+    
+    ✅ GOOD Examples:
+    - "The camera slowly pulls back to a medium-wide shot, revealing the breathtaking scene as the dress's long train glides and floats gracefully on the water's surface behind her"
+    - "The camera slowly pans across the whimsical, sunlit scene as the miniature figures expertly carve the turquoise water"
+    - "Close up shot of melting icicles on a frozen rock wall with cool blue tones, zoomed in maintaining close-up detail of water drips"
+    - "The camera dollies to show a close up of a desperate man in a green trench coat"
+    - "The camera dollies in, revealing the tension in his jaw and the desperation etched on his face as he struggles to make the call"
+    - "Aerial view tracking the character as they run through the forest, camera smoothly following from above"
+    - "Eye-level shot with camera slowly circling around the character, revealing their surroundings"
+    - "Low angle worm's eye view as the camera tilts up, making the character appear towering and powerful"
+    
+    ❌ BAD Examples (too simple):
+    - "Camera moves"
+    - "Close up"
+    - "Wide shot"
+    
+    **Camera Guidelines for Veo Prompt**:
+    1. **Be Descriptive**: Use flowing, cinematic language
+    2. **Specify Movement**: Describe HOW the camera moves (slowly pulls back, smoothly pans, dollies in)
+    3. **Include Framing**: Mention shot composition (close-up, wide shot, medium shot)
+    4. **Add Context**: Explain what the camera movement reveals or emphasizes
+    5. **Smooth Transitions**: Camera movements should feel natural and purposeful
+    6. **Match Emotion**: Camera movement should enhance the mood (slow for dramatic, quick for energetic)
+    
+    **Camera Tips for Viral Content**:
+    - **Vary camera work** - Don't use same angle/movement for every segment
+    - **Dynamic movement** - Use camera motion to add energy and visual interest
+    - **Match emotion** - Close-ups for reactions, wide shots for action, dollies for reveals
+    - **Cinematic flow** - Smooth, professional camera movements enhance production value
+    - **POV immersion** - First-person shots make viewers feel present in the scene
     
     **ACTION PACING** (CRITICAL FOR VIRAL CONTENT):
     - **FAST & ENERGETIC**: Character movements should be quick, lively, and dynamic
@@ -402,24 +475,18 @@ def get_daily_character_prompt(idea: str, character_name: str, creature_language
         {{
           "segment": 1,
           "duration": 8,
-          "characters_present": ["Character1", "Character2"],  // List of character names in this segment (for multi-character content)
-          "veo_prompt": "CRITICAL - VEO 3 STRUCTURED PROMPT. Format as newline-separated sections:\\nAction: [What's happening - movements, events, interactions. NO character appearance description since first_frame image defines that. Be specific and descriptive about the action sequence.]\\nStyle: [Visual style: 'Cute character animation', 'Indie drama', etc. + Format: 'Instagram vertical', 'Cinematic', etc. + Mood: 'Comedic timing', 'Dramatic', 'Wholesome', etc. + Visual qualities: 'Vibrant colors', 'Warm tones', 'Soft focus', etc.]\\nCamera: [Camera angle: 'Low angle', 'Eye-level', 'High angle' + Position: 'Wide shot', 'Close-up', 'Medium shot' + Movement: 'Static', 'Tracking', 'Zoom in/out', 'Pan' + Composition: 'Full body visible', 'Over-shoulder' + Focus: 'Deep focus', 'Shallow focus']\\nAmbiance: [Lighting: 'Soft morning sunlight', 'Dramatic shadows' + Direction: 'From upper right', 'Backlighting' + Atmosphere: 'Fresh after-rain', 'Misty' + Color tones: 'Warm tones', 'Cool blue tones' + Environment mood: 'Peaceful', 'Tense', 'Playful']\\nAudio: [Creature sounds with timing: 'At 1.0s, playful high-pitched chirping sounds' + Sound effects: 'At 5.5s, small splash sound' + Dialogue if allowed: 'At 3.0s, says softly Hello' + Ambient: 'Ambient forest sounds with gentle breeze rustling leaves' + Background: 'Distant bird calls, soft wind']\\n\\nEXAMPLE:\\nveo_prompt: \\"Action: Bouncing happily toward a large clear puddle on a mossy forest path, stops abruptly at the edge, leans in close to investigate the reflection, waves a paw tentatively at it. The reflection waves back instantly. Eyes widen in shock and jumps back in panic, landing on the grass with a small bounce.\\nStyle: Cute character animation, vibrant colors, comedic timing, family-friendly content, Instagram-optimized vertical format.\\nCamera: Low angle wide shot tracking the movement as approaching the puddle, transitions smoothly to over-the-shoulder view looking down into the water, then quick zoom out as jumping back. Deep focus keeping both character and environment sharp, full body visible throughout.\\nAmbiance: Soft morning sunlight filtering through tall pine trees, dappled light creating patterns on the mossy ground, warm natural tones, fresh after-rain atmosphere with slight mist.\\nAudio: At 1.0s, playful high-pitched chirping sounds expressing happiness and curiosity. At 3.5s, soft curious cooing as investigating. At 5.5s, sharp startled squeak when reflection moves. At 7.0s, scared high-pitched squeak with small splash sound as landing. Ambient forest sounds throughout with gentle breeze rustling leaves and distant bird calls.\\"",
-          "first_frame_description": "ONLY include this field if there is a SCENE CHANGE or this is segment 1. If the scene continues from previous segment, set to null or empty string. When included: ULTRA-DETAILED frame description with Camera angle, Character's exact pose (specify position for EACH character if multiple), Full body visibility (include 'Full body visible from head to toe' in EITHER first or last frame, or both if action allows), Specific objects, Lighting details, Environment specifics. For multi-character: specify each character's position (e.g., 'Floof on left, Buddy on right'). Minimum 30 words when present.",
-          "last_frame_description": "ALWAYS REQUIRED. ULTRA-DETAILED frame description including: Camera angle (e.g., 'Close-up from front', 'Wide shot from behind', 'Side profile medium shot'), Character's exact final pose (e.g., 'leaning forward with paws on ground', 'jumping mid-air with arms spread'), Full body visibility (include 'Full body visible from head to toe' in EITHER first or last frame, or both if action allows - at least ONE frame per segment must show full body), Specific objects and their positions (e.g., 'red car 3 feet behind', 'sled spinning to the right'), Lighting changes (e.g., 'shadows lengthening', 'sunlight reflecting off snow'), Environmental details (e.g., 'disturbed snow showing movement', 'trees swaying in wind'). For multi-character: specify each character's position and what they're doing. This frame will be generated by Imagen. Minimum 30 words.",
+          "characters_present": ["Character1", "Character2"],
+          "veo_prompt": "CRITICAL - VEO 3 DESCRIPTIVE PROMPT FORMAT. Write as a flowing, descriptive paragraph with keyword tags in parentheses. Include ALL these elements naturally woven together:\\n\\n**FORMAT**: Write a single flowing description with (keyword tags) like this example:\\n'Close up shot (composition) of Floof (fluffy pink creature with big curious eyes) with soft high-pitched chirps (subject) bouncing happily toward a puddle (action) in a sunlit forest clearing (context) with warm golden tones (ambiance), the camera slowly dollies forward (camera motion) tracking the movement as Floof stops at the water's edge (action), soft morning light filtering through trees (lighting), cute character animation style (style), shallow focus on character (focus), at 1.0s playful high-pitched chirps expressing curiosity (audio/sfx), at 4.0s soft surprised squeak as seeing reflection (audio/sfx), gentle forest ambiance with rustling leaves and distant bird calls (ambient audio).'\\n\\n**SUBJECT FORMAT** (CRITICAL - Include name, appearance AND voice):\\n- For SINGLE character: '[Name] ([appearance description]) with [voice description]'\\n- Example: 'Floof (fluffy pink creature with big curious eyes) with soft high-pitched chirps'\\n- For MULTIPLE characters: '[Name1] ([appearance1]) with [voice1], and [Name2] ([appearance2]) with [voice2]'\\n- Example: 'Floof (fluffy pink creature with big curious eyes) with soft high-pitched chirps, and Poof (small blue robot with glowing antenna) with mechanical beeping sounds'\\n- This helps Veo understand WHO each character is, what they LOOK like, and how they SOUND\\n\\n**REQUIRED ELEMENTS** (include keyword tag in parentheses):\\n- (subject): Character name + appearance + voice description (see format above)\\n- (action): What the subject is doing - movements, events, interactions\\n- (context): The setting/environment where action takes place\\n- (composition): Shot framing - wide shot, close-up, medium shot, two-shot, single-shot, extreme close-up\\n- (camera motion): How camera moves - dollies in/out, pulls back, pans across, tilts, zooms, tracking, orbiting, static hold\\n- (camera position): Where camera is - aerial view, eye-level, low angle, high angle, top-down, worm's eye, POV shot\\n- (style): Visual style - cute character animation, cinematic, film noir, sci-fi, horror film, animated, Instagram vertical\\n- (ambiance): Color and light mood - warm tones, cool blue tones, golden hour, night, dramatic shadows\\n- (lighting): Light source and quality - soft morning sunlight, dramatic backlighting, dappled light, neon glow\\n- (focus): Lens effects - shallow focus, deep focus, soft focus, macro lens, wide-angle lens\\n- (audio/sfx): Creature sounds and sound effects with timing - 'at 2.0s playful chirps expressing excitement (audio/sfx)', 'at 5.0s splash sound as hitting water (audio/sfx)'\\n- (dialogue): Character speech in quotes with timing (ONLY if allow_dialogue=True) - 'at 3.0s Floof chirps softly \"Wow!\" (dialogue)'\\n- (ambient audio): Environmental soundscape - 'forest ambiance with bird calls (ambient audio)', 'city traffic hum (ambient audio)'\\n- (overlay_text): Text to display on screen - ONLY include if there's actual text to show, otherwise OMIT entirely\\n- (overlay_position): Where text appears - top, center, bottom, top-left, bottom-right - ONLY include if overlay_text exists\\n- (overlay_type): Type of text - title, subtitle, caption, description - ONLY include if overlay_text exists\\n\\n**AUDIO IN VEO_PROMPT** (CRITICAL - All audio goes IN the veo_prompt):\\n- **Creature Sounds**: Include timing for character sounds - 'at 1.0s playful high-pitched chirps (audio/sfx)', 'at 4.0s surprised squeak (audio/sfx)'\\n- **Dialogue** (only if allow_dialogue=True): Include speech with timing - 'at 3.0s Floof trills softly \"This is amazing!\" (dialogue)'\\n- **Sound Effects**: Environmental sounds with timing - 'at 2.5s splash sound (audio/sfx)', 'at 6.0s door creaking (audio/sfx)'\\n- **Ambient Audio**: Background soundscape - 'gentle forest ambiance with rustling leaves (ambient audio)'\\n- **Voice Matching**: Match sounds to character voice - 'Floof chirps happily in soft high-pitched tones (audio/sfx)'\\n\\n**EXAMPLE VEO_PROMPT (Single Character - NO dialogue)**:\\n'Medium wide shot (composition) of Floof (fluffy pink creature with big curious eyes and soft fur) with playful high-pitched chirps and squeaks (subject) bouncing excitedly toward a shimmering puddle on a mossy forest path (action) in a magical woodland clearing (context), the camera smoothly tracks alongside at eye-level (camera position) then slowly dollies in (camera motion) as Floof stops at the water's edge and peers down curiously (action), cute character animation style with vibrant saturated colors (style), warm golden morning light filtering through tall pine trees creating dappled patterns on the moss (lighting) with soft natural tones and slight mist (ambiance), deep focus keeping both character and environment sharp (focus), at 1.0s playful high-pitched chirping sounds expressing happiness (audio/sfx), at 4.0s soft curious cooing as investigating the reflection (audio/sfx), at 6.0s surprised squeak seeing own reflection (audio/sfx), gentle forest ambiance with rustling leaves and distant bird calls throughout (ambient audio).'\\n\\n**EXAMPLE VEO_PROMPT (Single Character - WITH dialogue allowed)**:\\n'Medium shot (composition) of Floof (fluffy pink creature with big curious eyes) with soft high-pitched chirps (subject) sitting at a tiny desk looking at a computer screen (action) in a cozy bedroom at night (context), the camera slowly dollies in (camera motion) from eye-level (camera position) as Floof's eyes widen at something on screen (action), cute character animation style (style), warm lamp light casting soft shadows (lighting) with cozy amber tones (ambiance), at 1.0s soft lo-fi music playing in background (ambient audio), at 2.0s Floof chirps curiously (audio/sfx), at 4.0s Floof gasps and squeaks excitedly \"No way!\" (dialogue), at 6.0s happy bouncing chirps (audio/sfx), keyboard clicking sounds (ambient audio).'\\n\\n**EXAMPLE VEO_PROMPT (Multiple Characters)**:\\n'Wide two-shot (composition) of Floof (fluffy pink creature with big curious eyes) with soft high-pitched chirps, and Poof (small blue robot with glowing antenna) with mechanical beeping sounds (subject) walking together through a snowy meadow (action) in a winter wonderland at sunset (context), the camera slowly pulls back (camera motion) from eye-level (camera position) revealing the vast snowy landscape (action), cute character animation style (style), warm orange sunset light casting long shadows on pristine snow (lighting) with cool blue tones in shadows (ambiance), at 1.0s crunching footsteps in snow (audio/sfx), at 2.0s Floof makes excited chirping sounds (audio/sfx), at 4.0s Poof responds with happy beeping (audio/sfx), at 6.0s both characters make joyful sounds together (audio/sfx), peaceful winter ambiance with gentle wind (ambient audio).'\\n\\n**OVERLAY TEXT EXAMPLE** (when needed):\\n'...the creature looks up with wonder (action), \"Chapter 1: The Discovery\" (overlay_text) appearing at the top of frame (overlay_position) as a title (overlay_type)...'\\n\\n**AUDIO PROMPTING RULES**:\\n- **ALL audio goes IN the veo_prompt** - no separate audio fields\\n- **Creature Sounds**: Always include with timing - 'at 2.0s happy chirps (audio/sfx)'\\n- **Dialogue**: ONLY if allow_dialogue=True - 'at 3.0s Floof says \"Wow!\" (dialogue)'\\n- **Sound Effects**: Environmental sounds - 'at 5.0s splash (audio/sfx)'\\n- **Ambient**: Background soundscape - 'forest ambiance (ambient audio)'\\n- **Timing Format**: Use 'at X.Xs' format for precise timing",
+          "first_frame_description": "**CONDITIONAL FIELD - NOT ALWAYS REQUIRED**\\n\\n**WHEN TO INCLUDE** (provide detailed description):\\n- Segment 1: ALWAYS include (establishes the starting scene)\\n- Scene change: Include when location/setting changes from previous segment\\n- Different scenes idea: Include for EVERY segment if idea mentions 'different scenes/locations'\\n\\n**WHEN TO SET TO NULL** (consecutive/continuous scenes):\\n- Set to null when scene continues from previous segment without location change\\n- Set to null when action flows directly from previous segment's ending\\n- Example: If segment 2 continues in same room as segment 1, set to null\\n\\n**WHEN INCLUDED** (minimum 30 words):\\nULTRA-DETAILED frame description with: Camera angle, Character's exact pose (specify position for EACH character if multiple), Full body visibility (include 'Full body visible from head to toe' in EITHER first or last frame), Specific objects, Lighting details, Environment specifics. For multi-character: specify each character's position (e.g., 'Floof on left, Poof on right').",
+          "last_frame_description": "**ALWAYS REQUIRED** - Never set to null.\\n\\nULTRA-DETAILED frame description (minimum 30 words) including: Camera angle (e.g., 'Close-up from front', 'Wide shot from behind'), Character's exact final pose (e.g., 'leaning forward with paws on ground'), Full body visibility (at least ONE frame per segment must show full body), Specific objects and positions, Lighting details, Environmental details. For multi-character: specify each character's position and action. This frame will be generated by Imagen.",
           "scene": "What's happening visually",
           "action": "Specific character action (for multi-character: describe each character's action)",
           "reaction": "Character's reaction/emotion (for multi-character: each character's reaction)",
           "camera": "Specific camera angle and movement (e.g., 'Close-up on face, slow zoom in', 'Wide shot, tracking left', 'Low angle, static')",
           "visual_focus": "What viewers should notice",
-          "comedy_element": "What makes this funny/engaging",
-          "creature_sounds": [
-            {{
-              "time": "exact second (e.g., '2.5s')",
-              "sound_type": "happy chirp/confused grunt/scared squeak/excited trill/etc.",
-              "emotion": "what emotion the sound conveys",
-              "description": "detailed sound description matching {creature_language}"
-            }}
-          ],
+          "overlay_text": "Text to display on screen - OMIT this field entirely if no overlay needed",
+          "overlay_position": "top/center/bottom/top-left/top-right/bottom-left/bottom-right - OMIT if no overlay",
+          "overlay_type": "title/subtitle/caption/description - OMIT if no overlay",
           "background": {{
             "location": "Specific location",
             "setting": "Detailed setting description",
@@ -428,37 +495,6 @@ def get_daily_character_prompt(idea: str, character_name: str, creature_language
             "props": ["key props in scene"],
             "atmosphere": "mood and vibe",
             "video_prompt_background": "Complete background description for AI"
-          }},
-          "audio_timing": {{
-            "creature_sounds": {{
-              "present": true/false,
-              "sound_count": "number of creature sounds in this segment",
-              "sounds": [
-                {{
-                  "time": "exact second",
-                  "type": "sound type",
-                  "emotion": "emotion conveyed"
-                }}
-              ]
-            }},
-            "background_music": {{
-              "present": true/false,
-              "track_type": "upbeat/comedic/chill/dramatic",
-              "start_time": "0s",
-              "end_time": "8s or continuous",
-              "volume": "low/medium/high",
-              "mood": "funny/relaxed/tense",
-              "continues_to_next_segment": true/false
-            }},
-            "sound_effects": [
-              {{
-                "type": "specific sound effect",
-                "start_time": "exact second (e.g., '2.5s')",
-                "duration": "how long (e.g., '0.5s')",
-                "volume": "subtle/medium/loud",
-                "description": "detailed sound description"
-              }}
-            ]
           }},
           "instagram_note": "Why this moment works for Instagram"
         }}
@@ -527,4 +563,6 @@ def get_daily_character_prompt(idea: str, character_name: str, creature_language
     - **THINK**: One continuous video split into {num_segments} parts, NOT {num_segments} separate videos
     
     Create content that makes people say "This is SO cute!" or "I love {character_name}!"
+    
+    {f"**FINAL REMINDER - CRITICAL**: Your JSON response MUST contain EXACTLY {num_segments} segments in the segments array. Count them before responding. If you have fewer than {num_segments}, add more segments to reach exactly {num_segments}. This is a STRICT requirement." if num_segments else ""}
     """

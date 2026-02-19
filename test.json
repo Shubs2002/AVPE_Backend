@@ -1,690 +1,966 @@
 {
-  "content": {
-    "title": "Floof's Snowy Ski Disaster",
-    "short_summary": "",
-    "description": "",
-    "hashtags": [
-      "#Floof",
-      "#SnowDay",
-      "#SkiFails",
-      "#CuteCreature",
-      "#WinterVibes",
-      "#Relatable"
-    ],
-    "character_name": "Floof",
-    "creature_language": "Cute and baby",
-    "allow_dialogue": true,
-    "total_segments": 150,
-    "generated_at": "2025-11-22T00:22:02.462190",
-    "generation_method": "gemini-3-pro-thinking-v2",
-    "segments": [
-     
-      {
-        "segment": 31,
-        "duration": 8,
-        "first_frame_description": "Floof sitting inside a tiny red convertible car parked on a snowy hill, wearing a small knitted scarf. Background shows a cozy wooden villa and pine trees covered in snow. Bright winter sunlight. Full body visible inside the open-top car.",
-        "last_frame_description": "Floof standing in the snow next to the tiny red car, looking amazed at the view, paws slightly raised. Full body visible, sinking slightly into the snow.",
-        "scene": "Arrival at the holiday spot",
-        "action": "Floof hops out of the car and takes in the view",
-        "reaction": "Pure amazement and excitement",
-        "camera": "Wide shot, static, establishing the scene",
-        "visual_focus": "The contrast of the tiny car and the vast snowy landscape",
-        "comedy_element": "Floof sinking slightly into the deep snow upon exiting",
-        "creature_sounds": [
-          {
-            "time": "1s",
-            "sound_type": "engine sputter",
-            "emotion": "neutral",
-            "description": "Cute toy car engine turning off"
-          },
-          {
-            "time": "4s",
-            "sound_type": "excited gasp",
-            "emotion": "amazement",
-            "description": "High-pitched gasp of wonder"
-          }
-        ],
-        "background": {
-          "location": "Snowy Hilltop",
-          "setting": "Winter landscape with a wooden cabin in background",
-          "time_of_day": "morning",
-          "lighting": "bright natural sunlight",
-          "props": [
-            "tiny red car",
-            "snow",
-            "pine trees"
-          ],
-          "atmosphere": "crisp and magical",
-          "video_prompt_background": "Snowy hill with pine trees and a wooden cabin in the distance, bright blue sky"
+    "content_data": {
+        "content": {
+            "title": "Moonlight & Moksha",
+            "logline": "On a silent Maha Shivaratri night, a quarreling modern couple is visited by the divine forms of Shiva and Parvati, who reveal that true love thrives only when ego surrenders.",
+            "genre": "disney style and very Cinematic and very high quality",
+            "theme": "Love survives where ego dies; balance between strength and softness.",
+            "target_audience": "Families, couples, and fans of mythic storytelling and high-fantasy animation.",
+            "emotional_arc": "From bitter discord and ego-driven isolation to divine realization and humble reconciliation.",
+            "character_name": "Parvati disney, Shiv disney, Aarav disney, Meera disney",
+            "segments": [
+                {
+                    "segment": 1,
+                    "act": "Act 1 - Setup",
+                    "duration": 8,
+                    "characters_present": [
+                        "Aarav disney",
+                        "Meera disney"
+                    ],
+                    "veo_prompt": "Wide establishing shot (composition) of a modern Mumbai skyline at night, transitioning to a high-rise balcony where Aarav disney (handsome Indian man in his late 20s, wearing a rumpled white kurta over jeans) with a warm friendly voice, and Meera disney (beautiful Indian woman in her late 20s, wearing a silk salwar kameez with disheveled hair) with a warm youthful voice (subject) stand on opposite ends, Aarav pacing angrily while Meera grips the railing, turning her back to him (action) in a high-rise apartment balcony overlooking a chaotic city (context) with city lights and smog (ambiance), camera dollies in from the city chaos to their isolation (camera motion) from high angle (camera position), disney animation style (style), deep blue night tones with harsh yellow city lights (lighting), deep focus (focus), at 1.0s distant city traffic horn blaring (audio/sfx), at 3.0s heavy sigh from Aarav (audio/sfx), at 5.0s Meera whispers 'I can't do this anymore' (dialogue), at 7.0s distant siren wailing (ambient audio).",
+                    "first_frame_description": "Wide shot from a high angle looking down at a modern apartment balcony. Aarav disney wearing a white cotton kurta that is slightly wrinkled and blue denim jeans, standing on the left side of the frame, pacing with his body angled toward the city but head turned back in frustration. Meera disney wearing a teal and gold silk salwar kameez, standing on the far right leaning against the glass railing, her back to Aarav, head bowed low. The balcony has modern glass railings, a small potted plant in the corner, and a sliding glass door leading to a dark living room. Background is a sprawling Mumbai skyline at night with bokeh city lights in gold and orange, contrasting with the cool blue moonlight hitting the balcony floor. Atmosphere is tense and cold despite the humid night.",
+                    "last_frame_description": "Medium shot from eye-level. Aarav disney wearing white kurta and jeans, now standing still on the left, arms crossed tightly across his chest, expression hardening. Meera disney wearing teal salwar kameez, still facing the city on the right, her shoulders hunched as if crying, one hand wiping her cheek. The gap between them appears visually exaggerated. Background city lights blur slightly as focus shifts to the couple. Lighting casts long shadows from the moon above, separating them further.",
+                    "scene": "Establishing the conflict amidst the city noise.",
+                    "action": "Aarav paces and crosses arms; Meera wipes a tear and grips railing; Camera pushes in.",
+                    "emotion": "Frustration, exhaustion, isolation.",
+                    "camera": "Dolly in from wide city view to medium shot of balcony.",
+                    "dialogue": "Meera: 'I can't do this anymore.'",
+                    "visual_focus": "The physical distance between them.",
+                    "story_purpose": "Establishes the broken relationship and the setting.",
+                    "background": {
+                        "location": "High-rise Apartment Balcony",
+                        "setting": "Modern city balcony at night",
+                        "time_of_day": "night",
+                        "weather": "clear but humid",
+                        "lighting": "City glow mixed with moonlight",
+                        "mood": "Tense and lonely",
+                        "props": [
+                            "Glass railing",
+                            "Potted plant"
+                        ],
+                        "video_prompt_background": "Mumbai skyline at night with high-rise balcony in foreground"
+                    }
+                },
+                {
+                    "segment": 2,
+                    "act": "Act 1 - Setup",
+                    "duration": 8,
+                    "characters_present": [
+                        "Aarav disney",
+                        "Meera disney"
+                    ],
+                    "veo_prompt": "Medium two-shot (composition) of Aarav disney (handsome Indian man in white kurta) with warm friendly voice, and Meera disney (beautiful Indian woman in teal salwar) with warm youthful voice (subject) engaging in a heated silent argument, Aarav gesturing broadly with frustration then turning away, while Meera shakes her head and looks at her phone screen which lights up her tear-stained face (action) on the balcony (context), camera pans slowly back and forth between them emphasizing the disconnect (camera motion) at eye-level (camera position), disney cinematic style (style), cold blue moonlight contrasting with the warm phone glow (lighting), shallow focus on faces (focus), at 1.0s Aarav grunts in frustration (audio/sfx), at 3.0s rapid notification pings from phone (audio/sfx), at 5.0s Meera sobs softly (audio/sfx), at 7.0s wind gusting loudly (ambient audio).",
+                    "first_frame_description": null,
+                    "last_frame_description": "Close-up split composition. Aarav disney wearing white kurta, face turned away to the left, jaw clenched, eyes closed in anger. Meera disney wearing teal salwar, face illuminated by the glow of a smartphone held in her hand, eyes red and watery, expression of despair. The balcony railing is visible between them. The background city lights are now soft bokeh orbs. The atmosphere is heavy with unsaid words.",
+                    "scene": "The peak of the silent argument, fueled by digital distractions.",
+                    "action": "Aarav gestures and turns away; Meera checks notifications and cries.",
+                    "emotion": "Anger, distraction, despair.",
+                    "camera": "Slow pan back and forth between faces.",
+                    "dialogue": "None (heavy breathing and notifications).",
+                    "visual_focus": "The phone light vs. the moonlight.",
+                    "story_purpose": "Shows the modern distractions (ego/noise) fueling the conflict.",
+                    "background": {
+                        "location": "High-rise Apartment Balcony",
+                        "setting": "Modern city balcony at night",
+                        "time_of_day": "night",
+                        "weather": "clear",
+                        "lighting": "Phone glow and moonlight",
+                        "mood": "Aggravated",
+                        "props": [
+                            "Smartphone"
+                        ],
+                        "video_prompt_background": "Balcony railing with city bokeh"
+                    }
+                },
+                {
+                    "segment": 3,
+                    "act": "Act 1 - Setup",
+                    "duration": 8,
+                    "characters_present": [
+                        "Aarav disney"
+                    ],
+                    "veo_prompt": "Close-up (composition) of Aarav disney (handsome Indian man in white kurta) with warm friendly voice (subject) gripping the balcony railing until his knuckles turn white, looking up at the sky with a plea for help, then squeezing his eyes shut as a clock chimes (action) on the dark balcony (context), camera tilts up from his hands to his face then to the moon (camera motion) from low angle (camera position), disney cinematic style (style), dramatic shadows across his face (lighting), cool tones (ambiance), shallow focus (focus), at 1.0s metal groaning under grip (audio/sfx), at 3.0s Aarav whispers 'Why is it so hard?' (dialogue), at 6.0s first chime of midnight clock (audio/sfx), at 7.5s wind suddenly dies down (audio/sfx).",
+                    "first_frame_description": null,
+                    "last_frame_description": "Close-up low angle. Aarav disney wearing white kurta, head tilted back looking up at the sky, eyes wide with a mix of anger and pleading. His hands are out of frame but tension is visible in his neck muscles. The night sky above him is unusually clear, with a very bright crescent moon directly above. Lighting is high contrast, rim lighting his profile. No background details visible other than the dark sky and moon.",
+                    "scene": "Aarav reaches his breaking point just as midnight approaches.",
+                    "action": "Grips railing, looks at moon, hears clock chime.",
+                    "emotion": "Desperation, hidden vulnerability.",
+                    "camera": "Tilt up from hands to face to moon.",
+                    "dialogue": "Aarav: 'Why is it so hard?'",
+                    "visual_focus": "Aarav's struggle and the moon.",
+                    "story_purpose": "Sets up the plea for divine intervention.",
+                    "background": {
+                        "location": "High-rise Apartment Balcony",
+                        "setting": "Balcony railing",
+                        "time_of_day": "night",
+                        "weather": "clear",
+                        "lighting": "Moonlight",
+                        "mood": "Desperate",
+                        "props": [
+                            "Railing"
+                        ],
+                        "video_prompt_background": "Night sky with moon"
+                    }
+                },
+                {
+                    "segment": 4,
+                    "act": "Act 1 - Setup",
+                    "duration": 8,
+                    "characters_present": [
+                        "Meera disney"
+                    ],
+                    "veo_prompt": "Close-up (composition) of Meera disney (beautiful Indian woman in teal salwar) with warm youthful voice (subject) dropping her phone to her side, staring into the void of the city, shivers running down her spine as the air goes still, her hair stops blowing in the wind (action) on the balcony (context), camera tracks slowly in on her eyes which widen in realization (camera motion) at eye-level (camera position), disney cinematic style (style), soft moonlight illuminating her tears (lighting), ethereal atmosphere (ambiance), macro focus on eyes (focus), at 1.0s deep breath intake (audio/sfx), at 3.0s city noise fades to absolute silence (audio/sfx), at 5.0s soft hum begins (ambient audio), at 7.0s Meera whispers 'It's so quiet...' (dialogue).",
+                    "first_frame_description": null,
+                    "last_frame_description": "Extreme close-up on Meera disney's face. She is wearing the teal salwar, earrings visible. Her hair, previously messy, is now perfectly still. Her eyes are wide, reflecting a strange blue light, looking slightly off-camera to the left. The background is completely blurred dark blue. The lighting has shifted from harsh city glow to a soft, supernatural blue luminescence on her skin.",
+                    "scene": "The supernatural silence falls upon the city.",
+                    "action": "Drops phone hand, shivers, notices the silence.",
+                    "emotion": "Awe, confusion, anticipation.",
+                    "camera": "Slow track in on eyes.",
+                    "dialogue": "Meera: 'It's so quiet...'",
+                    "visual_focus": "The cessation of movement (hair/wind).",
+                    "story_purpose": "The Inciting Incident - the world stops for the Divine.",
+                    "background": {
+                        "location": "High-rise Apartment Balcony",
+                        "setting": "Balcony corner",
+                        "time_of_day": "Midnight",
+                        "weather": "Unnaturally still",
+                        "lighting": "Ethereal blue",
+                        "mood": "Mysterious",
+                        "props": [],
+                        "video_prompt_background": "Blurred dark city"
+                    }
+                },
+                {
+                    "segment": 5,
+                    "act": "Act 2 - Confrontation",
+                    "duration": 8,
+                    "characters_present": [
+                        "Aarav disney",
+                        "Meera disney"
+                    ],
+                    "veo_prompt": "Wide shot (composition) of the balcony where Aarav disney (man in white kurta) and Meera disney (woman in teal salwar) (subject) both turn slowly toward the open space between them, reacting as a luminous blue mist swirls up from the floor, casting long magical shadows (action) on the balcony (context), camera pulls back and booms up creating a high angle view (camera motion), disney cinematic style (style), magical glowing blue lighting overtaking the yellow city lights (lighting), mystical ambiance (ambiance), deep focus (focus), at 1.0s ethereal wind chime sound (audio/sfx), at 3.0s deep resonant hum vibrating (audio/sfx), at 6.0s both gasp in unison (audio/sfx), magical shimmering sound (ambient audio).",
+                    "first_frame_description": null,
+                    "last_frame_description": "High angle wide shot of the balcony. Aarav (left, white kurta) and Meera (right, teal salwar) are turned inward, facing the center of the balcony. Between them, rising from the floor, is a swirling vortex of soft blue and silver mist/light, not yet formed into shapes but illuminating the scene. The city background is dimmed significantly, almost pitch black, emphasizing the glow on the balcony. The couple's posture is defensive but curious.",
+                    "scene": "The manifestation begins.",
+                    "action": "Couple turns, mist rises, shadows lengthen.",
+                    "emotion": "Fear turning to wonder.",
+                    "camera": "Pull back and boom up.",
+                    "dialogue": "None (gasps only).",
+                    "visual_focus": "The magical mist appearing between them.",
+                    "story_purpose": "Bridge to the supernatural encounter.",
+                    "background": {
+                        "location": "High-rise Apartment Balcony",
+                        "setting": "Balcony floor",
+                        "time_of_day": "Midnight",
+                        "weather": "Magical",
+                        "lighting": "Blue magical glow",
+                        "mood": "Divine",
+                        "props": [
+                            "Mist"
+                        ],
+                        "video_prompt_background": "Darkened city"
+                    }
+                },
+                {
+                    "segment": 6,
+                    "act": "Act 2 - Confrontation",
+                    "duration": 8,
+                    "characters_present": [
+                        "Parvati disney",
+                        "Shiv disney"
+                    ],
+                    "veo_prompt": "Low angle medium shot (composition) revealing the feet and legs of Shiv disney (blue-skinned divine being wearing tiger skin and wooden beads) and Parvati disney (radiant goddess in red silk sari with golden anklets) (subject) stepping gently out of the mist, their feet touching the concrete which ripples like water (action) on the balcony (context), camera tilts up slowly revealing their divine forms and glowing aura (camera motion), disney cinematic style (style), radiant internal light source (lighting), holy and majestic atmosphere (ambiance), soft focus on edges (focus), at 1.0s sound of heavy anklets jingling melodiously (audio/sfx), at 3.0s deep drum beat 'damru' sound softly (audio/sfx), at 6.0s divine hum swells (ambient audio), at 7.0s mist clearing (visuals).",
+                    "first_frame_description": null,
+                    "last_frame_description": "Medium shot from low angle, tilting up. Showing Shiv disney from waist down, wearing a tiger skin wrap (dhoti style), blue skin visible, wooden rudraksha beads around waist. Beside him, Parvati disney wearing a rich red silk sari with intricate gold embroidery, golden anklets on her feet. They stand on the balcony floor which looks like rippling water reflecting starlight. The mist is fading around their knees. The background is a starry void, the city no longer visible.",
+                    "scene": "The arrival of the Gods.",
+                    "action": "Feet step out of mist, floor ripples, camera reveals forms.",
+                    "emotion": "Majesty, awe.",
+                    "camera": "Tilt up from feet.",
+                    "dialogue": "None.",
+                    "visual_focus": "The divine attire and the rippling floor.",
+                    "story_purpose": "Reveals the deities.",
+                    "background": {
+                        "location": "High-rise Apartment Balcony",
+                        "setting": "Balcony transformed",
+                        "time_of_day": "Midnight",
+                        "weather": "Divine stillness",
+                        "lighting": "Radiant gold and blue",
+                        "mood": "Sacred",
+                        "props": [
+                            "Anklets"
+                        ],
+                        "video_prompt_background": "Starry void"
+                    }
+                },
+                {
+                    "segment": 7,
+                    "act": "Act 2 - Confrontation",
+                    "duration": 8,
+                    "characters_present": [
+                        "Parvati disney",
+                        "Shiv disney",
+                        "Aarav disney",
+                        "Meera disney"
+                    ],
+                    "veo_prompt": "Wide full-body shot (composition) of Parvati disney (goddess in red sari) with soft melodic voice, and Shiv disney (god in tiger skin with trident) with deep calm voice (subject) standing tall and luminous in the center, while Aarav and Meera (in shadows) shrink back against the railings in disbelief (action) on the balcony (context), camera orbits slowly around the group capturing the scale difference (camera motion) at eye-level (camera position), disney cinematic style (style), gods are glowing while mortals are in shadow (lighting), contrasting ambiance (ambiance), rack focus from gods to mortals (focus), at 1.0s Aarav stammers 'Who...?' (dialogue), at 3.0s cosmic wind sound (ambient audio), at 6.0s Shiv gently raises a hand in blessing (action), silence resonates (audio/sfx).",
+                    "first_frame_description": null,
+                    "last_frame_description": "Wide shot, slightly high angle. In the center, Shiv disney (blue skin, matted hair with crescent moon, tiger skin dhoti, trident in hand) and Parvati disney (red sari, heavy gold jewelry, glowing complexion) stand radiating light. To the left, Aarav (white kurta) is pressed against the glass door, eyes wide. To the right, Meera (teal salwar) has hands over her mouth, kneeling slightly. The balcony floor is now covered in a thin layer of fog. The contrast between the divine glow and the mortal shadows is stark.",
+                    "scene": "The confrontation between human and divine.",
+                    "action": "Gods stand tall, mortals cower, Shiv raises hand.",
+                    "emotion": "Shock, fear, overwhelming presence.",
+                    "camera": "Orbit around the group.",
+                    "dialogue": "Aarav: 'Who...?'",
+                    "visual_focus": "The contrast between the glowing gods and shadowed humans.",
+                    "story_purpose": "Establishes the divine presence.",
+                    "background": {
+                        "location": "High-rise Apartment Balcony",
+                        "setting": "Balcony with fog",
+                        "time_of_day": "Midnight",
+                        "weather": "Magical fog",
+                        "lighting": "Divine radiance",
+                        "mood": "Overwhelming",
+                        "props": [
+                            "Trident"
+                        ],
+                        "video_prompt_background": "Darkness"
+                    }
+                },
+                {
+                    "segment": 8,
+                    "act": "Act 2 - Confrontation",
+                    "duration": 8,
+                    "characters_present": [
+                        "Parvati disney",
+                        "Meera disney"
+                    ],
+                    "veo_prompt": "Medium close-up (composition) of Parvati disney (goddess in red sari with compassionate eyes) with soft melodic voice (subject) stepping closer to Meera disney (woman in teal salwar), looking into her eyes with intense motherly love, causing Meera's fear to melt into tears (action) on the balcony (context), camera dollies in to a tight two-shot (camera motion) at eye-level (camera position), disney cinematic style (style), warm golden light radiating from Parvati to Meera (lighting), emotional and intimate (ambiance), soft focus background (focus), at 1.0s gentle chime sound (audio/sfx), at 3.0s Meera sobs audibly (audio/sfx), at 6.0s Parvati whispers 'Peace, child' (dialogue), heartbeat sound (audio/sfx).",
+                    "first_frame_description": null,
+                    "last_frame_description": "Medium close-up two-shot. Parvati disney on the left, profile view, wearing red sari, looking down with a soft smile at Meera. Meera disney on the right, looking up, tears streaming down her face, expression shifting from fear to relief. Parvati's hand is slightly raised as if to cup Meera's cheek but not touching yet. Golden light reflects in Meera's wet eyes.",
+                    "scene": "Parvati connects with Meera.",
+                    "action": "Parvati approaches, Meera cries, emotional shift.",
+                    "emotion": "Compassion, release of pain.",
+                    "camera": "Dolly in to tight two-shot.",
+                    "dialogue": "Parvati: 'Peace, child.'",
+                    "visual_focus": "The connection between the women.",
+                    "story_purpose": "Addresses Meera's emotional hurt.",
+                    "background": {
+                        "location": "High-rise Apartment Balcony",
+                        "setting": "Balcony",
+                        "time_of_day": "Midnight",
+                        "weather": "Still",
+                        "lighting": "Golden aura",
+                        "mood": "Compassionate",
+                        "props": [],
+                        "video_prompt_background": "Blurred light"
+                    }
+                },
+                {
+                    "segment": 9,
+                    "act": "Act 2 - Confrontation",
+                    "duration": 8,
+                    "characters_present": [
+                        "Shiv disney",
+                        "Aarav disney"
+                    ],
+                    "veo_prompt": "Medium close-up (composition) of Shiv disney (blue-skinned god with calm intense gaze) with deep calm voice (subject) staring directly at Aarav disney (man in white kurta), his gaze piercing through Aarav's anger, causing Aarav to unclench his fists and lower his head in shame (action) on the balcony (context), camera pushes in slowly on Shiv's eyes then cuts to Aarav's reaction (camera motion) at eye-level (camera position), disney cinematic style (style), cool blue light radiating from Shiv (lighting), authoritative and heavy (ambiance), sharp focus (focus), at 1.0s deep resonant hum (audio/sfx), at 4.0s Aarav exhales shakily (audio/sfx), at 6.0s Shiv says deeply 'Look within' (dialogue), silence (ambient audio).",
+                    "first_frame_description": null,
+                    "last_frame_description": "Medium close-up. Shiv disney facing camera/Aarav, blue skin glowing, serpent around neck visible, expression calm but intense. Aarav disney (over the shoulder view or reaction shot) standing with head bowed, shoulders slumped, white kurta looking stark against the dark background. The blue light from Shiva illuminates the top of Aarav's head.",
+                    "scene": "Shiva confronts Aarav's ego.",
+                    "action": "Shiva stares, Aarav unclinches fists and bows head.",
+                    "emotion": "Shame, submission, clarity.",
+                    "camera": "Push in on Shiva, reaction of Aarav.",
+                    "dialogue": "Shiv: 'Look within.'",
+                    "visual_focus": "Shiva's eyes and Aarav's hands relaxing.",
+                    "story_purpose": "Addresses Aarav's ego/anger.",
+                    "background": {
+                        "location": "High-rise Apartment Balcony",
+                        "setting": "Balcony",
+                        "time_of_day": "Midnight",
+                        "weather": "Still",
+                        "lighting": "Blue aura",
+                        "mood": "Authoritative",
+                        "props": [],
+                        "video_prompt_background": "Darkness"
+                    }
+                },
+                {
+                    "segment": 10,
+                    "act": "Act 2 - Confrontation",
+                    "duration": 8,
+                    "characters_present": [
+                        "Parvati disney",
+                        "Shiv disney",
+                        "Aarav disney",
+                        "Meera disney"
+                    ],
+                    "veo_prompt": "Wide shot (composition) of the entire group as the balcony walls dissolve into swirling snow and clouds, transitioning the setting from Mumbai to the Himalayas, Aarav and Meera looking around in shock as the cold wind hits them (action) in a magical transition space (context), camera spins rapidly around them creating a vortex effect (camera motion) from high angle (camera position), disney cinematic style (style), white and blue blizzard lighting (lighting), surreal and epic (ambiance), motion blur (focus), at 1.0s howling wind starts (audio/sfx), at 3.0s crumbling stone sound as reality shifts (audio/sfx), at 5.0s Aarav shouts 'What is happening?' (dialogue), at 7.0s eagle cry echoes (audio/sfx).",
+                    "first_frame_description": "Wide shot, high angle. The balcony floor is cracking and dissolving into white snow. Aarav (white kurta) and Meera (teal salwar) are reaching for each other in the center. Shiv and Parvati stand calm in the background. The city skyline is warping and turning into jagged mountain peaks. Snow particles are flying in a circular motion around the group. Lighting shifts from night blue to blinding white mountain daylight.",
+                    "last_frame_description": "Wide shot. The transition is complete. Aarav and Meera are now standing knee-deep in snow (though not cold/shivering yet, just shocked). Shiv and Parvati are floating slightly above the snow. Background is the majestic Himalayas with peaks piercing the clouds. Bright sunlight reflects off the snow. Aarav is holding Meera's arm for support.",
+                    "scene": "The transport to the Vision.",
+                    "action": "Walls dissolve, snow appears, characters react to wind.",
+                    "emotion": "Disorientation, awe.",
+                    "camera": "Spinning vortex shot.",
+                    "dialogue": "Aarav: 'What is happening?'",
+                    "visual_focus": "The environment changing from city to mountains.",
+                    "story_purpose": "Taking them out of their context to show the truth.",
+                    "background": {
+                        "location": "Transition / Himalayas",
+                        "setting": "Snowy peaks",
+                        "time_of_day": "Day",
+                        "weather": "Blizzard clearing to sun",
+                        "lighting": "Bright snow reflection",
+                        "mood": "Epic",
+                        "props": [
+                            "Snow"
+                        ],
+                        "video_prompt_background": "Himalayan mountains"
+                    }
+                },
+                {
+                    "segment": 11,
+                    "act": "Act 2 - Confrontation",
+                    "duration": 8,
+                    "characters_present": [
+                        "Parvati disney"
+                    ],
+                    "veo_prompt": "Long shot (composition) of a vision of Parvati disney (ascetic form in simple orange robes) with soft determined voice (subject) sitting in deep meditation amidst a snowstorm, fires burning around her in a circle, face calm despite the harsh elements (action) in the high Himalayas (context), camera tracks slowly through the fire and snow toward her (camera motion) at eye-level (camera position), disney cinematic style (style), firelight contrasting with blue ice (lighting), intense devotion (ambiance), deep focus (focus), at 1.0s roaring fire sound (audio/sfx), at 3.0s howling wind (audio/sfx), at 5.0s chanting 'Om Namah Shivaya' softly (dialogue), at 7.0s fire crackling (audio/sfx).",
+                    "first_frame_description": null,
+                    "last_frame_description": "Long shot. Parvati disney, now appearing in a vision within the film, wearing simple orange ascetic robes (different from the red sari before). She sits in lotus position on a rock. Surrounding her are five distinct fires burning in the snow. Snow falls heavily but melts near the fires. Her eyes are closed, expression serene. The background is a vast snowy landscape. The lighting is dramatic, lit by the warm fires against the cold blue snow.",
+                    "scene": "The Vision: Parvati's Tapasya (Devotion).",
+                    "action": "Parvati meditates, fires burn, snow falls.",
+                    "emotion": "Determination, strength, sacrifice.",
+                    "camera": "Track through fire toward Parvati.",
+                    "dialogue": "Parvati (chanting): 'Om Namah Shivaya'",
+                    "visual_focus": "Her stillness amidst chaos.",
+                    "story_purpose": "Shows Meera that love requires strength/effort, not just emotion.",
+                    "background": {
+                        "location": "Himalayas",
+                        "setting": "Snowy mountain top with fires",
+                        "time_of_day": "Day",
+                        "weather": "Snowstorm",
+                        "lighting": "Fire and snow",
+                        "mood": "Intense",
+                        "props": [
+                            "Fire",
+                            "Rocks"
+                        ],
+                        "video_prompt_background": "Snowy mountains"
+                    }
+                },
+                {
+                    "segment": 12,
+                    "act": "Act 2 - Confrontation",
+                    "duration": 8,
+                    "characters_present": [
+                        "Shiv disney"
+                    ],
+                    "veo_prompt": "Close-up (composition) of a vision of Shiv disney (ascetic form covered in ash) with deep calm voice (subject) opening his eyes slowly, the ice on his eyelashes melting, looking not with anger but with acceptance at the devotion before him (action) in a cave setting (context), camera zooms in extremely slow on his third eye area then widens to his smile (camera motion) at eye-level (camera position), disney cinematic style (style), cool cave lighting with a beam of light hitting his face (lighting), serene awareness (ambiance), sharp focus (focus), at 1.0s cracking ice sound (audio/sfx), at 3.0s deep exhale (audio/sfx), at 5.0s gentle melodic hum (ambient audio), at 7.0s he whispers 'I see you' (dialogue).",
+                    "first_frame_description": null,
+                    "last_frame_description": "Close-up. Shiv disney in the vision, covered in white ash, hair matted. Ice crystals are visible on his eyebrows and beard. His eyes are just opening, revealing a calm, dark gaze. A faint smile plays on his lips. Lighting is dark and moody (cave-like) with a single shaft of light illuminating his face.",
+                    "scene": "The Vision: Shiva's Awakening.",
+                    "action": "Shiva opens eyes, ice melts, smiles.",
+                    "emotion": "Acceptance, recognition.",
+                    "camera": "Slow zoom out from eyes to smile.",
+                    "dialogue": "Shiv: 'I see you.'",
+                    "visual_focus": "The gentleness in his powerful face.",
+                    "story_purpose": "Shows Aarav that power lies in acceptance, not dominance.",
+                    "background": {
+                        "location": "Himalayas",
+                        "setting": "Cave entrance",
+                        "time_of_day": "Day",
+                        "weather": "Cold",
+                        "lighting": "Shaft of light",
+                        "mood": "Serene",
+                        "props": [],
+                        "video_prompt_background": "Cave wall"
+                    }
+                },
+                {
+                    "segment": 13,
+                    "act": "Act 2 - Confrontation",
+                    "duration": 8,
+                    "characters_present": [
+                        "Parvati disney",
+                        "Shiv disney"
+                    ],
+                    "veo_prompt": "Medium shot (composition) of the vision where Parvati disney (ascetic robes) stands and offers a simple mountain flower to Shiv disney (ash-covered), who accepts it with both hands, their energies swirling together in pink and blue ribbons of light (action) on a mountain peak (context), camera orbits them capturing the union of energies (camera motion) at eye-level (camera position), disney cinematic style (style), radiant magical lighting (lighting), harmonious (ambiance), soft focus (focus), at 1.0s rustling robes (audio/sfx), at 3.0s magical chime as hands touch (audio/sfx), at 5.0s wind dies down completely (audio/sfx), at 7.0s energy humming (ambient audio).",
+                    "first_frame_description": null,
+                    "last_frame_description": "Medium shot. Parvati (orange robes) standing on left, extending a small white flower. Shiva (ash covered) on right, reaching out to take it. Between their hands, a swirl of pink and blue energy is forming a figure-eight shape. The background is the stunning white Himalayan peaks under a clear blue sky. They look at each other with profound respect.",
+                    "scene": "The Vision: The Union.",
+                    "action": "Flower offering, acceptance, energy swirl.",
+                    "emotion": "Respect, balance, love.",
+                    "camera": "Orbit around the exchange.",
+                    "dialogue": "None.",
+                    "visual_focus": "The flower and the energy merging.",
+                    "story_purpose": "Demonstrates balance - Shakti and Shiva.",
+                    "background": {
+                        "location": "Himalayas",
+                        "setting": "Mountain peak",
+                        "time_of_day": "Day",
+                        "weather": "Clear",
+                        "lighting": "Bright sun",
+                        "mood": "Harmonious",
+                        "props": [
+                            "Flower"
+                        ],
+                        "video_prompt_background": "Mountains"
+                    }
+                },
+                {
+                    "segment": 14,
+                    "act": "Act 2 - Confrontation",
+                    "duration": 8,
+                    "characters_present": [
+                        "Aarav disney",
+                        "Meera disney"
+                    ],
+                    "veo_prompt": "Close-up two-shot (composition) of Aarav disney (white kurta) and Meera disney (teal salwar) watching the vision, their faces illuminated by the pink/blue glow, Aarav's expression softening from anger to awe, Meera wiping a fresh tear of understanding (action) in the snowy void (context), camera tracks laterally across their faces (camera motion) at eye-level (camera position), disney cinematic style (style), reflection of the vision in their eyes (lighting), emotional breakthrough (ambiance), sharp focus (focus), at 1.0s Aarav whispers 'It wasn't about winning...' (dialogue), at 4.0s Meera whispers '...it was about uniting' (dialogue), at 6.0s magical swoosh sound (audio/sfx), at 7.5s vision fades (visuals).",
+                    "first_frame_description": null,
+                    "last_frame_description": "Close-up two-shot. Aarav (left) and Meera (right) are looking slightly upward and off-camera. Their faces are lit by a pink and blue strobe effect from the vision. Aarav's eyebrows are raised, mouth slightly open. Meera is smiling through tears. Snowflakes are stuck in their hair. Background is a blur of white.",
+                    "scene": "The Couple's Realization.",
+                    "action": "Watching vision, facial expressions soften, whispering realization.",
+                    "emotion": "Epiphany, humility.",
+                    "camera": "Lateral track across faces.",
+                    "dialogue": "Aarav: 'It wasn't about winning...' Meera: '...it was about uniting.'",
+                    "visual_focus": "The change in their expressions.",
+                    "story_purpose": "They understand the lesson of the vision.",
+                    "background": {
+                        "location": "Transition / Himalayas",
+                        "setting": "Snowy void",
+                        "time_of_day": "Day",
+                        "weather": "Snowy",
+                        "lighting": "Magical reflection",
+                        "mood": "Epiphanic",
+                        "props": [],
+                        "video_prompt_background": "Blurry white"
+                    }
+                },
+                {
+                    "segment": 15,
+                    "act": "Act 2 - Confrontation",
+                    "duration": 8,
+                    "characters_present": [
+                        "Aarav disney",
+                        "Meera disney"
+                    ],
+                    "veo_prompt": "Wide shot (composition) as the snowy landscape dissolves rapidly back into the dark balcony, landing Aarav disney (white kurta) and Meera disney (teal salwar) back in reality but standing closer together now, stumbling slightly as they regain footing (action) on the balcony at night (context), camera zooms out from the floor to wide (camera motion) from high angle (camera position), disney cinematic style (style), sudden shift from bright white to dark blue night lighting (lighting), disorienting but grounded (ambiance), deep focus (focus), at 1.0s whooshing vacuum sound (audio/sfx), at 3.0s city hum returns abruptly (audio/sfx), at 5.0s footsteps shuffling (audio/sfx), at 7.0s heavy breathing (audio/sfx).",
+                    "first_frame_description": "Wide shot high angle. The white snow is evaporating into blue mist, revealing the concrete balcony floor again. Aarav and Meera are in the center, much closer than in segment 1. They are stumbling forward slightly. The background snaps back to the Mumbai skyline at night. The lighting shifts instantly from bright day to dark night.",
+                    "last_frame_description": "Wide shot eye-level. Aarav and Meera are standing steady on the balcony. They look at each other, confused but present. The divine forms are not immediately visible in this frame (they are fading/watching). The city lights are back.",
+                    "scene": "Return to Reality.",
+                    "action": "Landscape shifts, couple lands, stumble, look around.",
+                    "emotion": "Disorientation, grounding.",
+                    "camera": "Zoom out/snap back.",
+                    "dialogue": "None.",
+                    "visual_focus": "The return to the dark balcony.",
+                    "story_purpose": "Brings the lesson back to the real world.",
+                    "background": {
+                        "location": "High-rise Apartment Balcony",
+                        "setting": "Balcony",
+                        "time_of_day": "Midnight",
+                        "weather": "Clear",
+                        "lighting": "Night city",
+                        "mood": "Changed",
+                        "props": [],
+                        "video_prompt_background": "City skyline"
+                    }
+                },
+                {
+                    "segment": 16,
+                    "act": "Act 3 - Resolution",
+                    "duration": 8,
+                    "characters_present": [
+                        "Shiv disney",
+                        "Parvati disney"
+                    ],
+                    "veo_prompt": "Medium shot (composition) of Shiv disney (blue skin) and Parvati disney (red sari) standing at the edge of the balcony, their forms becoming translucent and made of starlight, smiling gently at the couple (action) on the balcony (context), camera tracks slowly sideways (camera motion) at eye-level (camera position), disney cinematic style (style), glowing ethereal transparency (lighting), peaceful farewell (ambiance), soft focus (focus), at 1.0s shimmering sound (audio/sfx), at 3.0s Shiv says 'Love survives...' (dialogue), at 5.0s Parvati finishes '...where ego dies' (dialogue), at 7.0s wind chimes (audio/sfx).",
+                    "first_frame_description": null,
+                    "last_frame_description": "Medium shot. Shiv and Parvati standing near the railing. They are semi-transparent now, their bodies filled with a galaxy-like texture of stars. They are smiling. Shiv raises a hand in blessing. Parvati nods. The city lights are visible through their bodies.",
+                    "scene": "The Divine Farewell.",
+                    "action": "Gods become translucent, smile, deliver final message.",
+                    "emotion": "Peace, blessing.",
+                    "camera": "Slow sideways track.",
+                    "dialogue": "Shiv: 'Love survives...' Parvati: '...where ego dies.'",
+                    "visual_focus": "The transparency/starlight effect.",
+                    "story_purpose": "Delivers the theme and concludes the divine intervention.",
+                    "background": {
+                        "location": "High-rise Apartment Balcony",
+                        "setting": "Balcony edge",
+                        "time_of_day": "Midnight",
+                        "weather": "Clear",
+                        "lighting": "Starlight",
+                        "mood": "Divine",
+                        "props": [],
+                        "video_prompt_background": "City lights"
+                    }
+                },
+                {
+                    "segment": 17,
+                    "act": "Act 3 - Resolution",
+                    "duration": 8,
+                    "characters_present": [
+                        "Aarav disney",
+                        "Meera disney"
+                    ],
+                    "veo_prompt": "Medium two-shot (composition) of Aarav disney (white kurta) and Meera disney (teal salwar) watching the gods fade, a soft blue glow reflecting on their faces, Aarav slowly reaching his hand out toward Meera without looking at her (action) on the balcony (context), camera focuses on the hand then racks focus to Meera's face (camera motion) at waist-level (camera position), disney cinematic style (style), soft blue ambient light (lighting), tentative hope (ambiance), rack focus (focus), at 1.0s quiet exhale (audio/sfx), at 3.0s rustle of clothes (audio/sfx), at 5.0s Meera notices the hand (action), heartbeat sound (audio/sfx).",
+                    "first_frame_description": null,
+                    "last_frame_description": "Medium two-shot. Aarav and Meera standing side by side (gap closed significantly). They are looking forward at where the gods were. Aarav's hand is extended sideways, palm open, hovering near Meera's hand. Meera is looking down at his hand. The light is soft blue, fading to normal night.",
+                    "scene": "The First Step.",
+                    "action": "Watching fade, Aarav extends hand, Meera notices.",
+                    "emotion": "Hesitation, vulnerability.",
+                    "camera": "Focus on hand, rack to face.",
+                    "dialogue": "None.",
+                    "visual_focus": "The hand reaching out.",
+                    "story_purpose": "Aarav initiates reconciliation (dropping ego).",
+                    "background": {
+                        "location": "High-rise Apartment Balcony",
+                        "setting": "Balcony",
+                        "time_of_day": "Midnight",
+                        "weather": "Clear",
+                        "lighting": "Fading blue glow",
+                        "mood": "Hopeful",
+                        "props": [],
+                        "video_prompt_background": "Balcony"
+                    }
+                },
+                {
+                    "segment": 18,
+                    "act": "Act 3 - Resolution",
+                    "duration": 8,
+                    "characters_present": [
+                        "Meera disney",
+                        "Aarav disney"
+                    ],
+                    "veo_prompt": "Close-up (composition) of Meera's hand (wearing gold bangles) hesitating for a split second, then firmly grasping Aarav's hand, interlacing fingers tightly (action) against the backdrop of the railing (context), camera static then pans up their arms to their faces (camera motion) at close range (camera position), disney cinematic style (style), warm skin tones returning (lighting), emotional connection (ambiance), sharp focus (focus), at 1.0s bangles jingling softly (audio/sfx), at 3.0s skin impact sound (audio/sfx), at 5.0s deep breath from both (audio/sfx), at 7.0s silence broken by distant temple bell (ambient audio).",
+                    "first_frame_description": null,
+                    "last_frame_description": "Close-up of hands clasped together. Meera's hand with gold bangles interlaced with Aarav's hand. The grip is tight and desperate. Camera has panned up to show their profiles in silhouette against the city lights. They are turning toward each other.",
+                    "scene": "The Connection.",
+                    "action": "Meera takes hand, fingers interlace, turn to each other.",
+                    "emotion": "Acceptance, love.",
+                    "camera": "Static on hands, pan up to faces.",
+                    "dialogue": "None.",
+                    "visual_focus": "The joined hands.",
+                    "story_purpose": "The physical act of reconciliation.",
+                    "background": {
+                        "location": "High-rise Apartment Balcony",
+                        "setting": "Balcony railing",
+                        "time_of_day": "Midnight",
+                        "weather": "Clear",
+                        "lighting": "City rim light",
+                        "mood": "Intimate",
+                        "props": [
+                            "Bangles"
+                        ],
+                        "video_prompt_background": "City lights"
+                    }
+                },
+                {
+                    "segment": 19,
+                    "act": "Act 3 - Resolution",
+                    "duration": 8,
+                    "characters_present": [
+                        "Aarav disney",
+                        "Meera disney"
+                    ],
+                    "veo_prompt": "Medium shot (composition) of Aarav disney (white kurta) and Meera disney (teal salwar) turning fully to face each other, Aarav stepping in and wrapping his arms around her in a tight embrace, burying his face in her neck, Meera resting her head on his shoulder (action) on the balcony (context), camera orbits 180 degrees around them (camera motion) at eye-level (camera position), disney cinematic style (style), warm backlight from apartment interior (lighting), relief and love (ambiance), soft focus background (focus), at 1.0s shuffling steps (audio/sfx), at 3.0s soft sob of relief (audio/sfx), at 5.0s 'I'm sorry' whispered by Aarav (dialogue), at 7.0s 'Me too' whispered by Meera (dialogue).",
+                    "first_frame_description": null,
+                    "last_frame_description": "Medium shot. Aarav and Meera in a tight embrace in the center of the balcony. Aarav's back is to the camera, Meera's face is visible over his shoulder, eyes closed, peaceful. The warm yellow light from the living room is now spilling onto the balcony, illuminating them warmly. The blue divine light is gone.",
+                    "scene": "The Embrace.",
+                    "action": "Full embrace, burying face, resting head.",
+                    "emotion": "Relief, forgiveness.",
+                    "camera": "180 degree orbit.",
+                    "dialogue": "Aarav: 'I'm sorry.' Meera: 'Me too.'",
+                    "visual_focus": "The intimacy of the hug.",
+                    "story_purpose": "Emotional climax and resolution.",
+                    "background": {
+                        "location": "High-rise Apartment Balcony",
+                        "setting": "Balcony center",
+                        "time_of_day": "Midnight",
+                        "weather": "Clear",
+                        "lighting": "Warm interior light",
+                        "mood": "Loving",
+                        "props": [],
+                        "video_prompt_background": "Apartment window"
+                    }
+                },
+                {
+                    "segment": 20,
+                    "act": "Act 3 - Resolution",
+                    "duration": 8,
+                    "characters_present": [
+                        "Aarav disney",
+                        "Meera disney"
+                    ],
+                    "veo_prompt": "Close-up (composition) of Aarav disney (white kurta) and Meera disney (teal salwar) pulling back slightly to touch foreheads, their eyes closed, smiling gently, breathing in sync (action) on the balcony (context), camera holds static and intimate (camera motion) at eye-level (camera position), disney cinematic style (style), soft warm lighting (lighting), peaceful intimacy (ambiance), shallow focus (focus), at 1.0s synchronized breathing sound (audio/sfx), at 4.0s Aarav whispers 'Happy Shivaratri' (dialogue), at 6.0s Meera smiles (action), gentle temple bell ringing louder (ambient audio).",
+                    "first_frame_description": null,
+                    "last_frame_description": "Close-up profile. Foreheads touching. Aarav on left, Meera on right. Both have eyes closed and faint smiles. The lighting is very warm and soft. Background is completely out of focus.",
+                    "scene": "The Moment of Peace.",
+                    "action": "Touch foreheads, breathe, smile.",
+                    "emotion": "Harmony, gratitude.",
+                    "camera": "Static intimate hold.",
+                    "dialogue": "Aarav: 'Happy Shivaratri.'",
+                    "visual_focus": "The touching foreheads.",
+                    "story_purpose": "Re-establishing their bond.",
+                    "background": {
+                        "location": "High-rise Apartment Balcony",
+                        "setting": "Balcony",
+                        "time_of_day": "Midnight",
+                        "weather": "Clear",
+                        "lighting": "Warm",
+                        "mood": "Peaceful",
+                        "props": [],
+                        "video_prompt_background": "Blur"
+                    }
+                },
+                {
+                    "segment": 21,
+                    "act": "Act 3 - Resolution",
+                    "duration": 8,
+                    "characters_present": [],
+                    "veo_prompt": "Wide aerial shot (composition) of the Mumbai city skyline, where the chaotic traffic lights are softened by a lingering translucent blue mist that weaves through the streets, calming the traffic (action) over the city (context), camera pans slowly across the horizon (camera motion) from high angle aerial (camera position), disney cinematic style (style), blue and gold palette (lighting), magical realism (ambiance), deep focus (focus), at 1.0s city noise is muffled and rhythmic (ambient audio), at 3.0s many temple bells ringing in harmony (audio/sfx), at 6.0s wind sweeping (audio/sfx), tranquil atmosphere.",
+                    "first_frame_description": "Aerial wide shot of Mumbai at night. The usual chaotic yellow/orange traffic lines are visible but overlaid with a soft, river-like blue mist that flows through the main streets. The city looks peaceful, not chaotic. Thousands of small lights (windows) are visible. The sky is clear.",
+                    "last_frame_description": "Aerial shot panning right. The blue mist is dissipating upwards into the sky. Temple spires are visible in the distance, lit up. The moon is high in the sky.",
+                    "scene": "The City Blessed.",
+                    "action": "Blue mist calms city, traffic flows, bells ring.",
+                    "emotion": "Universal peace.",
+                    "camera": "Aerial pan.",
+                    "dialogue": "None.",
+                    "visual_focus": "The blue mist over the city.",
+                    "story_purpose": "Shows the divine impact wasn't just for them, but the world.",
+                    "background": {
+                        "location": "Mumbai City",
+                        "setting": "Aerial skyline",
+                        "time_of_day": "Night",
+                        "weather": "Clear",
+                        "lighting": "City lights + Blue mist",
+                        "mood": "Blessed",
+                        "props": [],
+                        "video_prompt_background": "City skyline"
+                    }
+                },
+                {
+                    "segment": 22,
+                    "act": "Act 3 - Resolution",
+                    "duration": 8,
+                    "characters_present": [
+                        "Aarav disney",
+                        "Meera disney"
+                    ],
+                    "veo_prompt": "Wide shot (composition) of the balcony looking in from the outside, showing Aarav disney (white kurta) and Meera disney (teal salwar) walking hand in hand back into the warm apartment, sliding the glass door shut (action) seen from exterior (context), camera pulls back slowly away from the building (camera motion) from eye-level (camera position), disney cinematic style (style), warm square of light in a dark building (lighting), domestic peace (ambiance), deep focus (focus), at 1.0s sliding door rumbling shut (audio/sfx), at 3.0s lock clicking (audio/sfx), at 5.0s muffled laughter (audio/sfx), at 7.0s night cricket sounds (ambient audio).",
+                    "first_frame_description": "Wide shot from outside the balcony railing looking in. Aarav and Meera are walking away from the camera, hand in hand, entering the living room through the sliding glass door. The living room is warm and inviting with a lamp on. The balcony is dark again.",
+                    "last_frame_description": "Wide shot, pulled back further. The glass door is shut. We see the couple inside the room (through the glass), moving towards a small home shrine. The reflection of the moon is visible on the glass door.",
+                    "scene": "Returning Inside.",
+                    "action": "Walk inside, close door, lock world out.",
+                    "emotion": "Sanctuary, closure.",
+                    "camera": "Pull back from exterior.",
+                    "dialogue": "None.",
+                    "visual_focus": "The warmth of the home.",
+                    "story_purpose": "They return to their life, changed.",
+                    "background": {
+                        "location": "Apartment Exterior",
+                        "setting": "Balcony looking in",
+                        "time_of_day": "Night",
+                        "weather": "Clear",
+                        "lighting": "Warm interior",
+                        "mood": "Cozy",
+                        "props": [
+                            "Sliding door"
+                        ],
+                        "video_prompt_background": "Apartment interior"
+                    }
+                },
+                {
+                    "segment": 23,
+                    "act": "Act 3 - Resolution",
+                    "duration": 8,
+                    "characters_present": [
+                        "Aarav disney",
+                        "Meera disney"
+                    ],
+                    "veo_prompt": "Medium shot (composition) of Aarav disney (white kurta) and Meera disney (teal salwar) inside their living room, standing before a small home altar with a Shiva Lingam, Meera lighting a diya (oil lamp) while Aarav rings a small bell (action) in the apartment (context), camera tracks slowly sideways (camera motion) at eye-level (camera position), disney cinematic style (style), warm candlelight illuminating their faces (lighting), devotional and serene (ambiance), soft focus (focus), at 1.0s match striking (audio/sfx), at 3.0s bell ringing clearly (audio/sfx), at 5.0s soft prayer muttering (dialogue), at 7.0s fire crackling softly (audio/sfx).",
+                    "first_frame_description": "Medium shot inside the apartment. A small wooden home temple (mandir) is on the wall. Meera is holding a lit match to a clay oil lamp (diya). Aarav stands beside her, holding a small brass bell. Their faces are lit by the growing flame. The room is tidy and modern Indian style.",
+                    "last_frame_description": "Medium shot. The lamp is lit, casting a warm glow. Aarav is ringing the bell with his right hand, eyes closed. Meera has hands folded in prayer. Smoke from an incense stick curls up.",
+                    "scene": "The Ritual.",
+                    "action": "Lighting lamp, ringing bell, praying.",
+                    "emotion": "Devotion, gratitude.",
+                    "camera": "Sideways track.",
+                    "dialogue": "None (prayers).",
+                    "visual_focus": "The flame and the bell.",
+                    "story_purpose": "Grounded ritual after the supernatural experience.",
+                    "background": {
+                        "location": "Apartment Interior",
+                        "setting": "Home Altar",
+                        "time_of_day": "Night",
+                        "weather": "Indoor",
+                        "lighting": "Candlelight",
+                        "mood": "Sacred",
+                        "props": [
+                            "Diya",
+                            "Bell",
+                            "Altar"
+                        ],
+                        "video_prompt_background": "Living room wall"
+                    }
+                },
+                {
+                    "segment": 24,
+                    "act": "Act 3 - Resolution",
+                    "duration": 8,
+                    "characters_present": [
+                        "Meera disney",
+                        "Aarav disney"
+                    ],
+                    "veo_prompt": "Close-up (composition) of the diya flame flickering, then rack focus to Aarav disney (white kurta) and Meera disney (teal salwar) in the background smiling at each other, Aarav tucking a strand of hair behind Meera's ear (action) in the living room (context), camera holds on flame then focuses deeper (camera motion) at eye-level (camera position), disney cinematic style (style), golden warmth (lighting), romantic and peaceful (ambiance), rack focus (focus), at 1.0s fire sound (audio/sfx), at 3.0s soft laughter (audio/sfx), at 5.0s 'Thank you' whispered (dialogue), at 7.0s gentle music swells (ambient audio).",
+                    "first_frame_description": null,
+                    "last_frame_description": "Close-up. Foreground is the oil lamp flame, slightly out of focus. Background shows Aarav and Meera sharp in focus. Aarav's hand is near Meera's face, fixing her hair. They are looking into each other's eyes with genuine warmth.",
+                    "scene": "Intimacy Restored.",
+                    "action": "Flame flickers, rack focus, hair tuck, smile.",
+                    "emotion": "Tenderness.",
+                    "camera": "Rack focus from foreground to background.",
+                    "dialogue": "Aarav: 'Thank you.'",
+                    "visual_focus": "The connection between them.",
+                    "story_purpose": "Shows the small acts of love returning.",
+                    "background": {
+                        "location": "Apartment Interior",
+                        "setting": "Living room",
+                        "time_of_day": "Night",
+                        "weather": "Indoor",
+                        "lighting": "Warm",
+                        "mood": "Romantic",
+                        "props": [
+                            "Diya"
+                        ],
+                        "video_prompt_background": "Wall"
+                    }
+                },
+                {
+                    "segment": 25,
+                    "act": "Act 3 - Resolution",
+                    "duration": 8,
+                    "characters_present": [],
+                    "veo_prompt": "Close-up (composition) of a framed photo on the wall showing Aarav and Meera happy on their wedding day, contrasting with the earlier argument, a shadow of a trident passes over it briefly (action) in the living room (context), camera slowly zooms in on the photo (camera motion) at eye-level (camera position), disney cinematic style (style), warm interior light (lighting), nostalgic (ambiance), sharp focus (focus), at 1.0s music building (ambient audio), at 4.0s subtle shimmer sound (audio/sfx), at 7.0s peaceful silence (audio/sfx).",
+                    "first_frame_description": "Close-up of a wooden picture frame on a side table. The photo shows Aarav and Meera in wedding attire, laughing. The lighting is warm. A faint, unexplained shadow (shaped like a trident) moves across the glass of the frame.",
+                    "last_frame_description": "Extreme close-up on the smiles in the photo. The shadow is gone. The photo looks vibrant.",
+                    "scene": "The Symbol.",
+                    "action": "Shadow passes over wedding photo.",
+                    "emotion": "Blessing, continuity.",
+                    "camera": "Slow zoom in.",
+                    "dialogue": "None.",
+                    "visual_focus": "The wedding photo.",
+                    "story_purpose": "Connects past happiness to present resolution.",
+                    "background": {
+                        "location": "Apartment Interior",
+                        "setting": "Side table",
+                        "time_of_day": "Night",
+                        "weather": "Indoor",
+                        "lighting": "Warm",
+                        "mood": "Nostalgic",
+                        "props": [
+                            "Photo frame"
+                        ],
+                        "video_prompt_background": "Wall"
+                    }
+                },
+                {
+                    "segment": 26,
+                    "act": "Act 3 - Resolution",
+                    "duration": 8,
+                    "characters_present": [
+                        "Aarav disney",
+                        "Meera disney"
+                    ],
+                    "veo_prompt": "Wide shot (composition) of the living room, Aarav disney (white kurta) and Meera disney (teal salwar) sitting on the sofa together, Meera resting her head on his lap, Aarav stroking her hair, both looking peaceful (action) in the apartment (context), camera pulls back slowly (camera motion) at eye-level (camera position), disney cinematic style (style), cozy warm lighting (lighting), domestic bliss (ambiance), deep focus (focus), at 1.0s soft sigh (audio/sfx), at 3.0s fabric rustling (audio/sfx), at 5.0s distant fireworks popping (audio/sfx), at 7.0s peaceful music (ambient audio).",
+                    "first_frame_description": null,
+                    "last_frame_description": "Wide shot of living room. Aarav sitting on a beige sofa, legs crossed. Meera lying on the sofa with head on his lap. He is looking down at her, hand on her head. The room is dimly lit by the lamp. Through the window in the back, small fireworks are visible in the distance.",
+                    "scene": "Rest.",
+                    "action": "Sitting together, resting, stroking hair.",
+                    "emotion": "Comfort, safety.",
+                    "camera": "Slow pull back.",
+                    "dialogue": "None.",
+                    "visual_focus": "The relaxed body language.",
+                    "story_purpose": "Shows the fight is truly over.",
+                    "background": {
+                        "location": "Apartment Interior",
+                        "setting": "Living room",
+                        "time_of_day": "Night",
+                        "weather": "Indoor",
+                        "lighting": "Cozy",
+                        "mood": "Peaceful",
+                        "props": [
+                            "Sofa"
+                        ],
+                        "video_prompt_background": "Room"
+                    }
+                },
+                {
+                    "segment": 27,
+                    "act": "Act 3 - Resolution",
+                    "duration": 8,
+                    "characters_present": [],
+                    "veo_prompt": "Low angle shot (composition) looking up from the balcony floor toward the sky, seeing the crescent moon shining brighter than ever, a faint blue cloud shaped like a trident dissolving near it (action) in the night sky (context), camera tilts up slowly (camera motion) from low angle (camera position), disney cinematic style (style), clear night sky with stars (lighting), magical residue (ambiance), deep focus (focus), at 1.0s wind chimes (audio/sfx), at 3.0s ethereal hum fading out (audio/sfx), at 6.0s cricket sound (ambient audio), at 8.0s silence (audio/sfx).",
+                    "first_frame_description": "Low angle shot of the night sky framed by the balcony railing. The moon is a sharp crescent. A faint wisp of blue cloud is near it, vaguely resembling the shape of a trident.",
+                    "last_frame_description": "Shot of just the moon and stars. The cloud has vanished. The moon is glowing intensely silver.",
+                    "scene": "The Sky Clears.",
+                    "action": "Cloud dissolves, moon shines.",
+                    "emotion": "Wonder, clarity.",
+                    "camera": "Tilt up.",
+                    "dialogue": "None.",
+                    "visual_focus": "The moon and the trident cloud.",
+                    "story_purpose": "Visual confirmation of the divine visit.",
+                    "background": {
+                        "location": "Sky",
+                        "setting": "Night sky",
+                        "time_of_day": "Night",
+                        "weather": "Clear",
+                        "lighting": "Moonlight",
+                        "mood": "Magical",
+                        "props": [],
+                        "video_prompt_background": "Stars"
+                    }
+                },
+                {
+                    "segment": 28,
+                    "act": "Act 3 - Resolution",
+                    "duration": 8,
+                    "characters_present": [
+                        "Aarav disney",
+                        "Meera disney"
+                    ],
+                    "veo_prompt": "Medium shot (composition) of the apartment window from outside, showing Aarav disney (white kurta) and Meera disney (teal salwar) standing together looking out at the moon, silhouetted against the warm interior light (action) seen from exterior (context), camera floats steadily backwards (camera motion) at eye-level (camera position), disney cinematic style (style), contrast of warm window and cool night (lighting), peaceful conclusion (ambiance), deep focus (focus), at 1.0s faint city hum (ambient audio), at 4.0s Aarav says 'Look' (dialogue), at 6.0s Meera laughs softly (audio/sfx), gentle music (ambient audio).",
+                    "first_frame_description": "Medium shot from outside. The window frame creates a picture. Inside, Aarav and Meera are silhouettes standing side by side, looking out. The interior is golden. The exterior wall is dark blue.",
+                    "last_frame_description": "Same shot, slightly further back. Meera leans her head on Aarav's shoulder. The silhouette merges.",
+                    "scene": "Looking Out Together.",
+                    "action": "Standing at window, looking out, leaning.",
+                    "emotion": "Unity.",
+                    "camera": "Float backward.",
+                    "dialogue": "Aarav: 'Look.'",
+                    "visual_focus": "The silhouette of the couple.",
+                    "story_purpose": "They face the world together now.",
+                    "background": {
+                        "location": "Apartment Exterior",
+                        "setting": "Window",
+                        "time_of_day": "Night",
+                        "weather": "Clear",
+                        "lighting": "Silhouette",
+                        "mood": "Peaceful",
+                        "props": [
+                            "Window"
+                        ],
+                        "video_prompt_background": "Building wall"
+                    }
+                },
+                {
+                    "segment": 29,
+                    "act": "Act 3 - Resolution",
+                    "duration": 8,
+                    "characters_present": [],
+                    "veo_prompt": "Wide establishing shot (composition) of the entire apartment building in the city, showing it as just one warm light among thousands, but the moonlight hits this specific balcony with a special glow (action) in the cityscape (context), camera pulls back to extreme wide (camera motion) from aerial view (camera position), disney cinematic style (style), city lights and moonlight (lighting), grand scale (ambiance), deep focus (focus), at 1.0s wind swoosh (audio/sfx), at 3.0s swelling orchestral music (ambient audio), at 6.0s temple bells echoing (audio/sfx), triumphant but quiet ending (mood).",
+                    "first_frame_description": "Wide aerial shot. The apartment building is in the center. One window is warmly lit. A beam of moonlight spotlights the balcony attached to that window. The rest of the city spreads out in all directions.",
+                    "last_frame_description": "Extreme wide shot. The building is now small. The city is a sea of lights. The moon is dominant in the sky.",
+                    "scene": "The Bigger Picture.",
+                    "action": "Camera pulls back, moon spotlights balcony.",
+                    "emotion": "Significance within insignificance.",
+                    "camera": "Extreme pull back.",
+                    "dialogue": "None.",
+                    "visual_focus": "The single warm window.",
+                    "story_purpose": "Contextualizes their story in the city.",
+                    "background": {
+                        "location": "Mumbai City",
+                        "setting": "Skyline",
+                        "time_of_day": "Night",
+                        "weather": "Clear",
+                        "lighting": "City lights",
+                        "mood": "Grand",
+                        "props": [],
+                        "video_prompt_background": "City"
+                    }
+                },
+                {
+                    "segment": 30,
+                    "act": "Act 3 - Resolution",
+                    "duration": 8,
+                    "characters_present": [],
+                    "veo_prompt": "Graphic shot (composition) of the crescent moon filling the frame, shimmering with a subtle blue aura, transitioning to the title 'Moonlight & Moksha' appearing in elegant gold font (action) against the starry sky (context), camera holds static (camera motion) looking up (camera position), disney cinematic style (style), silver and gold lighting (lighting), finality (ambiance), sharp focus (focus), at 1.0s magical shimmer sound (audio/sfx), at 3.0s final orchestral chord resolves (audio/sfx), at 5.0s fade to black (visuals), silence (audio/sfx).",
+                    "first_frame_description": "Full frame shot of the crescent moon. It has a magical texture, slightly blue-tinted. The stars around it are bright.",
+                    "last_frame_description": "The moon is in the background. In the foreground, the text 'Moonlight & Moksha' appears in elegant, serif gold letters with a subtle glow. Fade to black begins at edges.",
+                    "scene": "Title Card / Ending.",
+                    "action": "Moon shimmers, title appears, fade out.",
+                    "emotion": "Resolution.",
+                    "camera": "Static hold.",
+                    "dialogue": "None.",
+                    "visual_focus": "The Moon and Title.",
+                    "story_purpose": "Final signature.",
+                    "overlay_text": "Moonlight & Moksha",
+                    "overlay_position": "center",
+                    "overlay_type": "title",
+                    "background": {
+                        "location": "Sky",
+                        "setting": "Starry void",
+                        "time_of_day": "Night",
+                        "weather": "Clear",
+                        "lighting": "Moonlight",
+                        "mood": "Final",
+                        "props": [],
+                        "video_prompt_background": "Stars"
+                    }
+                }
+            ],
+            "why_this_works": "This film blends the relatable modern struggle of relationship ego with the timeless grandeur of Indian mythology. The visual progression from the chaotic, noisy city to the silent, magical intervention creates a strong sensory journey. Using the Disney style makes the divine elements feel accessible and wondrous rather than purely religious, focusing on the universal theme of love requiring the death of ego (Moksha).",
+            "key_moments": [
+                "The silence falling over the city at midnight (Segment 4)",
+                "Shiva and Parvati stepping out of the mist (Segment 6)",
+                "The vision of the Himalayas transforming the balcony (Segment 10)",
+                "Meera and Aarav holding hands for the first time after the vision (Segment 18)",
+                "The blue mist blessing the city traffic (Segment 21)"
+            ],
+            "visual_motifs": [
+                "The Crescent Moon (Shiva's symbol)",
+                "Blue Light/Mist (Divine presence)",
+                "The Balcony Railing (The barrier/gap between them)",
+                "Warm vs. Cool Light (Home/Human vs. Divine/Moon)"
+            ],
+            "color_palette": "Deep Midnight Blue and Silver (Divine), contrasting with Warm Amber and Teal (Human/City)"
         },
-        "audio_timing": {
-          "creature_sounds": {
-            "present": true,
-            "sound_count": 2,
-            "sounds": [
-              {
-                "time": "4s",
-                "type": "gasp",
-                "emotion": "amazed"
-              }
+        "character_metadata": {
+            "character_ids": [
+                "char_parvatidisney_1fd686c5",
+                "char_shivdisney_eaacce3a",
+                "char_aaravdisney_b4e3758c",
+                "char_meeradisney_a89d4b27"
+            ],
+            "characters": [
+                {
+                    "character_id": "char_parvatidisney_1fd686c5",
+                    "character_name": "Parvati disney",
+                    "cloudinary_url": "https://res.cloudinary.com/dc3o4l7rx/image/upload/v1771148248/characters/characters/character_parvati_disney_e81e864e.png",
+                    "gender": "female",
+                    "voice_description": "Soft melodic and Indian accent and gentle divine and graceful elegant and soothing warm",
+                    "can_speak": true
+                },
+                {
+                    "character_id": "char_shivdisney_eaacce3a",
+                    "character_name": "Shiv disney",
+                    "cloudinary_url": "https://res.cloudinary.com/dc3o4l7rx/image/upload/v1771147941/characters/characters/character_shiv_disney_ada2583b.png",
+                    "gender": "male",
+                    "voice_description": "Deep calm and Indian accent and resonant divine and soothing authoritative wisdom",
+                    "can_speak": true
+                },
+                {
+                    "character_id": "char_aaravdisney_b4e3758c",
+                    "character_name": "Aarav disney",
+                    "cloudinary_url": "https://res.cloudinary.com/dc3o4l7rx/image/upload/v1771148135/characters/characters/character_aarav_disney_c2440eb6.png",
+                    "gender": "male",
+                    "voice_description": "Warm friendly and Indian accent and clear melodic and cheerful tenor",
+                    "can_speak": true
+                },
+                {
+                    "character_id": "char_meeradisney_a89d4b27",
+                    "character_name": "Meera disney",
+                    "cloudinary_url": "https://res.cloudinary.com/dc3o4l7rx/image/upload/v1771147683/characters/characters/character_meera_disney_de93cb6d.png",
+                    "gender": "female",
+                    "voice_description": "Warm youthful and Indian accent and soft melodic and friendly cheerful",
+                    "can_speak": true
+                }
             ]
-          },
-          "background_music": {
-            "present": true,
-            "track_type": "upbeat",
-            "start_time": "0s",
-            "end_time": "continuous",
-            "volume": "medium",
-            "mood": "happy",
-            "continues_to_next_segment": true
-          },
-          "sound_effects": [
-            {
-              "type": "snow crunch",
-              "start_time": "2s",
-              "duration": "1s",
-              "volume": "medium",
-              "description": "Crunchy snow sound as he steps out"
-            }
-          ]
-        },
-        "instagram_note": "Strong visual hook with the cute car setup"
-      },
-      {
-        "segment": 32,
-        "duration": 8,
-        "first_frame_description": "Floof standing in the snow next to the tiny red car, looking amazed. Full body visible. Same environment.",
-        "last_frame_description": "Floof waddling through deep snow toward a round blue plastic sled lying a few feet away. Full body visible, struggling slightly.",
-        "scene": "Spotting the adventure gear",
-        "action": "Floof sees a sled and tries to walk to it",
-        "reaction": "Determination mixed with physical struggle",
-        "camera": "Tracking shot, low angle, moving with Floof",
-        "visual_focus": "The difficulty of walking in deep snow",
-        "comedy_element": "The waddle walk is exaggerated by the deep snow",
-        "creature_sounds": [
-          {
-            "time": "2s",
-            "sound_type": "curious chirp",
-            "emotion": "curiosity",
-            "description": "Noticing the sled"
-          },
-          {
-            "time": "5s",
-            "sound_type": "effort grunt",
-            "emotion": "struggle",
-            "description": "Cute grunts while walking in deep snow"
-          }
-        ],
-        "background": {
-          "location": "Snowy Hilltop",
-          "setting": "Open snow area near the car",
-          "time_of_day": "morning",
-          "lighting": "bright natural sunlight",
-          "props": [
-            "blue sled",
-            "snow"
-          ],
-          "atmosphere": "playful",
-          "video_prompt_background": "Snowy ground with texture details"
-        },
-        "audio_timing": {
-          "creature_sounds": {
-            "present": true,
-            "sound_count": 2,
-            "sounds": [
-              {
-                "time": "5s",
-                "type": "grunt",
-                "emotion": "effort"
-              }
-            ]
-          },
-          "background_music": {
-            "present": true,
-            "track_type": "comedic",
-            "start_time": "continuous",
-            "end_time": "continuous",
-            "volume": "medium",
-            "mood": "playful",
-            "continues_to_next_segment": true
-          },
-          "sound_effects": [
-            {
-              "type": "heavy snow footsteps",
-              "start_time": "3s",
-              "duration": "4s",
-              "volume": "loud",
-              "description": "Rhythmic crunching"
-            }
-          ]
-        },
-        "instagram_note": "Relatable struggle of walking in deep snow"
-      },
-      {
-        "segment": 33,
-        "duration": 8,
-        "first_frame_description": "Floof standing right next to the blue round sled in the snow. Full body visible. He looks proud.",
-        "last_frame_description": "Floof sitting awkwardly on top of the blue sled, trying to balance, wobbling. Full body visible.",
-        "scene": "Getting on the ride",
-        "action": "Floof climbs onto the sled",
-        "reaction": "Focused balancing act",
-        "camera": "Medium shot, static, focusing on the balancing act",
-        "visual_focus": "The wobbling motion",
-        "comedy_element": "Floof is almost too round for the sled",
-        "creature_sounds": [
-          {
-            "time": "3s",
-            "sound_type": "nervous hum",
-            "emotion": "concentration",
-            "description": "Low hum while balancing"
-          },
-          {
-            "time": "7s",
-            "sound_type": "squeak",
-            "emotion": "mild panic",
-            "description": "Small slip squeak"
-          }
-        ],
-        "background": {
-          "location": "Snowy Hilltop",
-          "setting": "Top of a small slope",
-          "time_of_day": "morning",
-          "lighting": "bright natural sunlight",
-          "props": [
-            "blue sled"
-          ],
-          "atmosphere": "anticipation",
-          "video_prompt_background": "Snowy slope beginning to angle downwards"
-        },
-        "audio_timing": {
-          "creature_sounds": {
-            "present": true,
-            "sound_count": 2,
-            "sounds": [
-              {
-                "time": "3s",
-                "type": "hum",
-                "emotion": "focus"
-              }
-            ]
-          },
-          "background_music": {
-            "present": true,
-            "track_type": "comedic",
-            "start_time": "continuous",
-            "end_time": "continuous",
-            "volume": "low",
-            "mood": "tense",
-            "continues_to_next_segment": true
-          },
-          "sound_effects": [
-            {
-              "type": "plastic scraping",
-              "start_time": "2s",
-              "duration": "3s",
-              "volume": "medium",
-              "description": "Plastic sled shifting on snow"
-            }
-          ]
-        },
-        "instagram_note": "Physical comedy moment"
-      },
-      {
-        "segment": 34,
-        "duration": 8,
-        "first_frame_description": "Floof sitting on the blue sled, balanced and looking at the camera with a confident smirk. Full body visible.",
-        "last_frame_description": "Floof on the sled, leaning forward, pushing off the snow with paws. Full body visible.",
-        "scene": "The Launch",
-        "action": "Floof pushes off to start the ride",
-        "reaction": "Over-confidence",
-        "camera": "Close-up on face (4th wall break) then zoom out slightly",
-        "visual_focus": "The confident expression before disaster",
-        "comedy_element": "The 'I got this' look",
-        "creature_sounds": [
-          {
-            "time": "2s",
-            "sound_type": "confident trill",
-            "emotion": "confidence",
-            "description": "Ta-da style sound"
-          },
-          {
-            "time": "6s",
-            "sound_type": "exertion grunt",
-            "emotion": "effort",
-            "description": "Pushing off sound"
-          }
-        ],
-        "background": {
-          "location": "Snowy Hilltop",
-          "setting": "Top of the slope",
-          "time_of_day": "morning",
-          "lighting": "bright natural sunlight",
-          "props": [
-            "blue sled"
-          ],
-          "atmosphere": "exciting",
-          "video_prompt_background": "Snowy background"
-        },
-        "audio_timing": {
-          "creature_sounds": {
-            "present": true,
-            "sound_count": 2,
-            "sounds": [
-              {
-                "time": "2s",
-                "type": "trill",
-                "emotion": "proud"
-              }
-            ]
-          },
-          "background_music": {
-            "present": true,
-            "track_type": "upbeat",
-            "start_time": "continuous",
-            "end_time": "continuous",
-            "volume": "medium",
-            "mood": "building",
-            "continues_to_next_segment": true
-          },
-          "sound_effects": [
-            {
-              "type": "woosh",
-              "start_time": "6s",
-              "duration": "1s",
-              "volume": "medium",
-              "description": "Sled starting to move"
-            }
-          ]
-        },
-        "instagram_note": "Perfect setup for the fall"
-      },
-      {
-        "segment": 35,
-        "duration": 8,
-        "first_frame_description": "Floof on the sled, moving slowly forward down the gentle slope. Full body visible.",
-        "last_frame_description": "Floof on the sled, moving much faster, eyes widening, paws gripping the sides. Full body visible.",
-        "scene": "Picking up speed",
-        "action": "Gravity takes over and the sled accelerates",
-        "reaction": "Realization that this is faster than expected",
-        "camera": "Tracking shot, side profile, keeping pace with Floof",
-        "visual_focus": "The transition from happy to concerned",
-        "comedy_element": "The slow realization of danger",
-        "creature_sounds": [
-          {
-            "time": "4s",
-            "sound_type": "worried oh-oh",
-            "emotion": "concern",
-            "description": "Short questioning sound"
-          }
-        ],
-        "background": {
-          "location": "Snowy Slope",
-          "setting": "Mid-slope, trees blurring slightly",
-          "time_of_day": "morning",
-          "lighting": "bright natural sunlight",
-          "props": [
-            "blue sled"
-          ],
-          "atmosphere": "speedy",
-          "video_prompt_background": "Blurry snow passing by"
-        },
-        "audio_timing": {
-          "creature_sounds": {
-            "present": true,
-            "sound_count": 1,
-            "sounds": [
-              {
-                "time": "4s",
-                "type": "oh-oh",
-                "emotion": "concern"
-              }
-            ]
-          },
-          "background_music": {
-            "present": true,
-            "track_type": "fast",
-            "start_time": "continuous",
-            "end_time": "continuous",
-            "volume": "high",
-            "mood": "chaotic",
-            "continues_to_next_segment": true
-          },
-          "sound_effects": [
-            {
-              "type": "wind rush",
-              "start_time": "0s",
-              "duration": "8s",
-              "volume": "increasing",
-              "description": "Wind noise getting louder"
-            }
-          ]
-        },
-        "instagram_note": "Building tension visually"
-      },
-      {
-        "segment": 36,
-        "duration": 8,
-        "first_frame_description": "Floof on the sled, moving fast, eyes wide, paws gripping sides. Full body visible.",
-        "last_frame_description": "Floof on the sled, spinning in a circle while moving down the hill. Full body visible.",
-        "scene": "Spinning out of control",
-        "action": "The sled hits a patch of ice and spins",
-        "reaction": "Dizziness and panic",
-        "camera": "Shaky cam, tracking the spinning movement",
-        "visual_focus": "The chaotic spinning",
-        "comedy_element": "Floof looks like a spinning top",
-        "creature_sounds": [
-          {
-            "time": "2s",
-            "sound_type": "dizzy warble",
-            "emotion": "dizzy",
-            "description": "Wobbling vocalization"
-          }
-        ],
-        "background": {
-          "location": "Snowy Slope",
-          "setting": "Steeper part of slope",
-          "time_of_day": "morning",
-          "lighting": "bright natural sunlight",
-          "props": [
-            "blue sled"
-          ],
-          "atmosphere": "chaos",
-          "video_prompt_background": "Spinning background of snow and trees"
-        },
-        "audio_timing": {
-          "creature_sounds": {
-            "present": true,
-            "sound_count": 1,
-            "sounds": [
-              {
-                "time": "2s",
-                "type": "warble",
-                "emotion": "dizzy"
-              }
-            ]
-          },
-          "background_music": {
-            "present": true,
-            "track_type": "chaotic",
-            "start_time": "continuous",
-            "end_time": "continuous",
-            "volume": "high",
-            "mood": "frantic",
-            "continues_to_next_segment": true
-          },
-          "sound_effects": [
-            {
-              "type": "spinning whoosh",
-              "start_time": "1s",
-              "duration": "6s",
-              "volume": "high",
-              "description": "Whooshing sound modulating with spin"
-            }
-          ]
-        },
-        "instagram_note": "Chaos energy peak"
-      },
-      {
-        "segment": 37,
-        "duration": 8,
-        "first_frame_description": "Floof on the spinning sled, facing backwards now. Full body visible.",
-        "last_frame_description": "Floof and sled hitting a small snow ramp/bump, launching into the air. Full body visible, mid-air.",
-        "scene": "The Jump",
-        "action": "Floof hits a bump and goes airborne",
-        "reaction": "Total shock",
-        "camera": "Low angle, looking up at Floof flying over camera",
-        "visual_focus": "Floof in the air",
-        "comedy_element": "The freeze-frame feel of the jump",
-        "creature_sounds": [
-          {
-            "time": "4s",
-            "sound_type": "long scream squeak",
-            "emotion": "fear",
-            "description": "High pitched continuous squeak"
-          }
-        ],
-        "background": {
-          "location": "Snowy Slope",
-          "setting": "Base of slope with a bump",
-          "time_of_day": "morning",
-          "lighting": "bright natural sunlight",
-          "props": [
-            "blue sled"
-          ],
-          "atmosphere": "dramatic",
-          "video_prompt_background": "Sky and tree tops visible from low angle"
-        },
-        "audio_timing": {
-          "creature_sounds": {
-            "present": true,
-            "sound_count": 1,
-            "sounds": [
-              {
-                "time": "4s",
-                "type": "squeak",
-                "emotion": "fear"
-              }
-            ]
-          },
-          "background_music": {
-            "present": true,
-            "track_type": "dramatic",
-            "start_time": "continuous",
-            "end_time": "continuous",
-            "volume": "high",
-            "mood": "suspense",
-            "continues_to_next_segment": true
-          },
-          "sound_effects": [
-            {
-              "type": "jump boing",
-              "start_time": "3s",
-              "duration": "1s",
-              "volume": "loud",
-              "description": "Cartoonish launch sound"
-            }
-          ]
-        },
-        "instagram_note": "The 'Oh no' moment everyone waits for"
-      },
-      {
-        "segment": 38,
-        "duration": 8,
-        "first_frame_description": "Floof and sled mid-air, beginning to descend. Full body visible.",
-        "last_frame_description": "Floof separated from sled, tumbling into a large pile of soft powder snow. Full body visible (mostly obscured by snow cloud).",
-        "scene": "The Crash",
-        "action": "Floof lands softly but dramatically in a snowbank",
-        "reaction": "Bracing for impact",
-        "camera": "Slow motion, wide shot to show the size of the snow pile",
-        "visual_focus": "The explosion of snow upon impact",
-        "comedy_element": "The harmless but dramatic poof of snow",
-        "creature_sounds": [
-          {
-            "time": "5s",
-            "sound_type": "muted thud",
-            "emotion": "impact",
-            "description": "Soft thud sound"
-          }
-        ],
-        "background": {
-          "location": "Bottom of Slope",
-          "setting": "Huge snow drift",
-          "time_of_day": "morning",
-          "lighting": "bright natural sunlight",
-          "props": [
-            "snow pile",
-            "flying sled"
-          ],
-          "atmosphere": "impactful",
-          "video_prompt_background": "White snow filling the frame"
-        },
-        "audio_timing": {
-          "creature_sounds": {
-            "present": false,
-            "sound_count": 0,
-            "sounds": []
-          },
-          "background_music": {
-            "present": true,
-            "track_type": "silence",
-            "start_time": "4s",
-            "end_time": "8s",
-            "volume": "off",
-            "mood": "silence for effect",
-            "continues_to_next_segment": true
-          },
-          "sound_effects": [
-            {
-              "type": "snow poof",
-              "start_time": "4s",
-              "duration": "2s",
-              "volume": "loud",
-              "description": "Heavy snow displacement sound"
-            }
-          ]
-        },
-        "instagram_note": "Satisfying visual impact"
-      },
-      {
-        "segment": 39,
-        "duration": 8,
-        "first_frame_description": "A large pile of disturbed snow. Floof is buried, only his feet/tail are sticking out wiggling. Full body implied (feet visible).",
-        "last_frame_description": "Floof's head popping out of the top of the snow pile, covered in white powder like a sugar donut. Full body buried, head visible.",
-        "scene": "The Aftermath",
-        "action": "Floof digs his way out",
-        "reaction": "Confused blinking",
-        "camera": "Static medium shot, waiting for the movement",
-        "visual_focus": "The wiggling feet then the head pop",
-        "comedy_element": "He looks like a snowman",
-        "creature_sounds": [
-          {
-            "time": "2s",
-            "sound_type": "muffled protest",
-            "emotion": "confusion",
-            "description": "Muffled sounds from under snow"
-          },
-          {
-            "time": "6s",
-            "sound_type": "pop sound",
-            "emotion": "surprise",
-            "description": "Mouth pop sound as head emerges"
-          }
-        ],
-        "background": {
-          "location": "Bottom of Slope",
-          "setting": "Snow drift",
-          "time_of_day": "morning",
-          "lighting": "bright natural sunlight",
-          "props": [
-            "snow"
-          ],
-          "atmosphere": "quiet",
-          "video_prompt_background": "Textured snow pile"
-        },
-        "audio_timing": {
-          "creature_sounds": {
-            "present": true,
-            "sound_count": 2,
-            "sounds": [
-              {
-                "time": "2s",
-                "type": "mumble",
-                "emotion": "confused"
-              }
-            ]
-          },
-          "background_music": {
-            "present": false,
-            "track_type": "none",
-            "start_time": "0s",
-            "end_time": "8s",
-            "volume": "off",
-            "mood": "none",
-            "continues_to_next_segment": false
-          },
-          "sound_effects": [
-            {
-              "type": "shuffling",
-              "start_time": "1s",
-              "duration": "3s",
-              "volume": "medium",
-              "description": "Snow shifting sound"
-            }
-          ]
-        },
-        "instagram_note": "Cute reveal"
-      },
-      {
-        "segment": 40,
-        "duration": 8,
-        "first_frame_description": "Floof's head sticking out of the snow pile, covered in snow. Full body buried, head visible.",
-        "last_frame_description": "Floof shaking the snow off his face and smiling/chirping happily. Full body emerging from snow.",
-        "scene": "Resolution",
-        "action": "Floof shakes off and decides he liked it",
-        "reaction": "Happy and ready for more",
-        "camera": "Close-up on face, slight zoom in",
-        "visual_focus": "The facial expression change from confused to happy",
-        "comedy_element": "Immediate recovery and joy",
-        "creature_sounds": [
-          {
-            "time": "2s",
-            "sound_type": "shake noise",
-            "emotion": "relief",
-            "description": "Brrr-rrr-rrr sound while shaking"
-          },
-          {
-            "time": "5s",
-            "sound_type": "happy giggle",
-            "emotion": "joy",
-            "description": "Cute baby giggle"
-          }
-        ],
-        "background": {
-          "location": "Bottom of Slope",
-          "setting": "Snow drift",
-          "time_of_day": "morning",
-          "lighting": "bright natural sunlight",
-          "props": [
-            "snow"
-          ],
-          "atmosphere": "joyful",
-          "video_prompt_background": "Bright snow background"
-        },
-        "audio_timing": {
-          "creature_sounds": {
-            "present": true,
-            "sound_count": 2,
-            "sounds": [
-              {
-                "time": "5s",
-                "type": "giggle",
-                "emotion": "happy"
-              }
-            ]
-          },
-          "background_music": {
-            "present": true,
-            "track_type": "chill",
-            "start_time": "0s",
-            "end_time": "8s",
-            "volume": "medium",
-            "mood": "happy ending",
-            "continues_to_next_segment": false
-          },
-          "sound_effects": [
-            {
-              "type": "sparkle ding",
-              "start_time": "5s",
-              "duration": "1s",
-              "volume": "low",
-              "description": "Subtle audio sweetener for the smile"
-            }
-          ]
-        },
-        "instagram_note": "End on a high note for replayability"
-      }
-      
-    ],
-    "total_segments_generated": 150
-  }
+        }
+    }
 }

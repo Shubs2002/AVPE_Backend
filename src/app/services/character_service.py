@@ -40,7 +40,7 @@ class CharacterService:
             can_speak: Whether character can speak human language (guides voice description format)
             
         Returns:
-            dict: Analysis results with suggestions
+            dict: Analysis results with suggestions (including AI-detected subject)
         """
         try:
             print(f"\n🔍 Analyzing character: {character_name}")
@@ -54,6 +54,7 @@ class CharacterService:
             from app.services.genai_service import analyze_image_with_gemini
             
             # Pass can_speak to prompt so AI knows how to format voice_description
+            # Subject will be detected by Gemini from the image
             prompt = get_character_analysis_prompt(
                 character_count=1,
                 character_name=character_name,
@@ -71,17 +72,9 @@ class CharacterService:
             else:
                 analysis_data = analysis_result
             
-            # Generate character_id with format: char_charactername_uuid
-            # Clean character name for ID (lowercase, remove spaces/special chars)
-            clean_name = character_name.lower().replace(" ", "").replace("-", "").replace("_", "")
-            # Take first 8 characters of UUID for shorter ID
-            short_uuid = str(uuid.uuid4()).split('-')[0]
-            character_id = f"char_{clean_name}_{short_uuid}"
-            
-            print(f"🆔 Generated character ID: {character_id}")
-            
-            # Extract the fields directly
+            # Extract the fields directly (including AI-detected subject)
             name = analysis_data.get("name", character_name)
+            subject = analysis_data.get("subject", "")  # AI-detected from image
             gender = analysis_data.get("gender", "undefined")
             keywords = analysis_data.get("keywords", "")  # Now a string, not array
             voice_description = analysis_data.get("voice_description", "")
@@ -91,11 +84,12 @@ class CharacterService:
                 keywords = keywords[:497] + "..."
             
             print(f"✅ Analysis complete: {name} ({gender})")
+            print(f"📝 AI-detected subject: {subject}")
             
-            # Build simplified response - ONLY essential data
+            # Build simplified response - NO character_id yet (generated in create step)
             response = {
-                "character_id": character_id,
                 "character_name": name,
+                "subject": subject,  # AI-detected: What the character is (e.g., "fluffy pink creature")
                 "gender": gender,
                 "voice_description": voice_description,
                 "keywords": keywords,  # String of comma-separated keywords (max 500 chars)
@@ -220,8 +214,8 @@ class CharacterService:
     async def create_character(
         self,
         image: UploadFile,
-        character_id: str,
         character_name: str,
+        subject: str,
         gender: str,
         voice_description: str,
         keywords: str,
@@ -234,8 +228,8 @@ class CharacterService:
         
         Args:
             image: Uploaded image file
-            character_id: Character ID from analyze step (char_xxx)
             character_name: Name of the character
+            subject: Detailed visual description of how the character looks (appearance, colors, features)
             gender: Gender (male/female/non-binary/creature/undefined)
             voice_description: Voice description with accent (and-separated)
             keywords: Comma-separated keywords string
@@ -247,6 +241,13 @@ class CharacterService:
             dict: Created character data
         """
         try:
+            # Generate character_id with format: char_charactername_uuid
+            # Clean character name for ID (lowercase, remove spaces/special chars)
+            clean_name = character_name.lower().replace(" ", "").replace("-", "").replace("_", "")
+            # Take first 8 characters of UUID for shorter ID
+            short_uuid = str(uuid.uuid4()).split('-')[0]
+            character_id = f"char_{clean_name}_{short_uuid}"
+            
             print(f"\n💾 Creating character: {character_name} (ID: {character_id})")
             
             # Read image data
@@ -272,6 +273,7 @@ class CharacterService:
             character_doc = {
                 "character_id": character_id,  # NOT encrypted - used for lookups
                 "character_name": character_name,
+                "subject": subject,  # What the character is
                 "gender": gender,
                 "voice_description": voice_description,
                 "keywords": keywords,  # String, not array

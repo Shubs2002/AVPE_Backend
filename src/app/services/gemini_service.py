@@ -12,6 +12,7 @@ from google.genai import types
 
 from app.config.settings import settings
 from app.data.prompts.generate_daily_character_prompt import get_daily_character_prompt
+from app.data.prompts.generate_short_film_prompt import get_short_film_prompt
 
 
 def get_gemini_client_with_thinking() -> genai.Client:
@@ -31,6 +32,7 @@ def generate_daily_character_content_v2(
     idea: str,
     character_name: str,
     creature_language: str = "Soft and High-Pitched",
+    character_subject: str = "creature",
     num_segments: int = None,
     allow_dialogue: bool = False,
     num_characters: int = 1
@@ -45,6 +47,7 @@ def generate_daily_character_content_v2(
         idea: The daily life moment/situation
         character_name: Name of the character(s) - comma-separated for multiple
         creature_language: Voice type description(s) - comma-separated for multiple
+        character_subject: What the character is (e.g., "fluffy pink creature")
         num_segments: Number of segments to generate. If None, Gemini decides automatically.
         allow_dialogue: Allow human dialogue/narration (default: False)
         num_characters: Number of characters (1-5, default: 1)
@@ -64,6 +67,7 @@ def generate_daily_character_content_v2(
             idea=idea,
             character_name=character_name,
             creature_language=creature_language,
+            character_subject=character_subject,
             num_segments=num_segments,
             allow_dialogue=allow_dialogue,
             num_characters=num_characters
@@ -109,8 +113,14 @@ def generate_daily_character_content_v2(
         # Parse JSON
         content_data = json.loads(response_text)
         
+        generated_count = len(content_data.get('segments', []))
         print(f"✅ Content generated successfully!")
-        print(f"📊 Generated {len(content_data.get('segments', []))} segments")
+        print(f"📊 Generated {generated_count} segments")
+        
+        # Validate segment count if num_segments was specified
+        if num_segments is not None and generated_count != num_segments:
+            print(f"⚠️  WARNING: Expected {num_segments} segments but got {generated_count}")
+            print(f"⚠️  Gemini may have decided a different count was more appropriate for the story")
         
         return content_data
     
@@ -131,6 +141,7 @@ def generate_daily_character_content_in_sets_v2(
     idea: str,
     character_name: str,
     creature_language: str,
+    character_subject: str,
     total_segments: int,
     allow_dialogue: bool,
     num_characters: int = 1
@@ -144,6 +155,7 @@ def generate_daily_character_content_in_sets_v2(
         idea: The daily life moment/situation
         character_name: Name of the character(s) - comma-separated for multiple
         creature_language: Voice type description(s) - comma-separated for multiple
+        character_subject: What the character(s) is/are (detailed visual descriptions)
         total_segments: Total number of segments needed
         allow_dialogue: Allow human dialogue/narration
         num_characters: Number of characters (1-5, default: 1)
@@ -177,6 +189,7 @@ def generate_daily_character_content_in_sets_v2(
                 idea=idea,
                 character_name=character_name,
                 creature_language=creature_language,
+                character_subject=character_subject,
                 num_segments=segments_in_set,
                 allow_dialogue=allow_dialogue,
                 num_characters=num_characters
@@ -191,6 +204,7 @@ def generate_daily_character_content_in_sets_v2(
                     "hashtags": set_data.get("hashtags", []),
                     "character_name": character_name,
                     "creature_language": creature_language,
+                    "character_subject": character_subject,
                     "allow_dialogue": allow_dialogue,
                     "total_segments": total_segments,
                     "generated_at": datetime.now().isoformat(),
@@ -222,3 +236,116 @@ def generate_daily_character_content_in_sets_v2(
     print(f"\n✅ All sets complete! Generated {len(all_segments)}/{total_segments} segments")
     
     return result
+
+
+
+def generate_short_film_content(
+    idea: str,
+    character_name: str = None,
+    creature_language: str = None,
+    character_subject: str = None,
+    num_segments: int = None,
+    allow_dialogue: bool = True,
+    num_characters: int = 1,
+    film_style: str = "cinematic drama"
+) -> dict:
+    """
+    Generate short film content using Gemini 3 Pro with extended thinking.
+    
+    Args:
+        idea: The film concept/story
+        character_name: Name of the character(s) - comma-separated for multiple
+        creature_language: Voice type(s) - comma-separated (optional for human characters)
+        character_subject: What the character(s) is/are (detailed visual descriptions)
+        num_segments: Number of segments. If None, Gemini decides automatically.
+        allow_dialogue: Allow dialogue (default: True for films)
+        num_characters: Number of characters (1-5, default: 1)
+        film_style: Style of film (e.g., "cinematic drama", "thriller", "romance")
+    
+    Returns:
+        dict: Generated short film content with segments
+    """
+    try:
+        print(f"\n🎬 Generating short film with Gemini 3 Pro (Thinking Mode)...")
+        print(f"💡 Concept: {idea}")
+        print(f"🎭 Style: {film_style}")
+        if character_name:
+            print(f"👤 Character(s): {character_name}")
+            print(f"👥 Number of characters: {num_characters}")
+        print(f"🔢 Segments: {num_segments if num_segments else 'Auto (Gemini decides)'}")
+        print(f"💬 Dialogue: {'Enabled' if allow_dialogue else 'Disabled'}")
+        
+        # Get the prompt
+        prompt = get_short_film_prompt(
+            idea=idea,
+            character_name=character_name,
+            creature_language=creature_language,
+            character_subject=character_subject,
+            num_segments=num_segments,
+            allow_dialogue=allow_dialogue,
+            num_characters=num_characters,
+            film_style=film_style
+        )
+        
+        # Get Gemini client with v1alpha API
+        client = get_gemini_client_with_thinking()
+        
+        print(f"🤔 Gemini 3 Pro is thinking deeply about your film...")
+        
+        # Generate content with Gemini 3 Pro and thinking mode
+        response = client.models.generate_content(
+            model="gemini-3-pro-preview",
+            contents=prompt,
+            config=types.GenerateContentConfig(
+                thinking_config=types.ThinkingConfig(
+                    thinking_budget=8192  # High thinking budget for creative storytelling
+                ),
+                response_modalities=["TEXT"],
+                temperature=0.9,  # Higher creativity for film content
+            )
+        )
+        
+        # Extract the response text
+        if not response or not response.text:
+            raise ValueError("Gemini returned empty response. This might be due to safety filters or API issues.")
+        
+        response_text = response.text.strip()
+        
+        print(f"✅ Gemini 3 Pro completed thinking")
+        
+        # Clean up response (remove markdown code blocks if present)
+        if response_text.startswith("```json"):
+            response_text = response_text[7:]
+        if response_text.startswith("```"):
+            response_text = response_text[3:]
+        if response_text.endswith("```"):
+            response_text = response_text[:-3]
+        response_text = response_text.strip()
+        
+        # Parse JSON
+        content_data = json.loads(response_text)
+        
+        generated_count = len(content_data.get('segments', []))
+        print(f"✅ Short film generated successfully!")
+        print(f"📊 Generated {generated_count} segments")
+        print(f"🎬 Title: {content_data.get('title', 'Untitled')}")
+        print(f"📝 Logline: {content_data.get('logline', 'N/A')}")
+        
+        # Validate segment count if num_segments was specified
+        if num_segments is not None and generated_count != num_segments:
+            print(f"⚠️  WARNING: Expected {num_segments} segments but got {generated_count}")
+            print(f"⚠️  Gemini may have decided a different count was more appropriate for the story")
+        
+        return content_data
+    
+    except json.JSONDecodeError as e:
+        error_msg = f"Failed to parse Gemini response as JSON: {str(e)}"
+        print(f"❌ {error_msg}")
+        if 'response_text' in locals():
+            print(f"Response preview: {response_text[:500]}")
+        raise ValueError(error_msg)
+    
+    except Exception as e:
+        error_msg = f"Failed to generate short film with Gemini 3 Pro: {str(e)}"
+        print(f"❌ {error_msg}")
+        raise ValueError(error_msg)

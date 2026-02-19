@@ -28,7 +28,7 @@ class CharacterController:
             can_speak: Whether character can speak human language (guides voice description)
             
         Returns:
-            dict: Analysis results with voice and keyword suggestions
+            dict: Analysis results with subject, voice, and keyword suggestions
         """
         try:
             result = await character_service.analyze_character_image(
@@ -51,8 +51,8 @@ class CharacterController:
     async def create_character(
         self,
         image: UploadFile,
-        character_id: str,
         character_name: str,
+        subject: str,
         gender: str,
         voice_description: str,
         keywords: str,
@@ -65,22 +65,23 @@ class CharacterController:
         
         Args:
             image: Uploaded image file
-            character_id: Character ID from analyze step (char_xxx)
             character_name: Name of the character
+            subject: What the character is (e.g., "fluffy pink creature")
             gender: Gender (male/female/non-binary/creature/undefined)
             voice_description: Voice description (and-separated)
             keywords: Comma-separated keywords string
             is_private: Private (true) or public (false)
+            can_speak: Whether character can speak human language
             user_id: Optional user ID
             
         Returns:
-            dict: Created character data
+            dict: Created character data with auto-generated character_id
         """
         try:
             result = await character_service.create_character(
                 image=image,
-                character_id=character_id,
                 character_name=character_name,
+                subject=subject,
                 gender=gender,
                 voice_description=voice_description,
                 keywords=keywords,

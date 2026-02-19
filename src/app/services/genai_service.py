@@ -188,7 +188,7 @@ def generate_video_from_payload(payload: dict):
     # Note: generate_audio and sample_count are not supported in GenerateVideosConfig
 
     def _is_transient_service_error(exc_or_obj) -> bool:
-        """Check for transient service errors (503 / UNAVAILABLE / OVERLOADED)."""
+        """Check for transient service errors (503 / UNAVAILABLE / OVERLOADED) and RAI filter errors."""
         try:
             text = str(exc_or_obj).lower()
             # Check for various transient error indicators
@@ -199,7 +199,13 @@ def generate_video_from_payload(payload: dict):
                 "overloaded",  # Code 14
                 "'code': 14",  # Explicit code 14 check
                 "currently overloaded",
-                "please try again later"
+                "please try again later",
+                # RAI (Responsible AI) filter errors - treat as retryable
+                "rai_media_filtered",
+                "rai filter",
+                "content filter",
+                "celebrity or their likenesses",
+                "generated_videos=none"
             ]
             return any(indicator in text for indicator in transient_indicators)
         except Exception:
@@ -400,6 +406,18 @@ def generate_video_from_payload(payload: dict):
     if not operation.response:
         raise Exception("Video generation failed: No response received")
     
+    # Check for RAI (Responsible AI) filtering - treat as retryable error
+    if hasattr(operation.response, 'rai_media_filtered_count') or hasattr(operation.response, 'rai_media_filtered_reasons'):
+        rai_count = getattr(operation.response, 'rai_media_filtered_count', 0)
+        rai_reasons = getattr(operation.response, 'rai_media_filtered_reasons', [])
+        
+        # Handle None values safely
+        if (rai_count is not None and rai_count > 0) or (rai_reasons and len(rai_reasons) > 0):
+            error_msg = f"Video generation blocked by RAI filter: rai_media_filtered_count={rai_count} rai_media_filtered_reasons={rai_reasons}"
+            print(f"❌ {error_msg}")
+            # Treat RAI filtering as a retryable error (might work with different prompt/image)
+            raise Exception(error_msg)
+    
     # Try to extract generated videos
     if hasattr(operation.response, 'generated_videos') and operation.response.generated_videos:
         for generated in operation.response.generated_videos:
@@ -421,8 +439,12 @@ def generate_video_from_payload(payload: dict):
         print(f"Response type: {type(operation.response)}")
         print(f"Response attributes: {dir(operation.response)}")
         
-        # Try to get any video data from the response
+        # Check if this is a RAI filtering case with generated_videos=None
         response_str = str(operation.response)
+        if 'rai_media_filtered' in response_str.lower() or 'generated_videos=None' in response_str:
+            raise Exception(f"Video generation blocked by content filter: {response_str}")
+        
+        # Try to get any video data from the response
         if response_str and response_str != "None":
             results.append(response_str)
         else:

@@ -791,8 +791,8 @@ def execute_content_video_generation(content_data: dict, content_type: str = Non
 
 def execute_daily_character_video_generation(content_data: dict, video_options: dict = None):
     """
-    Generate videos for daily character content using keyframes.
-    Each segment uses the character image as first keyframe for consistency.
+    Generate videos for daily character content using keyframes with CHAT-BASED frame generation.
+    Uses chat sessions to maintain continuity across continuous segments.
     
     Args:
         content_data: Daily character content data with segments
@@ -802,7 +802,11 @@ def execute_daily_character_video_generation(content_data: dict, video_options: 
         dict: Complete results with video generation status
     """
     import time
+    import requests
+    from io import BytesIO
+    from PIL import Image
     from app.services.genai_service import generate_video_with_keyframes
+    from app.services.imagen_chat_service import FrameGenerationChat
     
     if video_options is None:
         video_options = {}
@@ -819,10 +823,62 @@ def execute_daily_character_video_generation(content_data: dict, video_options: 
     character_name = content_data.get("character_name", "Character")
     title = content_data.get("title", "Daily Character Content")
     
+    # Extract character metadata for multi-character support
+    character_metadata = content_data.get("character_metadata", {})
+    characters = character_metadata.get("characters", [])
+    
+    # Extract visual style from content_data (vibe for daily character, genre for short films)
+    content_style = content_data.get("vibe") or content_data.get("genre") or content_data.get("style") or "cute character animation"
+    
+    # Build character names and subjects lists for Imagen
+    character_names_list = []
+    character_subjects_list = []
+    character_url_to_info = {}  # Map URL to character info
+    
+    # Get character URLs list
+    character_keyframe_uris = video_options.get("character_keyframe_uris", [character_keyframe_uri])
+    
+    if characters:
+        for char in characters:
+            char_name = char.get("character_name", "Character")
+            char_subject = char.get("subject", "creature")  # Get subject description from database
+            char_url = char.get("cloudinary_url", "")
+            
+            character_names_list.append(char_name)
+            character_subjects_list.append(char_subject)
+            
+            if char_url:
+                character_url_to_info[char_url] = {
+                    "name": char_name,
+                    "subject": char_subject
+                }
+        
+        print(f"📋 Character metadata loaded:")
+        for name, subject in zip(character_names_list, character_subjects_list):
+            print(f"   - {name}: {subject[:50]}...")
+    else:
+        # Fallback for single character without metadata
+        character_names_list = [character_name]
+        character_subjects_list = [content_data.get("creature_sound_description", "creature")]
+    
+    # Download character images once for chat service
+    print(f"📥 Downloading character images for chat service...")
+    character_images = []
+    for idx, url in enumerate(character_keyframe_uris, 1):
+        if url.startswith("http://") or url.startswith("https://"):
+            print(f"   Downloading character {idx}/{len(character_keyframe_uris)}...")
+            response = requests.get(url, timeout=30)
+            response.raise_for_status()
+            img = Image.open(BytesIO(response.content))
+            character_images.append(img)
+            print(f"   ✅ Character {idx} loaded: {img.size}")
+    
     print(f"\n🎬 Starting daily character video generation for: {title}")
-    print(f"👤 Character: {character_name}")
+    print(f"👤 Character(s): {', '.join(character_names_list)}")
+    print(f"🎭 Style: {content_style}")
     print(f"🖼️ Keyframe: {character_keyframe_uri}")
     print(f"📊 Total segments: {len(segments)}")
+    print(f"🔄 Using CHAT-BASED frame generation for continuity")
     
     # Initialize results
     results = {
@@ -839,8 +895,8 @@ def execute_daily_character_video_generation(content_data: dict, video_options: 
         "frame_chain": []  # Track frame chaining
     }
     
-    # Track the last frame for chaining
-    previous_last_frame = None
+    # Initialize chat session for frame generation (will be reused for continuous segments)
+    frame_chat = None
     
     # Process each segment
     for idx, segment in enumerate(segments):
@@ -902,57 +958,114 @@ def execute_daily_character_video_generation(content_data: dict, video_options: 
         print(f"\n🎬 Generating video for Segment {segment_num}/{len(segments)}...")
         print(f"📝 Prompt: {prompt[:100]}...")
         
-        # Determine first frame for this segment
+        # Determine first frame for this segment using CHAT-BASED generation
         first_frame_to_use = None
+        first_frame_desc = segment.get("first_frame_description")
+        last_frame_desc = segment.get("last_frame_description")
         
-        if is_first_segment:
-            # For first segment, check if there's a first_frame_description
-            first_frame_desc = segment.get("first_frame_description")
+        # Get character info for this segment
+        segment_char_names = []
+        segment_char_subjects = []
+        characters_present = segment.get("characters_present", [])
+        
+        if characters_present and characters:
+            # Match characters_present to character metadata
+            for char_name in characters_present:
+                for char in characters:
+                    if char.get("character_name") == char_name:
+                        segment_char_names.append(char_name)
+                        segment_char_subjects.append(char.get("subject", "creature"))
+                        break
+        else:
+            # Fallback to all characters
+            segment_char_names = character_names_list
+            segment_char_subjects = character_subjects_list
+        
+        # CHAT-BASED FRAME GENERATION LOGIC
+        try:
             if first_frame_desc:
-                print(f"🎨 Segment 1: Generating custom first frame with Imagen (nano banana)...")
-                print(f"📝 Frame description: {first_frame_desc[:80]}...")
-                try:
-                    from app.services.imagen_service import generate_first_frame_with_imagen
+                # NEW SCENE - Create new chat session
+                print(f"🆕 Segment {segment_num}: NEW SCENE detected (has first_frame_description)")
+                print(f"   Creating new chat session for frame generation...")
+                
+                frame_chat = FrameGenerationChat(
+                    model=video_options.get("image_model", "gemini-2.5-flash-image")
+                )
+                
+                # Generate first frame with new chat
+                print(f"🎨 Generating first frame with new chat session...")
+                generated_image, first_frame_path = frame_chat.generate_first_frame(
+                    character_images=character_images,
+                    frame_description=first_frame_desc,
+                    character_names=segment_char_names,
+                    character_subjects=segment_char_subjects,
+                    style=content_style,
+                    aspect_ratio=video_options.get("aspect_ratio", "9:16"),
+                    resolution="2K",
+                    output_dir="frames"
+                )
+                
+                first_frame_to_use = first_frame_path
+                segment_result["first_frame_source"] = "chat_new_scene"
+                segment_result["first_frame_path"] = first_frame_path
+                print(f"✅ First frame generated (new scene): {first_frame_path}")
+                
+            elif frame_chat is not None:
+                # CONTINUOUS SEGMENT - Reuse existing chat session
+                print(f"🔄 Segment {segment_num}: CONTINUOUS from previous (no first_frame_description)")
+                print(f"   Reusing existing chat session for continuity...")
+                
+                # The last frame from previous segment becomes the first frame
+                # We don't need to generate a new first frame - just use the last one
+                if hasattr(frame_chat, 'current_frame') and frame_chat.current_frame:
+                    # Save the current frame as first frame for this segment
+                    import os
+                    from datetime import datetime
+                    os.makedirs("frames", exist_ok=True)
+                    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+                    first_frame_path = os.path.join("frames", f"first_frame_continuous_{timestamp}.png")
+                    frame_chat.current_frame.save(first_frame_path, "PNG")
                     
-                    # Get character URLs for this segment (support multi-character)
-                    segment_char_urls = segment.get("character_keyframe_uris")
-                    if not segment_char_urls:
-                        segment_char_urls = [segment.get("character_keyframe_uri", character_keyframe_uri)]
-                    
-                    # Generate and download the first frame
-                    generated_image, frame_filepath = generate_first_frame_with_imagen(
-                        character_image_urls=segment_char_urls,
-                        frame_description=first_frame_desc,
-                        aspect_ratio=video_options.get("aspect_ratio", "9:16"),
-                        output_dir="frames",
-                        image_model=video_options.get("image_model", "gemini-2.5-flash-image")
-                    )
-                    
-                    # Use the downloaded frame file path
-                    first_frame_to_use = frame_filepath
-                    segment_result["first_frame_source"] = "imagen_generated"
-                    segment_result["first_frame_path"] = frame_filepath
-                    print(f"✅ First frame generated with Imagen and saved to: {frame_filepath}")
-                except Exception as e:
-                    print(f"⚠️ Imagen generation failed: {str(e)}, using character keyframe")
+                    first_frame_to_use = first_frame_path
+                    segment_result["first_frame_source"] = "chat_continuous"
+                    segment_result["first_frame_path"] = first_frame_path
+                    print(f"✅ Using previous last frame as first frame: {first_frame_path}")
+                else:
+                    # Fallback to character keyframe
                     first_frame_to_use = character_keyframe_uri
-                    segment_result["first_frame_source"] = "character_keyframe"
+                    segment_result["first_frame_source"] = "character_keyframe_fallback"
+                    print(f"⚠️ No previous frame available, using character keyframe")
             else:
-                # No description, use character keyframe
+                # First segment without first_frame_description - use character keyframe
                 first_frame_to_use = character_keyframe_uri
                 segment_result["first_frame_source"] = "character_keyframe"
-                print(f"🖼️ Segment 1: Using character keyframe as first frame")
-        else:
-            # For subsequent segments, use last frame from previous video
-            if previous_last_frame:
-                first_frame_to_use = previous_last_frame
-                segment_result["first_frame_source"] = f"last_frame_from_segment_{segment_num-1}"
-                print(f"🔗 Segment {segment_num}: Using last frame from previous segment")
+                print(f"🖼️ Segment {segment_num}: Using character keyframe as first frame")
+            
+            # Generate LAST FRAME using chat (if description provided)
+            last_frame_to_use = None
+            if last_frame_desc and frame_chat is not None:
+                print(f"🎨 Generating last frame with chat session...")
+                generated_image, last_frame_path = frame_chat.generate_last_frame(
+                    last_frame_description=last_frame_desc,
+                    aspect_ratio=video_options.get("aspect_ratio", "9:16"),
+                    resolution="2K",
+                    output_dir="frames"
+                )
+                
+                last_frame_to_use = last_frame_path
+                segment_result["last_frame_generated"] = last_frame_path
+                print(f"✅ Last frame generated: {last_frame_path}")
+                print(f"   → Will be used as first frame for next continuous segment")
             else:
-                # Fallback to character keyframe if previous frame not available
-                first_frame_to_use = character_keyframe_uri
-                segment_result["first_frame_source"] = "character_keyframe_fallback"
-                print(f"⚠️ Segment {segment_num}: Previous frame not available, using character keyframe")
+                print(f"⚠️ No last_frame_description provided for segment {segment_num}")
+                
+        except Exception as e:
+            print(f"⚠️ Chat-based frame generation failed: {str(e)}")
+            print(f"   Falling back to character keyframe")
+            first_frame_to_use = character_keyframe_uri
+            last_frame_to_use = None
+            segment_result["first_frame_source"] = "character_keyframe_fallback"
+            segment_result["frame_generation_error"] = str(e)
         
         # Retry logic
         max_retries = 3
@@ -968,8 +1081,8 @@ def execute_daily_character_video_generation(content_data: dict, video_options: 
                 # Generate video with keyframe chaining and character reference (Veo 3.1)
                 video_urls = generate_video_with_keyframes(
                     prompt=prompt,
-                    first_frame=first_frame_to_use,  # Previous frame as main image
-                    last_frame=None,  # Let Veo3.1 generate the end naturally
+                    first_frame=first_frame_to_use,  # Chat-generated or character keyframe
+                    last_frame=last_frame_to_use,  # Chat-generated last frame (if available)
                     duration=duration,
                     resolution=video_options.get("resolution", "720p"),
                     aspect_ratio=video_options.get("aspect_ratio", "9:16"),
@@ -985,9 +1098,9 @@ def execute_daily_character_video_generation(content_data: dict, video_options: 
                     
                     print(f"✅ Segment {segment_num} video generated: {video_url[:50]}...")
                     
-                    # Download video and extract last frame (skip for last segment)
+                    # Download video to content directory
                     try:
-                        from app.services.genai_service import download_video, extract_last_frame_from_video
+                        from app.services.genai_service import download_video
                         from app.services.file_storage_manager import storage_manager, ContentType
                         import os
                         
@@ -996,9 +1109,7 @@ def execute_daily_character_video_generation(content_data: dict, video_options: 
                         
                         # Create subdirectories
                         videos_dir = os.path.join(content_dir, "videos")
-                        frames_dir = os.path.join(content_dir, "frames")
                         os.makedirs(videos_dir, exist_ok=True)
-                        os.makedirs(frames_dir, exist_ok=True)
                         
                         # Download video to content directory
                         temp_filename = f"{character_name}_segment_{segment_num}"
@@ -1013,32 +1124,10 @@ def execute_daily_character_video_generation(content_data: dict, video_options: 
                             print(f"💾 Also saved to downloads: {downloads_path}")
                         
                         segment_result["video_file"] = temp_video_path
-                        
-                        # Extract last frame ONLY if not the last segment (need n-1 frames for n segments)
-                        if not is_last_segment:
-                            last_frame_filename = f"last_frame_seg_{segment_num}.png"
-                            last_frame_path = os.path.join(frames_dir, last_frame_filename)
-                            extracted_frame_path = extract_last_frame_from_video(temp_video_path, last_frame_path)
-                            
-                            # Store for next segment
-                            previous_last_frame = extracted_frame_path
-                            segment_result["last_frame_extracted"] = extracted_frame_path
-                            results["frame_chain"].append({
-                                "segment": segment_num,
-                                "last_frame": extracted_frame_path,
-                                "video_file": temp_video_path
-                            })
-                            
-                            print(f"🖼️ Last frame extracted for next segment: {extracted_frame_path}")
-                        else:
-                            print(f"⏭️ Last segment - skipping frame extraction")
-                        
                         print(f"📁 Content directory: {content_dir}")
                         
                     except Exception as e:
-                        print(f"⚠️ Frame extraction failed for segment {segment_num}: {str(e)}")
-                        print(f"⚠️ Next segment will use character keyframe as fallback")
-                        previous_last_frame = None
+                        print(f"⚠️ Video download failed for segment {segment_num}: {str(e)}")
                     
                     break  # Success, exit retry loop
                     
@@ -1219,6 +1308,32 @@ def execute_daily_character_video_generation(content_data: dict, video_options: 
     if not segments:
         raise ValueError("No segments found in content data")
     
+    # Extract character metadata for multi-character support
+    character_metadata = content_data.get("character_metadata", {})
+    characters = character_metadata.get("characters", [])
+    
+    # Extract visual style from content_data (vibe for daily character, genre for short films)
+    content_style = content_data.get("vibe") or content_data.get("genre") or content_data.get("style") or "cute character animation"
+    
+    # Build character names and subjects lists for Imagen
+    character_names_list = []
+    character_subjects_list = []
+    
+    if characters:
+        for char in characters:
+            char_name = char.get("character_name", "Character")
+            char_subject = char.get("subject", "creature")  # Get subject description from database
+            character_names_list.append(char_name)
+            character_subjects_list.append(char_subject)
+        
+        print(f"📋 Character metadata loaded:")
+        for name, subject in zip(character_names_list, character_subjects_list):
+            print(f"   - {name}: {subject[:50]}...")
+    else:
+        # Fallback for single character without metadata
+        character_names_list = [content_data.get('character_name', 'Character')]
+        character_subjects_list = [content_data.get("creature_sound_description", "creature")]
+    
     # Prepare results structure
     results = {
         "content_title": content_data.get('title', 'Daily Character Video'),
@@ -1233,7 +1348,8 @@ def execute_daily_character_video_generation(content_data: dict, video_options: 
     }
     
     print(f"🎬 Starting daily character video generation for: {results['content_title']}")
-    print(f"👤 Character: {results['character_name']}")
+    print(f"👤 Character(s): {', '.join(character_names_list)}")
+    print(f"🎭 Style: {content_style}")
     print(f"🖼️ Keyframe: {character_keyframe_uri}")
     print(f"📊 Total segments: {len(segments)}")
     
@@ -1256,10 +1372,14 @@ def execute_daily_character_video_generation(content_data: dict, video_options: 
         
         try:
             # Extract or build prompt from segment
-            prompt = segment.get('video_prompt', '')
-            if not prompt:
+            # Check for Veo 3 structured prompt first (veo_prompt), then fallback to video_prompt
+            prompt = segment.get('veo_prompt', '') or segment.get('video_prompt', '')
+            if prompt:
+                print(f"✅ Using Veo 3 structured prompt with integrated audio")
+            else:
                 # Build prompt from segment fields for daily character content
                 prompt = build_daily_character_video_prompt(segment)
+                print(f"⚠️  Using legacy prompt format (no integrated audio)")
             
             if not prompt or prompt == "Daily character moment":
                 raise ValueError(f"Could not build video prompt for segment {i}")
@@ -1300,13 +1420,34 @@ def execute_daily_character_video_generation(content_data: dict, video_options: 
                     if not segment_char_urls:
                         segment_char_urls = [segment.get("character_keyframe_uri", character_keyframe_uri)]
                     
+                    # Get character names and subjects for this segment's characters
+                    segment_char_names = []
+                    segment_char_subjects = []
+                    characters_present = segment.get("characters_present", [])
+                    
+                    if characters_present and characters:
+                        # Match characters_present to character metadata
+                        for char_name in characters_present:
+                            for char in characters:
+                                if char.get("character_name") == char_name:
+                                    segment_char_names.append(char_name)
+                                    segment_char_subjects.append(char.get("subject", "creature"))
+                                    break
+                    else:
+                        # Fallback to all characters
+                        segment_char_names = character_names_list
+                        segment_char_subjects = character_subjects_list
+                    
                     generated_image, frame_path = generate_first_frame_with_imagen(
                         character_image_urls=segment_char_urls,
                         frame_description=first_frame_description,
                         aspect_ratio=video_options.get("aspect_ratio", "9:16"),
                         output_dir=frames_dir,
                         additional_reference_images=video_options.get("reference_images"),
-                        image_model=video_options.get("image_model", "gemini-2.5-flash-image")
+                        image_model=video_options.get("image_model", "gemini-2.5-flash-image"),
+                        character_names=segment_char_names,
+                        character_subjects=segment_char_subjects,
+                        style=content_style
                     )
                     first_frame = frame_path
                     segment_result["first_frame_generated"] = frame_path
@@ -1348,6 +1489,24 @@ def execute_daily_character_video_generation(content_data: dict, video_options: 
                     if not segment_char_urls:
                         segment_char_urls = [segment.get("character_keyframe_uri", character_keyframe_uri)]
                     
+                    # Get character names and subjects for this segment's characters
+                    segment_char_names = []
+                    segment_char_subjects = []
+                    characters_present = segment.get("characters_present", [])
+                    
+                    if characters_present and characters:
+                        # Match characters_present to character metadata
+                        for char_name in characters_present:
+                            for char in characters:
+                                if char.get("character_name") == char_name:
+                                    segment_char_names.append(char_name)
+                                    segment_char_subjects.append(char.get("subject", "creature"))
+                                    break
+                    else:
+                        # Fallback to all characters
+                        segment_char_names = character_names_list
+                        segment_char_subjects = character_subjects_list
+                    
                     generated_image, last_frame_path = generate_last_frame_with_imagen(
                         character_image_urls=segment_char_urls,
                         first_frame_path=first_frame,
@@ -1355,7 +1514,10 @@ def execute_daily_character_video_generation(content_data: dict, video_options: 
                         aspect_ratio=video_options.get("aspect_ratio", "9:16"),
                         output_dir=frames_dir,
                         additional_reference_images=video_options.get("reference_images"),
-                        image_model=video_options.get("image_model", "gemini-2.5-flash-image")
+                        image_model=video_options.get("image_model", "gemini-2.5-flash-image"),
+                        character_names=segment_char_names,
+                        character_subjects=segment_char_subjects,
+                        style=content_style
                     )
                     last_frame = last_frame_path
                     segment_result["last_frame_generated"] = last_frame_path
@@ -1476,6 +1638,32 @@ def execute_daily_character_video_generation_with_references(content_data: dict,
     if not segments:
         raise ValueError("No segments found in content data")
     
+    # Extract character metadata for multi-character support
+    character_metadata = content_data.get("character_metadata", {})
+    characters = character_metadata.get("characters", [])
+    
+    # Build character names and subjects lists for Imagen
+    character_names_list = []
+    character_subjects_list = []
+    
+    if characters:
+        for char in characters:
+            char_name = char.get("character_name", "Character")
+            char_subject = char.get("subject", "creature")  # Get subject description from database
+            character_names_list.append(char_name)
+            character_subjects_list.append(char_subject)
+        
+        print(f"📋 Character metadata loaded:")
+        for name, subject in zip(character_names_list, character_subjects_list):
+            print(f"   - {name}: {subject[:50]}...")
+    else:
+        # Fallback for single character without metadata
+        character_names_list = [content_data.get('character_name', 'Character')]
+        character_subjects_list = [content_data.get("creature_sound_description", "creature")]
+    
+    # Extract visual style from content_data (vibe for daily character, genre for short films)
+    content_style = content_data.get("vibe") or content_data.get("genre") or content_data.get("style") or "cute character animation"
+    
     # Prepare results structure
     results = {
         "content_title": content_data.get('title', 'Daily Character Video'),
@@ -1491,7 +1679,8 @@ def execute_daily_character_video_generation_with_references(content_data: dict,
     }
     
     print(f"🎬 Starting daily character video generation (REFERENCE MODE) for: {results['content_title']}")
-    print(f"👤 Character: {results['character_name']}")
+    print(f"👤 Character(s): {', '.join(character_names_list)}")
+    print(f"🎭 Style: {content_style}")
     print(f"🖼️ Character Keyframe: {character_keyframe_uri}")
     print(f"🎨 Mode: Using frames as REFERENCE IMAGES for character consistency")
     print(f"📊 Total segments: {len(segments)}")
@@ -1515,10 +1704,14 @@ def execute_daily_character_video_generation_with_references(content_data: dict,
         
         try:
             # Extract or build prompt from segment
-            prompt = segment.get('video_prompt', '')
-            if not prompt:
+            # Check for Veo 3 structured prompt first (veo_prompt), then fallback to video_prompt
+            prompt = segment.get('veo_prompt', '') or segment.get('video_prompt', '')
+            if prompt:
+                print(f"✅ Using Veo 3 structured prompt with integrated audio")
+            else:
                 # Build prompt from segment fields for daily character content
                 prompt = build_daily_character_video_prompt(segment)
+                print(f"⚠️  Using legacy prompt format (no integrated audio)")
             
             if not prompt or prompt == "Daily character moment":
                 raise ValueError(f"Could not build video prompt for segment {i}")
@@ -1543,12 +1736,33 @@ def execute_daily_character_video_generation_with_references(content_data: dict,
                     if not segment_char_urls:
                         segment_char_urls = [segment.get("character_keyframe_uri", character_keyframe_uri)]
                     
+                    # Get character names and subjects for this segment's characters
+                    segment_char_names = []
+                    segment_char_subjects = []
+                    characters_present = segment.get("characters_present", [])
+                    
+                    if characters_present and characters:
+                        # Match characters_present to character metadata
+                        for char_name in characters_present:
+                            for char in characters:
+                                if char.get("character_name") == char_name:
+                                    segment_char_names.append(char_name)
+                                    segment_char_subjects.append(char.get("subject", "creature"))
+                                    break
+                    else:
+                        # Fallback to all characters
+                        segment_char_names = character_names_list
+                        segment_char_subjects = character_subjects_list
+                    
                     generated_image, frame_path = generate_first_frame_with_imagen(
                         character_image_urls=segment_char_urls,
                         frame_description=frame_description,
                         aspect_ratio=video_options.get("aspect_ratio", "9:16"),
                         output_dir=frames_dir,
-                        image_model=video_options.get("image_model", "gemini-2.5-flash-image")
+                        image_model=video_options.get("image_model", "gemini-2.5-flash-image"),
+                        character_names=segment_char_names,
+                        character_subjects=segment_char_subjects,
+                        style=content_style
                     )
                     # Use the saved frame path as first_frame (will be used as reference)
                     first_frame = frame_path

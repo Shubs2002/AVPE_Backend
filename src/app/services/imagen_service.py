@@ -19,7 +19,10 @@ def generate_first_frame_with_imagen(
     output_dir: str = "frames",
     additional_reference_images: list = None,
     image_model: str = "gemini-2.5-flash-image",
-    character_image_urls: list = None  # NEW: Support multiple character URLs
+    character_image_urls: list = None,  # Support multiple character URLs
+    character_names: list = None,  # Names of characters (e.g., ["Floof", "Poof"])
+    character_subjects: list = None,  # Subject descriptions (e.g., ["fluffy pink creature with big eyes", "small blue robot"])
+    style: str = None  # NEW: Visual style (e.g., "cute character animation", "cinematic drama", "anime style")
 ) -> tuple[Image.Image, str]:
     """
     Generate the first frame using Imagen (nano banana model).
@@ -33,6 +36,9 @@ def generate_first_frame_with_imagen(
         additional_reference_images: Optional list of additional reference image data (bytes or PIL Images)
         image_model: Image generation model to use
         character_image_urls: List of character image URLs (for multi-character support)
+        character_names: List of character names (for multi-character identification)
+        character_subjects: List of character subject descriptions (detailed visual descriptions)
+        style: Visual style for the image (e.g., "cute character animation", "cinematic drama")
     
     Returns:
         tuple: (PIL.Image, filepath) - Generated image and path where it was saved
@@ -86,9 +92,24 @@ def generate_first_frame_with_imagen(
     num_chars = len(character_images)
     char_refs_text = "characters" if num_chars > 1 else "character"
     
+    # Build character identification section if names and subjects are provided
+    character_identification = ""
+    if character_names and character_subjects and len(character_names) == num_chars:
+        character_identification = "\n\n**CHARACTER IDENTIFICATION** (CRITICAL - Match each reference image to its description):\n"
+        for i, (name, subject) in enumerate(zip(character_names, character_subjects), 1):
+            character_identification += f"- Reference Image {i} is **{name}**: {subject}\n"
+        character_identification += "\nWhen placing characters in the scene, use these descriptions to identify which reference image is which character."
+    
+    # Build style section
+    style_instruction = ""
+    if style:
+        style_instruction = f"\n\n**VISUAL STYLE**: {style}\nApply this visual style to the entire image while maintaining character consistency."
+    
     prompt = f"""Create a high-quality image.
 
 Scene: {frame_description}
+{character_identification}
+{style_instruction}
 
 ⚠️ CRITICAL CHARACTER CONSISTENCY RULE:
 Use the reference image(s) EXACTLY as provided. DO NOT change, modify, or reinterpret the {char_refs_text}:
@@ -112,6 +133,12 @@ Requirements:
     print(f"🎨 Generating frame with Imagen...")
     print(f"📐 Aspect ratio: {aspect_ratio}")
     print(f"👥 Using {num_chars} character reference(s)")
+    if style:
+        print(f"🎭 Style: {style}")
+    if character_names and character_subjects:
+        print(f"📋 Character identification enabled:")
+        for name, subject in zip(character_names, character_subjects):
+            print(f"   - {name}: {subject[:60]}...")
     
     try:
         # Get Gemini client
@@ -266,7 +293,10 @@ def generate_last_frame_with_imagen(
     output_dir: str = "frames",
     additional_reference_images: list = None,
     image_model: str = "gemini-2.5-flash-image",
-    character_image_urls: list = None  # NEW: Support multiple character URLs
+    character_image_urls: list = None,  # Support multiple character URLs
+    character_names: list = None,  # Names of characters (e.g., ["Floof", "Poof"])
+    character_subjects: list = None,  # Subject descriptions (e.g., ["fluffy pink creature with big eyes", "small blue robot"])
+    style: str = None  # NEW: Visual style (e.g., "cute character animation", "cinematic drama", "anime style")
 ) -> tuple[Image.Image, str]:
     """
     Generate the last frame using Imagen with BOTH character reference and first frame reference.
@@ -281,6 +311,9 @@ def generate_last_frame_with_imagen(
         additional_reference_images: Optional list of additional reference image data (bytes or PIL Images)
         image_model: Image generation model to use
         character_image_urls: List of character image URLs (for multi-character support)
+        character_names: List of character names (for multi-character identification)
+        character_subjects: List of character subject descriptions (detailed visual descriptions)
+        style: Visual style for the image (e.g., "cute character animation", "cinematic drama")
     
     Returns:
         tuple: (PIL.Image, filepath) - Generated image and path where it was saved
@@ -341,9 +374,24 @@ def generate_last_frame_with_imagen(
     num_chars = len(character_images)
     char_refs_text = "character references" if num_chars > 1 else "character reference"
     
+    # Build character identification section if names and subjects are provided
+    character_identification = ""
+    if character_names and character_subjects and len(character_names) == num_chars:
+        character_identification = "\n\n**CHARACTER IDENTIFICATION** (CRITICAL - Match each reference image to its description):\n"
+        for i, (name, subject) in enumerate(zip(character_names, character_subjects), 1):
+            character_identification += f"- Reference Image {i} is **{name}**: {subject}\n"
+        character_identification += "\nWhen placing characters in the scene, use these descriptions to identify which reference image is which character."
+    
+    # Build style section
+    style_instruction = ""
+    if style:
+        style_instruction = f"\n\n**VISUAL STYLE**: {style}\nApply this visual style to the entire image while maintaining character consistency."
+    
     prompt = f"""Create a high-quality image.
 
 Scene: {last_frame_description}
+{character_identification}
+{style_instruction}
 
 ⚠️ CRITICAL CHARACTER CONSISTENCY RULE:
 Use the FIRST {num_chars} reference image(s) EXACTLY as provided. DO NOT change, modify, or reinterpret ANY character:
@@ -375,6 +423,12 @@ Requirements:
     print(f"🎨 Generating last frame with Imagen...")
     print(f"📐 Aspect ratio: {aspect_ratio}")
     print(f"🖼️ Using {num_chars} character reference(s) + first frame reference")
+    if style:
+        print(f"🎭 Style: {style}")
+    if character_names and character_subjects:
+        print(f"📋 Character identification enabled:")
+        for name, subject in zip(character_names, character_subjects):
+            print(f"   - {name}: {subject[:60]}...")
     
     try:
         # Get Gemini client

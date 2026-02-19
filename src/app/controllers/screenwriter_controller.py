@@ -820,6 +820,7 @@ def generate_daily_character_content_v2(
     idea: str,
     character_name: str,
     creature_language: str = "Soft and High-Pitched",
+    character_subject: str = "creature",
     num_segments: int = None,
     allow_dialogue: bool = False,
     num_characters: int = 1
@@ -842,6 +843,7 @@ def generate_daily_character_content_v2(
         idea: The daily life moment/situation
         character_name: Name of the character(s) - comma-separated for multiple
         creature_language: Voice type description
+        character_subject: What the character is (e.g., "fluffy pink creature")
         num_segments: Number of segments (unlimited). If None, Gemini decides automatically.
         allow_dialogue: Allow human dialogue/narration (default: False)
         num_characters: Number of characters in the story
@@ -876,30 +878,142 @@ def generate_daily_character_content_v2(
     try:
         from app.services import gemini_service
         
-        # For large segment counts, use set-wise generation
-        if num_segments is not None and num_segments > 10:
-            content = gemini_service.generate_daily_character_content_in_sets_v2(
-                idea=idea,
-                character_name=character_name,
-                creature_language=creature_language,
-                total_segments=num_segments,
-                allow_dialogue=allow_dialogue,
-                num_characters=num_characters
-            )
-        else:
-            # Use single-pass generation (Gemini decides segment count if None)
-            content = gemini_service.generate_daily_character_content_v2(
-                idea=idea,
-                character_name=character_name,
-                creature_language=creature_language,
-                num_segments=num_segments,  # Can be None - Gemini will decide
-                allow_dialogue=allow_dialogue,
-                num_characters=num_characters
-            )
+        # V2 route: Always use single-pass generation (no set splitting)
+        # Gemini 3 Pro with thinking mode can handle large segment counts
+        content = gemini_service.generate_daily_character_content_v2(
+            idea=idea,
+            character_name=character_name,
+            creature_language=creature_language,
+            character_subject=character_subject,
+            num_segments=num_segments,  # Can be None - Gemini will decide
+            allow_dialogue=allow_dialogue,
+            num_characters=num_characters
+        )
         
         return {"content": content}
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Daily character content generation (v2) failed: {str(e)}"
+        )
+
+
+
+def generate_short_film(
+    idea: str,
+    character_ids: list = None,
+    num_segments: int = None,
+    allow_dialogue: bool = True,
+    film_style: str = "cinematic drama"
+):
+    """
+    Generate short film content using Gemini 3 Pro with thinking mode.
+    
+    Args:
+        idea: The film concept/story
+        character_ids: List of character IDs to use (optional)
+        num_segments: Number of segments (optional - Gemini decides if None)
+        allow_dialogue: Allow dialogue (default: True)
+        film_style: Style of film (default: "cinematic drama")
+    
+    Returns:
+        dict: Generated short film content with character_metadata
+    """
+    if not idea:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Missing film idea"
+        )
+    
+    if num_segments is not None and num_segments < 1:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Number of segments must be at least 1"
+        )
+    
+    try:
+        from app.services import gemini_service
+        
+        # If character_ids provided, fetch character data
+        character_name = None
+        creature_language = None
+        character_subject = None
+        num_characters = 0
+        character_metadata = None
+        
+        if character_ids and len(character_ids) > 0:
+            from app.services.character_service import character_service
+            
+            character_names = []
+            creature_languages = []
+            character_subjects = []
+            characters_list = []
+            
+            for char_id in character_ids:
+                print(f"✅ Using character: {char_id}")
+                char_data = character_service.get_character_by_id(char_id)
+                
+                character_names.append(char_data["character_name"])
+                
+                # Get voice description or use default
+                voice_desc = char_data.get("voice_description", "Natural speaking voice")
+                creature_languages.append(voice_desc)
+                
+                # Get subject (detailed visual description)
+                subject = char_data.get("subject", "character")
+                character_subjects.append(subject)
+                
+                # Build character metadata for video generation
+                characters_list.append({
+                    "character_id": char_id,
+                    "character_name": char_data["character_name"],
+                    "cloudinary_url": char_data.get("cloudinary_url"),
+                    "gender": char_data.get("gender", "undefined"),
+                    "voice_description": voice_desc,
+                    "can_speak": char_data.get("can_speak", True)
+                })
+            
+            character_name = ", ".join(character_names)
+            creature_language = ", ".join(creature_languages)
+            character_subject = ", ".join(character_subjects)
+            num_characters = len(character_ids)
+            
+            # Build character_metadata structure (same as character content)
+            character_metadata = {
+                "character_ids": character_ids,
+                "characters": characters_list
+            }
+            
+            print(f"🎭 Characters: {character_name}")
+            print(f"📝 Character subject(s): {character_subject}")
+        
+        # Generate short film content
+        content = gemini_service.generate_short_film_content(
+            idea=idea,
+            character_name=character_name,
+            creature_language=creature_language,
+            character_subject=character_subject,
+            num_segments=num_segments,
+            allow_dialogue=allow_dialogue,
+            num_characters=num_characters,
+            film_style=film_style
+        )
+        
+        # Build response in same format as character content
+        result = {
+            "content_data": {
+                "content": content
+            }
+        }
+        
+        # Add character_metadata if characters were used
+        if character_metadata:
+            result["content_data"]["character_metadata"] = character_metadata
+        
+        return result
+        
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Short film generation failed: {str(e)}"
         )

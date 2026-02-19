@@ -685,6 +685,81 @@ async def download_video_route(payload: DownloadVideoRequest) -> dict:
     return cinematographer_controller.handle_download_video(payload.dict())
 
 
+# ---------- SHORT FILM GENERATION ----------
+
+class GenerateShortFilmRequest(BaseModel):
+    idea: str = Field(..., description="Film concept/story", example="A lonely robot discovers the meaning of friendship")
+    character_ids: Optional[List[str]] = Field(None, description="List of character IDs to use (optional)", example=["char_floof_xxx", "char_poof_yyy"])
+    num_segments: Optional[int] = Field(None, description="Number of segments (optional - Gemini decides if not provided)", ge=10, le=200, example=50)
+    allow_dialogue: Optional[bool] = Field(True, description="Allow dialogue in the film (default: True)")
+    film_style: Optional[str] = Field("cinematic drama", description="Style of film", example="cinematic drama")
+
+@router.post("/generate-short-film")
+async def generate_short_film_route(
+    payload: GenerateShortFilmRequest,
+    current_user: Optional[dict] = Depends(get_current_user)
+) -> dict:
+    """
+    🎬 Generate professional short film content using Gemini 3 Pro with thinking mode.
+    
+    Create cinematic short films with:
+    - 🎭 Strong narrative arc (beginning, middle, end)
+    - 🎨 Professional cinematography and visual storytelling
+    - 💬 Natural dialogue (optional)
+    - 🎯 Emotional depth and character development
+    - 📽️ Three-act structure
+    - 🎬 Cinematic camera work
+    
+    **Film Styles:**
+    - "cinematic drama" - Emotional, character-driven stories
+    - "thriller" - Suspenseful, tension-filled narratives
+    - "romance" - Love stories with emotional depth
+    - "sci-fi" - Futuristic, imaginative concepts
+    - "horror" - Scary, atmospheric stories
+    - "comedy" - Funny, lighthearted films
+    - "mystery" - Intriguing, puzzle-like narratives
+    
+    **Segment Count:**
+    - Short films: 20-40 segments (2.5-5 minutes)
+    - Medium films: 40-70 segments (5-9 minutes)
+    - Longer films: 70-100 segments (9-13 minutes)
+    - Or let Gemini decide the optimal length
+    
+    **With Characters:**
+    - Provide character_ids to use your saved characters
+    - Characters maintain visual consistency
+    - Supports multi-character films
+    
+    **Without Characters:**
+    - Gemini creates characters as needed for the story
+    
+    **Example:**
+    ```json
+    {
+      "idea": "A lonely robot discovers the meaning of friendship",
+      "character_ids": ["char_robot_xxx"],
+      "num_segments": 50,
+      "allow_dialogue": true,
+      "film_style": "sci-fi"
+    }
+    ```
+    
+    **Returns:**
+    - Complete short film script with segments
+    - Cinematic camera descriptions
+    - Three-act structure
+    - Emotional arc
+    - Visual storytelling
+    """
+    return screenwriter_controller.generate_short_film(
+        idea=payload.idea,
+        character_ids=payload.character_ids,
+        num_segments=payload.num_segments,
+        allow_dialogue=payload.allow_dialogue,
+        film_style=payload.film_style
+    )
+
+
 # ---------- CHARACTER MANAGEMENT (NEW FLOW) ----------
 
 # Pydantic Models for Character Management
@@ -725,7 +800,7 @@ async def analyze_character_route(
     **Step 1 of 2-step character creation process**
     
     Upload a character image and get AI-powered suggestions for:
-    - Character ID (auto-generated with format: char_charactername_uuid)
+    - **Subject (DETAILED visual description of how the character looks - AI-DETECTED from image)**
     - Gender detection
     - Voice description (creative, detailed - format based on can_speak)
     - Comprehensive keywords (AI-analyzed)
@@ -733,6 +808,8 @@ async def analyze_character_route(
     **IMPORTANT: can_speak parameter determines voice description format:**
     - can_speak = true → Voice description includes accent (British, American, etc.)
     - can_speak = false → Voice description describes creature sounds only
+    
+    **Subject is AI-detected:** Gemini analyzes the image and generates a DETAILED description of how the character looks, including type, features, colors, and style (10-30 words). This helps with consistent character representation in video generation. No need to provide it as input!
     
     The user can then review and edit these suggestions before creating the character.
     
@@ -748,11 +825,11 @@ async def analyze_character_route(
     can_speak: false
     ```
     
-    **Returns:**
+    **Returns (NO character_id - generated in create step):**
     ```json
     {
-      "character_id": "char_floof_a1b2c3d4",
       "character_name": "Floof",
+      "subject": "A fluffy pink creature with big round eyes, small body, soft fur, and adorable innocent expression",
       "gender": "creature",
       "voice_description": "Soft high-pitched and playful creature sounds",
       "keywords": "cute, fluffy, small, friendly, ...",
@@ -767,8 +844,8 @@ async def analyze_character_route(
 @router.post("/characters/create")
 async def create_character_route(
     image: UploadFile = File(..., description="Character image file"),
-    character_id: str = Form(..., description="Character ID from analyze step (e.g., char_floof_a1b2c3d4)"),
     character_name: str = Form(..., description="Name of the character"),
+    subject: str = Form(..., description="Detailed visual description of how the character looks (from analyze step)", example="A fluffy pink creature with big round eyes, small body, soft fur, and adorable innocent expression"),
     gender: str = Form(..., description="Gender: male/female/non-binary/creature/undefined"),
     voice_description: str = Form(..., description="Voice description (format depends on can_speak: with accent if true, creature sounds if false)"),
     keywords: str = Form(..., description="Comma-separated keywords string (max 500 chars)"),
@@ -784,8 +861,8 @@ async def create_character_route(
     **Step 2 of 2-step character creation process**
     
     After analyzing the character (Step 1), create the character with:
-    - Character ID from analyze step (format: char_charactername_uuid)
-    - User-reviewed/edited data
+    - **Character ID auto-generated** (format: char_charactername_uuid)
+    - User-reviewed/edited data from analyze step
     - Image upload to Cloudinary
     - Encrypted storage in MongoDB
     - **user_id automatically extracted from auth token**
@@ -795,10 +872,10 @@ async def create_character_route(
     Authorization: Bearer <access_token>
     ```
     
-    **Input Format (matches analyze output):**
+    **Input Format (from analyze output, NO character_id needed):**
     ```
-    character_id: "char_floof_a1b2c3d4"
     character_name: "Floof"
+    subject: "A fluffy pink creature with big round eyes, small body, soft fur, and adorable innocent expression"
     gender: "creature"
     voice_description: "Soft high-pitched and playful creature sounds"
     keywords: "cute, fluffy, small, friendly, ..."
@@ -807,11 +884,12 @@ async def create_character_route(
     ```
     
     **What happens:**
-    1. user_id extracted from JWT token (automatic)
-    2. Image uploaded to Cloudinary (with thumbnail generation)
-    3. Sensitive data encrypted (character_id, cloudinary_public_id)
-    4. Character saved to MongoDB with user_id
-    5. Returns character data with public URLs
+    1. character_id auto-generated (char_charactername_uuid)
+    2. user_id extracted from JWT token (automatic)
+    3. Image uploaded to Cloudinary (with thumbnail generation)
+    4. Sensitive data encrypted (character_id, cloudinary_public_id)
+    5. Character saved to MongoDB with user_id
+    6. Returns character data with public URLs and generated character_id
     
     **Security:**
     - character_id: Encrypted with Fernet
@@ -826,8 +904,8 @@ async def create_character_route(
     
     return await character_controller.create_character(
         image=image,
-        character_id=character_id,
         character_name=character_name,
+        subject=subject,
         gender=gender,
         voice_description=voice_description,
         keywords=keywords,
@@ -1478,14 +1556,18 @@ async def generate_daily_character_v2_route(
             
             print(f"✅ Using character: {character['character_name']} ({char_id})")
         
-        # Build character_name and creature_language strings
+        # Build character_name, creature_language, and subject strings
         character_name = ", ".join(character_names)
         creature_language = ", ".join(creature_languages)
+        # Extract subjects for veo_prompt (e.g., "fluffy pink creature, small robot")
+        character_subjects = [char.get("subject", "creature") for char in characters]
+        character_subject = ", ".join(character_subjects)
         
         # Determine if ANY character can speak (if any can, allow dialogue)
         allow_dialogue = any(char.get("can_speak", False) for char in characters)
         
         print(f"🗣️  Speech capability: {'Enabled' if allow_dialogue else 'Disabled (creature sounds only)'}")
+        print(f"📝 Character subject(s): {character_subject}")
         
         # Generate content with character details
         # Note: This returns {"content": {...}}
@@ -1493,6 +1575,7 @@ async def generate_daily_character_v2_route(
             idea=payload.idea,
             character_name=character_name,
             creature_language=creature_language,
+            character_subject=character_subject,  # NEW: Pass subject for veo_prompt
             num_segments=payload.num_segments,
             allow_dialogue=allow_dialogue,  # Automatically determined from character
             num_characters=len(characters)  # Pass the actual number of characters
