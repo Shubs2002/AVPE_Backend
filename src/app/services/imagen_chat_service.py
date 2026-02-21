@@ -106,7 +106,7 @@ class FrameGenerationChat:
         self.character_subjects = character_subjects or []
         self.style = style
         
-        # Create new chat session
+        # Create new chat session with Google Search tools
         self.chat = self.client.chats.create(
             model=self.model,
             config=types.GenerateContentConfig(
@@ -114,7 +114,8 @@ class FrameGenerationChat:
                 image_config=types.ImageConfig(
                     aspect_ratio=aspect_ratio,
                     image_size=resolution
-                )
+                ),
+                tools=[{"google_search": {}}]  # Enable Google Search for context
             )
         )
         
@@ -233,7 +234,8 @@ This is the ending frame of the same scene, so everything should feel continuous
                 image_config=types.ImageConfig(
                     aspect_ratio=aspect_ratio,
                     image_size=resolution
-                )
+                ),
+                tools=[{"google_search": {}}]  # Enable Google Search for context
             )
         )
         
@@ -307,7 +309,8 @@ This is the ending frame of the same scene, so everything should feel continuous
                 image_config=types.ImageConfig(
                     aspect_ratio=aspect_ratio,
                     image_size=resolution
-                )
+                ),
+                tools=[{"google_search": {}}]  # Enable Google Search for context
             )
         )
         

@@ -2039,3 +2039,374 @@ async def generate_daily_character_videos_with_references_route(payload: Generat
     - Failed segments for retry
     """
     return cinematographer_controller.handle_generate_daily_character_videos_with_references(payload.dict())
+
+
+# ---------- IMAGE EDITING & GENERATION ROUTES ----------
+
+class GenerateSingleImageRequest(BaseModel):
+    prompt: str = Field(..., description="Text description of the image to generate")
+    aspect_ratio: Optional[str] = Field("16:9", description="Image aspect ratio (1:1, 2:3, 3:2, 3:4, 4:3, 4:5, 5:4, 9:16, 16:9, 21:9)")
+    resolution: Optional[str] = Field("2K", description="Image resolution (1K, 2K, 4K)")
+    use_google_search: Optional[bool] = Field(False, description="Enable Google Search for current information")
+    model: Optional[str] = Field("gemini-2.5-flash-image", description="Gemini model to use")
+
+
+class GenerateBulkImagesRequest(BaseModel):
+    prompts: List[str] = Field(..., description="List of text prompts for image generation", min_items=1)
+    aspect_ratio: Optional[str] = Field("16:9", description="Image aspect ratio")
+    resolution: Optional[str] = Field("2K", description="Image resolution")
+    use_google_search: Optional[bool] = Field(False, description="Enable Google Search")
+    output_dir: Optional[str] = Field("generated_images", description="Directory to save images")
+    delay_between_requests: Optional[float] = Field(2.0, description="Delay in seconds between requests (for rate limiting)")
+    model: Optional[str] = Field("gemini-2.5-flash-image", description="Gemini model to use")
+
+
+class EditSingleImageRequest(BaseModel):
+    image_path: str = Field(..., description="Path to the image to edit")
+    edit_prompt: str = Field(..., description="Text description of the edit to make")
+    aspect_ratio: Optional[str] = Field("16:9", description="Output aspect ratio")
+    resolution: Optional[str] = Field("2K", description="Output resolution")
+    model: Optional[str] = Field("gemini-2.5-flash-image", description="Gemini model to use")
+
+
+class EditBulkImagesRequest(BaseModel):
+    image_paths: List[str] = Field(..., description="List of paths to images to edit", min_items=1)
+    edit_prompts: List[str] = Field(..., description="List of edit prompts (one per image, or single prompt for all)", min_items=1)
+    aspect_ratio: Optional[str] = Field("16:9", description="Output aspect ratio")
+    resolution: Optional[str] = Field("2K", description="Output resolution")
+    output_dir: Optional[str] = Field("edited_images", description="Directory to save edited images")
+    delay_between_requests: Optional[float] = Field(2.0, description="Delay in seconds between requests")
+    model: Optional[str] = Field("gemini-2.5-flash-image", description="Gemini model to use")
+
+
+@router.post("/images/generate")
+async def generate_single_image_route(payload: GenerateSingleImageRequest) -> dict:
+    """
+    🎨 Generate a single image from a text prompt using Gemini.
+    
+    **Features:**
+    - Text-to-image generation
+    - Optional Google Search integration for current information
+    - Multiple aspect ratios and resolutions
+    - Returns both image path and optional text response
+    
+    **Example:**
+    ```json
+    {
+      "prompt": "A cute fluffy pink creature with big curious eyes in a sunny park",
+      "aspect_ratio": "16:9",
+      "resolution": "2K",
+      "use_google_search": false
+    }
+    ```
+    
+    **Response:**
+    ```json
+    {
+      "success": true,
+      "image_path": "generated_images/image_20260220_143022.png",
+      "text_response": "Generated a cute creature...",
+      "prompt": "A cute fluffy pink creature..."
+    }
+    ```
+    """
+    from app.services.image_edit_service import get_image_edit_service
+    
+    try:
+        service = get_image_edit_service(model=payload.model)
+        
+        image, image_path, text_response = service.generate_single_image(
+            prompt=payload.prompt,
+            aspect_ratio=payload.aspect_ratio,
+            resolution=payload.resolution,
+            use_google_search=payload.use_google_search
+        )
+        
+        return {
+            "success": True,
+            "image_path": image_path,
+            "text_response": text_response,
+            "prompt": payload.prompt,
+            "aspect_ratio": payload.aspect_ratio,
+            "resolution": payload.resolution
+        }
+        
+    except Exception as e:
+        return {
+            "success": False,
+            "error": str(e),
+            "prompt": payload.prompt
+        }
+
+
+@router.post("/images/generate-bulk")
+async def generate_bulk_images_route(payload: GenerateBulkImagesRequest) -> dict:
+    """
+    🎨 Generate multiple images iteratively (free tier friendly).
+    
+    **Features:**
+    - Batch image generation with rate limiting
+    - Automatic delay between requests
+    - Individual success/failure tracking
+    - Progress logging
+    
+    **Free Tier Optimization:**
+    - Processes images one at a time
+    - Configurable delay between requests (default: 2s)
+    - Continues on individual failures
+    
+    **Example:**
+    ```json
+    {
+      "prompts": [
+        "A sunny beach with palm trees",
+        "A snowy mountain peak at sunset",
+        "A bustling city street at night"
+      ],
+      "aspect_ratio": "16:9",
+      "resolution": "2K",
+      "delay_between_requests": 2.0
+    }
+    ```
+    
+    **Response:**
+    ```json
+    {
+      "success": true,
+      "total_images": 3,
+      "success_count": 3,
+      "failed_count": 0,
+      "results": [
+        {
+          "index": 1,
+          "prompt": "A sunny beach...",
+          "status": "completed",
+          "image_path": "generated_images/image_1_20260220_143022.png",
+          "text_response": "..."
+        }
+      ]
+    }
+    ```
+    """
+    from app.services.image_edit_service import get_image_edit_service
+    
+    try:
+        service = get_image_edit_service(model=payload.model)
+        
+        results = service.generate_bulk_images(
+            prompts=payload.prompts,
+            aspect_ratio=payload.aspect_ratio,
+            resolution=payload.resolution,
+            use_google_search=payload.use_google_search,
+            output_dir=payload.output_dir,
+            delay_between_requests=payload.delay_between_requests
+        )
+        
+        success_count = sum(1 for r in results if r["status"] == "completed")
+        failed_count = sum(1 for r in results if r["status"] == "failed")
+        
+        return {
+            "success": True,
+            "total_images": len(payload.prompts),
+            "success_count": success_count,
+            "failed_count": failed_count,
+            "results": results,
+            "output_dir": payload.output_dir
+        }
+        
+    except Exception as e:
+        return {
+            "success": False,
+            "error": str(e),
+            "total_images": len(payload.prompts)
+        }
+
+
+@router.post("/images/edit")
+async def edit_single_image_route(payload: EditSingleImageRequest) -> dict:
+    """
+    ✏️ Edit an existing image using a text prompt.
+    
+    **Features:**
+    - Text-based image editing
+    - Maintains image context
+    - Multiple edit operations possible
+    - Returns edited image path
+    
+    **Example:**
+    ```json
+    {
+      "image_path": "generated_images/image_20260220_143022.png",
+      "edit_prompt": "Change the sky to sunset colors with orange and pink",
+      "aspect_ratio": "16:9",
+      "resolution": "2K"
+    }
+    ```
+    
+    **Response:**
+    ```json
+    {
+      "success": true,
+      "input_image": "generated_images/image_20260220_143022.png",
+      "output_path": "edited_images/edited_20260220_143045.png",
+      "text_response": "Changed sky to sunset colors...",
+      "edit_prompt": "Change the sky to sunset colors..."
+    }
+    ```
+    """
+    from app.services.image_edit_service import get_image_edit_service
+    import os
+    
+    # Validate image exists
+    if not os.path.exists(payload.image_path):
+        return {
+            "success": False,
+            "error": f"Image not found: {payload.image_path}",
+            "input_image": payload.image_path
+        }
+    
+    try:
+        service = get_image_edit_service(model=payload.model)
+        
+        edited_image, output_path, text_response = service.edit_image_with_prompt(
+            image_path=payload.image_path,
+            edit_prompt=payload.edit_prompt,
+            aspect_ratio=payload.aspect_ratio,
+            resolution=payload.resolution
+        )
+        
+        return {
+            "success": True,
+            "input_image": payload.image_path,
+            "output_path": output_path,
+            "text_response": text_response,
+            "edit_prompt": payload.edit_prompt,
+            "aspect_ratio": payload.aspect_ratio,
+            "resolution": payload.resolution
+        }
+        
+    except Exception as e:
+        return {
+            "success": False,
+            "error": str(e),
+            "input_image": payload.image_path,
+            "edit_prompt": payload.edit_prompt
+        }
+
+
+@router.post("/images/edit-bulk")
+async def edit_bulk_images_route(payload: EditBulkImagesRequest) -> dict:
+    """
+    ✏️ Edit multiple images iteratively (free tier friendly).
+    
+    **Features:**
+    - Batch image editing with rate limiting
+    - Single prompt for all images OR individual prompts
+    - Automatic delay between requests
+    - Individual success/failure tracking
+    
+    **Free Tier Optimization:**
+    - Processes images one at a time
+    - Configurable delay between requests (default: 2s)
+    - Continues on individual failures
+    
+    **Example (single prompt for all):**
+    ```json
+    {
+      "image_paths": [
+        "generated_images/image_1.png",
+        "generated_images/image_2.png",
+        "generated_images/image_3.png"
+      ],
+      "edit_prompts": ["Add a rainbow in the sky"],
+      "aspect_ratio": "16:9",
+      "resolution": "2K",
+      "delay_between_requests": 2.0
+    }
+    ```
+    
+    **Example (individual prompts):**
+    ```json
+    {
+      "image_paths": [
+        "generated_images/image_1.png",
+        "generated_images/image_2.png"
+      ],
+      "edit_prompts": [
+        "Make it daytime",
+        "Make it nighttime"
+      ],
+      "delay_between_requests": 2.0
+    }
+    ```
+    
+    **Response:**
+    ```json
+    {
+      "success": true,
+      "total_images": 3,
+      "success_count": 3,
+      "failed_count": 0,
+      "results": [
+        {
+          "index": 1,
+          "input_image": "generated_images/image_1.png",
+          "edit_prompt": "Add a rainbow...",
+          "status": "completed",
+          "output_path": "edited_images/edited_1_20260220_143022.png",
+          "text_response": "..."
+        }
+      ]
+    }
+    ```
+    """
+    from app.services.image_edit_service import get_image_edit_service
+    import os
+    
+    # Validate all images exist
+    missing_images = [path for path in payload.image_paths if not os.path.exists(path)]
+    if missing_images:
+        return {
+            "success": False,
+            "error": f"Images not found: {', '.join(missing_images)}",
+            "total_images": len(payload.image_paths)
+        }
+    
+    # Validate prompt count
+    if len(payload.edit_prompts) != 1 and len(payload.edit_prompts) != len(payload.image_paths):
+        return {
+            "success": False,
+            "error": f"Number of prompts ({len(payload.edit_prompts)}) must be 1 or match number of images ({len(payload.image_paths)})",
+            "total_images": len(payload.image_paths)
+        }
+    
+    try:
+        service = get_image_edit_service(model=payload.model)
+        
+        results = service.edit_bulk_images(
+            image_paths=payload.image_paths,
+            edit_prompts=payload.edit_prompts,
+            aspect_ratio=payload.aspect_ratio,
+            resolution=payload.resolution,
+            output_dir=payload.output_dir,
+            delay_between_requests=payload.delay_between_requests
+        )
+        
+        success_count = sum(1 for r in results if r["status"] == "completed")
+        failed_count = sum(1 for r in results if r["status"] == "failed")
+        
+        return {
+            "success": True,
+            "total_images": len(payload.image_paths),
+            "success_count": success_count,
+            "failed_count": failed_count,
+            "results": results,
+            "output_dir": payload.output_dir
+        }
+        
+    except Exception as e:
+        return {
+            "success": False,
+            "error": str(e),
+            "total_images": len(payload.image_paths)
+        }
