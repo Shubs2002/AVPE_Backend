@@ -8,6 +8,7 @@ from app.controllers import (
     distributor_controller,
     screenwriter_controller,
     cinematographer_controller,
+    image_editor_controller,
 )
 from app.utils.story_retry_helper import (
     get_retry_info_by_title,
@@ -2080,7 +2081,10 @@ class EditBulkImagesRequest(BaseModel):
 
 
 @router.post("/images/generate")
-async def generate_single_image_route(payload: GenerateSingleImageRequest) -> dict:
+async def generate_single_image_route(
+    payload: GenerateSingleImageRequest,
+    current_user: dict = Depends(get_current_active_user)
+) -> dict:
     """
     🎨 Generate a single image from a text prompt using Gemini.
     
@@ -2110,37 +2114,21 @@ async def generate_single_image_route(payload: GenerateSingleImageRequest) -> di
     }
     ```
     """
-    from app.services.image_edit_service import get_image_edit_service
-    
-    try:
-        service = get_image_edit_service(model=payload.model)
-        
-        image, image_path, text_response = service.generate_single_image(
-            prompt=payload.prompt,
-            aspect_ratio=payload.aspect_ratio,
-            resolution=payload.resolution,
-            use_google_search=payload.use_google_search
-        )
-        
-        return {
-            "success": True,
-            "image_path": image_path,
-            "text_response": text_response,
-            "prompt": payload.prompt,
-            "aspect_ratio": payload.aspect_ratio,
-            "resolution": payload.resolution
-        }
-        
-    except Exception as e:
-        return {
-            "success": False,
-            "error": str(e),
-            "prompt": payload.prompt
-        }
+    return image_editor_controller.generate_single_image(
+        prompt=payload.prompt,
+        aspect_ratio=payload.aspect_ratio,
+        resolution=payload.resolution,
+        use_google_search=payload.use_google_search,
+        model=payload.model,
+        current_user_id=current_user.get("user_id")
+    )
 
 
 @router.post("/images/generate-bulk")
-async def generate_bulk_images_route(payload: GenerateBulkImagesRequest) -> dict:
+async def generate_bulk_images_route(
+    payload: GenerateBulkImagesRequest,
+    current_user: dict = Depends(get_current_active_user)
+) -> dict:
     """
     🎨 Generate multiple images iteratively (free tier friendly).
     
@@ -2188,42 +2176,23 @@ async def generate_bulk_images_route(payload: GenerateBulkImagesRequest) -> dict
     }
     ```
     """
-    from app.services.image_edit_service import get_image_edit_service
-    
-    try:
-        service = get_image_edit_service(model=payload.model)
-        
-        results = service.generate_bulk_images(
-            prompts=payload.prompts,
-            aspect_ratio=payload.aspect_ratio,
-            resolution=payload.resolution,
-            use_google_search=payload.use_google_search,
-            output_dir=payload.output_dir,
-            delay_between_requests=payload.delay_between_requests
-        )
-        
-        success_count = sum(1 for r in results if r["status"] == "completed")
-        failed_count = sum(1 for r in results if r["status"] == "failed")
-        
-        return {
-            "success": True,
-            "total_images": len(payload.prompts),
-            "success_count": success_count,
-            "failed_count": failed_count,
-            "results": results,
-            "output_dir": payload.output_dir
-        }
-        
-    except Exception as e:
-        return {
-            "success": False,
-            "error": str(e),
-            "total_images": len(payload.prompts)
-        }
+    return image_editor_controller.generate_bulk_images(
+        prompts=payload.prompts,
+        aspect_ratio=payload.aspect_ratio,
+        resolution=payload.resolution,
+        use_google_search=payload.use_google_search,
+        output_dir=payload.output_dir,
+        delay_between_requests=payload.delay_between_requests,
+        model=payload.model,
+        current_user_id=current_user.get("user_id")
+    )
 
 
 @router.post("/images/edit")
-async def edit_single_image_route(payload: EditSingleImageRequest) -> dict:
+async def edit_single_image_route(
+    payload: EditSingleImageRequest,
+    current_user: dict = Depends(get_current_active_user)
+) -> dict:
     """
     ✏️ Edit an existing image using a text prompt.
     
@@ -2254,48 +2223,21 @@ async def edit_single_image_route(payload: EditSingleImageRequest) -> dict:
     }
     ```
     """
-    from app.services.image_edit_service import get_image_edit_service
-    import os
-    
-    # Validate image exists
-    if not os.path.exists(payload.image_path):
-        return {
-            "success": False,
-            "error": f"Image not found: {payload.image_path}",
-            "input_image": payload.image_path
-        }
-    
-    try:
-        service = get_image_edit_service(model=payload.model)
-        
-        edited_image, output_path, text_response = service.edit_image_with_prompt(
-            image_path=payload.image_path,
-            edit_prompt=payload.edit_prompt,
-            aspect_ratio=payload.aspect_ratio,
-            resolution=payload.resolution
-        )
-        
-        return {
-            "success": True,
-            "input_image": payload.image_path,
-            "output_path": output_path,
-            "text_response": text_response,
-            "edit_prompt": payload.edit_prompt,
-            "aspect_ratio": payload.aspect_ratio,
-            "resolution": payload.resolution
-        }
-        
-    except Exception as e:
-        return {
-            "success": False,
-            "error": str(e),
-            "input_image": payload.image_path,
-            "edit_prompt": payload.edit_prompt
-        }
+    return image_editor_controller.edit_single_image(
+        image_path=payload.image_path,
+        edit_prompt=payload.edit_prompt,
+        aspect_ratio=payload.aspect_ratio,
+        resolution=payload.resolution,
+        model=payload.model,
+        current_user_id=current_user.get("user_id")
+    )
 
 
 @router.post("/images/edit-bulk")
-async def edit_bulk_images_route(payload: EditBulkImagesRequest) -> dict:
+async def edit_bulk_images_route(
+    payload: EditBulkImagesRequest,
+    current_user: dict = Depends(get_current_active_user)
+) -> dict:
     """
     ✏️ Edit multiple images iteratively (free tier friendly).
     
@@ -2360,53 +2302,1227 @@ async def edit_bulk_images_route(payload: EditBulkImagesRequest) -> dict:
     }
     ```
     """
-    from app.services.image_edit_service import get_image_edit_service
+    return image_editor_controller.edit_bulk_images(
+        image_paths=payload.image_paths,
+        edit_prompts=payload.edit_prompts,
+        aspect_ratio=payload.aspect_ratio,
+        resolution=payload.resolution,
+        output_dir=payload.output_dir,
+        delay_between_requests=payload.delay_between_requests,
+        model=payload.model,
+        current_user_id=current_user.get("user_id")
+    )
+
+
+
+class BatchStyleTransferRequest(BaseModel):
+    image_paths: List[str] = Field(..., description="List of paths to images to transform", min_items=1)
+    style_prompt: str = Field(..., description="Single style prompt to apply to ALL images")
+    aspect_ratio: Optional[str] = Field("16:9", description="Output aspect ratio")
+    resolution: Optional[str] = Field("2K", description="Output resolution")
+    output_dir: Optional[str] = Field("styled_images", description="Directory to save styled images")
+    delay_between_requests: Optional[float] = Field(2.0, description="Delay in seconds between requests")
+    variations_per_image: Optional[int] = Field(1, description="Number of variations to generate per image", ge=1, le=5)
+    model: Optional[str] = Field("gemini-2.5-flash-image", description="Gemini model to use")
+
+
+@router.post("/images/batch-style-transfer")
+async def batch_style_transfer_route(
+    payload: BatchStyleTransferRequest,
+    current_user: dict = Depends(get_current_active_user)
+) -> dict:
+    """
+    🎨 Apply the same style/transformation to multiple images (batch style transfer).
+    
+    **Perfect for converting 50+ images to the same style efficiently!**
+    
+    **Features:**
+    - Single style prompt applied to ALL images
+    - Process large batches (50+ images)
+    - Optional multiple variations per image
+    - Free tier optimized with rate limiting
+    - Individual success/failure tracking
+    
+    **Use Cases:**
+    - Convert 50 photos to anime style
+    - Transform images to watercolor paintings
+    - Apply consistent filters to image sets
+    - Generate multiple style variations
+    
+    **Example (Convert 50 images to anime style):**
+    ```json
+    {
+      "image_paths": [
+        "photos/img1.jpg",
+        "photos/img2.jpg",
+        ...
+        "photos/img50.jpg"
+      ],
+      "style_prompt": "Convert to anime style with vibrant colors, bold outlines, and cel-shaded look",
+      "aspect_ratio": "16:9",
+      "resolution": "2K",
+      "delay_between_requests": 2.0,
+      "variations_per_image": 1
+    }
+    ```
+    
+    **Example (Generate 3 variations per image):**
+    ```json
+    {
+      "image_paths": ["photo1.jpg", "photo2.jpg"],
+      "style_prompt": "Transform into watercolor painting with soft edges",
+      "variations_per_image": 3,
+      "delay_between_requests": 2.0
+    }
+    ```
+    
+    **Style Prompt Examples:**
+    - "Convert to anime style with vibrant colors and bold outlines"
+    - "Transform into watercolor painting with soft, flowing colors"
+    - "Make it look like pixel art with 8-bit retro style"
+    - "Apply oil painting effect with thick brush strokes"
+    - "Convert to pencil sketch with detailed shading"
+    - "Transform into cyberpunk style with neon colors"
+    - "Make it look like a vintage photograph from the 1970s"
+    
+    **Response:**
+    ```json
+    {
+      "success": true,
+      "total_images": 50,
+      "total_operations": 50,
+      "success_count": 50,
+      "failed_count": 0,
+      "style_prompt": "Convert to anime style...",
+      "results": [
+        {
+          "index": 1,
+          "variation": 1,
+          "input_image": "photos/img1.jpg",
+          "style_prompt": "Convert to anime style...",
+          "status": "completed",
+          "output_path": "styled_images/img1_styled_20260220_143022.png",
+          "text_response": "...",
+          "error": null
+        }
+      ],
+      "output_dir": "styled_images"
+    }
+    ```
+    
+    **Free Tier Tips:**
+    - Use 2-3 second delays for large batches
+    - Process in smaller batches if needed (25 images at a time)
+    - Use 2K resolution (not 4K) for faster processing
+    - Monitor rate limits and adjust delay if needed
+    """
+    return image_editor_controller.batch_style_transfer(
+        image_paths=payload.image_paths,
+        style_prompt=payload.style_prompt,
+        aspect_ratio=payload.aspect_ratio,
+        resolution=payload.resolution,
+        output_dir=payload.output_dir,
+        delay_between_requests=payload.delay_between_requests,
+        variations_per_image=payload.variations_per_image,
+        model=payload.model,
+        current_user_id=current_user.get("user_id")
+    )
+
+
+
+# ---------- IMAGE EDITING WITH FILE UPLOADS ----------
+
+@router.post("/images/edit-upload")
+async def edit_single_image_upload_route(
+    image: UploadFile = File(..., description="Image file to edit"),
+    edit_prompt: str = Form(..., description="Text description of the edit to make"),
+    aspect_ratio: Optional[str] = Form("16:9", description="Output aspect ratio"),
+    resolution: Optional[str] = Form("2K", description="Output resolution (1K, 2K, 4K)"),
+    model: Optional[str] = Form("gemini-2.5-flash-image", description="Gemini model to use"),
+    current_user: dict = Depends(get_current_active_user)
+) -> dict:
+    """
+    ✏️ Edit an uploaded image using a text prompt.
+    
+    **Upload image directly instead of providing file path!**
+    
+    **Form Data:**
+    - `image`: Image file (PNG, JPG, JPEG, WEBP)
+    - `edit_prompt`: Text description of the edit
+    - `aspect_ratio`: Output aspect ratio (optional, default: 16:9)
+    - `resolution`: Output resolution (optional, default: 2K)
+    - `model`: Gemini model (optional, default: gemini-2.5-flash-image)
+    
+    **Example using curl:**
+    ```bash
+    curl -X POST "http://localhost:8000/api/images/edit-upload" \
+      -H "Authorization: Bearer YOUR_TOKEN" \
+      -F "image=@/path/to/image.jpg" \
+      -F "edit_prompt=Add a rainbow in the sky"
+    ```
+    
+    **Example using Postman:**
+    1. Select POST method
+    2. Set URL: http://localhost:8000/api/images/edit-upload
+    3. Set Authorization: Bearer Token
+    4. Go to Body → form-data
+    5. Add key "image" (type: File) → Select file
+    6. Add key "edit_prompt" (type: Text) → Enter prompt
+    7. Click Send
+    """
     import os
+    import tempfile
+    from datetime import datetime
     
-    # Validate all images exist
-    missing_images = [path for path in payload.image_paths if not os.path.exists(path)]
-    if missing_images:
+    # Validate file type
+    allowed_types = ["image/png", "image/jpeg", "image/jpg", "image/webp"]
+    if image.content_type not in allowed_types:
         return {
             "success": False,
-            "error": f"Images not found: {', '.join(missing_images)}",
-            "total_images": len(payload.image_paths)
+            "error": f"Invalid file type: {image.content_type}. Allowed: PNG, JPG, JPEG, WEBP"
         }
     
-    # Validate prompt count
-    if len(payload.edit_prompts) != 1 and len(payload.edit_prompts) != len(payload.image_paths):
-        return {
-            "success": False,
-            "error": f"Number of prompts ({len(payload.edit_prompts)}) must be 1 or match number of images ({len(payload.image_paths)})",
-            "total_images": len(payload.image_paths)
-        }
+    # Save uploaded file temporarily
+    temp_dir = tempfile.gettempdir()
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    file_ext = os.path.splitext(image.filename)[1] or ".png"
+    temp_path = os.path.join(temp_dir, f"upload_{timestamp}{file_ext}")
     
     try:
-        service = get_image_edit_service(model=payload.model)
+        # Save uploaded file
+        with open(temp_path, "wb") as f:
+            content = await image.read()
+            f.write(content)
         
-        results = service.edit_bulk_images(
-            image_paths=payload.image_paths,
-            edit_prompts=payload.edit_prompts,
-            aspect_ratio=payload.aspect_ratio,
-            resolution=payload.resolution,
-            output_dir=payload.output_dir,
-            delay_between_requests=payload.delay_between_requests
+        # Edit image using controller
+        result = image_editor_controller.edit_single_image(
+            image_path=temp_path,
+            edit_prompt=edit_prompt,
+            aspect_ratio=aspect_ratio,
+            resolution=resolution,
+            model=model,
+            current_user_id=current_user.get("user_id")
         )
         
-        success_count = sum(1 for r in results if r["status"] == "completed")
-        failed_count = sum(1 for r in results if r["status"] == "failed")
+        # Clean up temp file
+        try:
+            os.remove(temp_path)
+        except:
+            pass
+        
+        return result
+        
+    except Exception as e:
+        # Clean up temp file on error
+        try:
+            os.remove(temp_path)
+        except:
+            pass
+        
+        return {
+            "success": False,
+            "error": str(e)
+        }
+
+
+@router.post("/images/edit-bulk-upload")
+async def edit_bulk_images_upload_route(
+    images: List[UploadFile] = File(..., description="Multiple image files to edit"),
+    edit_prompt: str = Form(..., description="Single edit prompt to apply to ALL images"),
+    aspect_ratio: Optional[str] = Form("16:9", description="Output aspect ratio"),
+    resolution: Optional[str] = Form("2K", description="Output resolution"),
+    output_dir: Optional[str] = Form("edited_images", description="Output directory"),
+    delay_between_requests: Optional[float] = Form(2.0, description="Delay between requests"),
+    model: Optional[str] = Form("gemini-2.5-flash-image", description="Gemini model"),
+    current_user: dict = Depends(get_current_active_user)
+) -> dict:
+    """
+    ✏️ Edit multiple uploaded images with the same prompt.
+    
+    **Upload multiple images directly!**
+    
+    **Form Data:**
+    - `images`: Multiple image files (select multiple files)
+    - `edit_prompt`: Single prompt to apply to ALL images
+    - `aspect_ratio`: Output aspect ratio (optional)
+    - `resolution`: Output resolution (optional)
+    - `output_dir`: Output directory (optional)
+    - `delay_between_requests`: Delay in seconds (optional)
+    
+    **Example using curl:**
+    ```bash
+    curl -X POST "http://localhost:8000/api/images/edit-bulk-upload" \
+      -H "Authorization: Bearer YOUR_TOKEN" \
+      -F "images=@image1.jpg" \
+      -F "images=@image2.jpg" \
+      -F "images=@image3.jpg" \
+      -F "edit_prompt=Make the lighting warmer"
+    ```
+    
+    **Example using Postman:**
+    1. Select POST method
+    2. Set Authorization: Bearer Token
+    3. Go to Body → form-data
+    4. Add key "images" (type: File) → Select multiple files
+    5. Add key "edit_prompt" (type: Text) → Enter prompt
+    6. Click Send
+    """
+    import os
+    import tempfile
+    from datetime import datetime
+    
+    # Validate file types
+    allowed_types = ["image/png", "image/jpeg", "image/jpg", "image/webp"]
+    for img in images:
+        if img.content_type not in allowed_types:
+            return {
+                "success": False,
+                "error": f"Invalid file type for {img.filename}: {img.content_type}",
+                "total_images": len(images)
+            }
+    
+    # Save uploaded files temporarily
+    temp_dir = tempfile.gettempdir()
+    temp_paths = []
+    
+    try:
+        # Save all uploaded files
+        for idx, img in enumerate(images, 1):
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
+            file_ext = os.path.splitext(img.filename)[1] or ".png"
+            temp_path = os.path.join(temp_dir, f"upload_{idx}_{timestamp}{file_ext}")
+            
+            with open(temp_path, "wb") as f:
+                content = await img.read()
+                f.write(content)
+            
+            temp_paths.append(temp_path)
+        
+        # Edit images using controller (single prompt for all)
+        result = image_editor_controller.edit_bulk_images(
+            image_paths=temp_paths,
+            edit_prompts=[edit_prompt],  # Single prompt for all
+            aspect_ratio=aspect_ratio,
+            resolution=resolution,
+            output_dir=output_dir,
+            delay_between_requests=delay_between_requests,
+            model=model,
+            current_user_id=current_user.get("user_id")
+        )
+        
+        # Clean up temp files
+        for temp_path in temp_paths:
+            try:
+                os.remove(temp_path)
+            except:
+                pass
+        
+        return result
+        
+    except Exception as e:
+        # Clean up temp files on error
+        for temp_path in temp_paths:
+            try:
+                os.remove(temp_path)
+            except:
+                pass
+        
+        return {
+            "success": False,
+            "error": str(e),
+            "total_images": len(images)
+        }
+
+
+@router.post("/images/batch-style-transfer-upload")
+async def batch_style_transfer_upload_route(
+    images: List[UploadFile] = File(..., description="Multiple image files to transform"),
+    style_prompt: str = Form(..., description="Style prompt to apply to ALL images"),
+    aspect_ratio: Optional[str] = Form("16:9", description="Output aspect ratio"),
+    resolution: Optional[str] = Form("2K", description="Output resolution"),
+    output_dir: Optional[str] = Form("styled_images", description="Output directory"),
+    delay_between_requests: Optional[float] = Form(2.0, description="Delay between requests"),
+    variations_per_image: Optional[int] = Form(1, description="Number of variations per image (1-5)"),
+    timeout_per_image: Optional[int] = Form(120, description="Timeout per image in seconds"),
+    skip_on_error: Optional[bool] = Form(True, description="Skip failed images and continue"),
+    model: Optional[str] = Form("gemini-2.5-flash-image", description="Gemini model"),
+    current_user: dict = Depends(get_current_active_user)
+) -> dict:
+    """
+    🎨 Apply the same style to multiple uploaded images (batch style transfer).
+    
+    **Upload images directly and convert them all to the same style!**
+    
+    **Perfect for:**
+    - Converting 50 photos to anime style
+    - Transforming images to watercolor paintings
+    - Applying consistent filters to image sets
+    
+    **Form Data:**
+    - `images`: Multiple image files (select all files to transform)
+    - `style_prompt`: Single style description for ALL images
+    - `aspect_ratio`: Output aspect ratio (optional, default: 16:9)
+    - `resolution`: Output resolution (optional, default: 2K)
+    - `output_dir`: Output directory (optional, default: styled_images)
+    - `delay_between_requests`: Delay in seconds (optional, default: 2.0)
+    - `variations_per_image`: Generate multiple variations (optional, default: 1)
+    - `timeout_per_image`: Timeout per image in seconds (optional, default: 120)
+    - `skip_on_error`: Skip failed images and continue (optional, default: true)
+    
+    **Example using curl:**
+    ```bash
+    curl -X POST "http://localhost:8000/api/images/batch-style-transfer-upload" \
+      -H "Authorization: Bearer YOUR_TOKEN" \
+      -F "images=@photo1.jpg" \
+      -F "images=@photo2.jpg" \
+      -F "images=@photo3.jpg" \
+      -F "style_prompt=Convert to anime style with vibrant colors" \
+      -F "timeout_per_image=120" \
+      -F "skip_on_error=true"
+    ```
+    
+    **Example using Postman:**
+    1. Select POST method
+    2. Set URL: http://localhost:8000/api/images/batch-style-transfer-upload
+    3. Set Authorization: Bearer Token
+    4. Go to Body → form-data
+    5. Add key "images" (type: File) → Select multiple files (50+ files supported!)
+    6. Add key "style_prompt" (type: Text) → "Convert to anime style"
+    7. Add key "delay_between_requests" (type: Text) → "2.0"
+    8. Add key "timeout_per_image" (type: Text) → "120"
+    9. Add key "skip_on_error" (type: Text) → "true"
+    10. Click Send
+    
+    **Style Prompt Examples:**
+    - "Convert to anime style with vibrant colors and bold outlines"
+    - "Transform into watercolor painting with soft, flowing colors"
+    - "Make it look like pixel art with 8-bit retro style"
+    - "Apply oil painting effect with thick brush strokes"
+    - "Convert to pencil sketch with detailed shading"
+    """
+    import os
+    import tempfile
+    from datetime import datetime
+    
+    # Validate file types
+    allowed_types = ["image/png", "image/jpeg", "image/jpg", "image/webp"]
+    for img in images:
+        if img.content_type not in allowed_types:
+            return {
+                "success": False,
+                "error": f"Invalid file type for {img.filename}: {img.content_type}",
+                "total_images": len(images)
+            }
+    
+    # Validate variations_per_image
+    if variations_per_image < 1 or variations_per_image > 5:
+        return {
+            "success": False,
+            "error": "variations_per_image must be between 1 and 5",
+            "total_images": len(images)
+        }
+    
+    # Save uploaded files temporarily
+    temp_dir = tempfile.gettempdir()
+    temp_paths = []
+    
+    try:
+        # Save all uploaded files
+        print(f"📥 Uploading {len(images)} images...")
+        for idx, img in enumerate(images, 1):
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
+            file_ext = os.path.splitext(img.filename)[1] or ".png"
+            temp_path = os.path.join(temp_dir, f"upload_{idx}_{timestamp}{file_ext}")
+            
+            with open(temp_path, "wb") as f:
+                content = await img.read()
+                f.write(content)
+            
+            temp_paths.append(temp_path)
+            print(f"   ✅ Uploaded {idx}/{len(images)}: {img.filename}")
+        
+        # Apply style transfer using controller
+        result = image_editor_controller.batch_style_transfer(
+            image_paths=temp_paths,
+            style_prompt=style_prompt,
+            aspect_ratio=aspect_ratio,
+            resolution=resolution,
+            output_dir=output_dir,
+            delay_between_requests=delay_between_requests,
+            variations_per_image=variations_per_image,
+            timeout_per_image=timeout_per_image,
+            skip_on_error=skip_on_error,
+            model=model,
+            current_user_id=current_user.get("user_id")
+        )
+        
+        # Clean up temp files
+        print(f"🧹 Cleaning up temporary files...")
+        for temp_path in temp_paths:
+            try:
+                os.remove(temp_path)
+            except:
+                pass
+        
+        return result
+        
+    except Exception as e:
+        # Clean up temp files on error
+        for temp_path in temp_paths:
+            try:
+                os.remove(temp_path)
+            except:
+                pass
+        
+        return {
+            "success": False,
+            "error": str(e),
+            "total_images": len(images)
+        }
+
+
+@router.post("/images/generate-from-references")
+async def generate_image_from_references_route(
+    reference_images: List[UploadFile] = File(..., description="Multiple reference images (max 14)"),
+    prompt: str = Form(..., description="Description of the image to generate"),
+    aspect_ratio: Optional[str] = Form("16:9", description="Output aspect ratio"),
+    resolution: Optional[str] = Form("2K", description="Output resolution"),
+    use_google_search: Optional[bool] = Form(False, description="Enable Google Search for context"),
+    model: Optional[str] = Form("gemini-2.5-flash-image", description="Gemini model"),
+    current_user: dict = Depends(get_current_active_user)
+) -> dict:
+    """
+    🎨 Generate a single image from multiple reference images.
+    
+    **Upload multiple reference images (up to 14) and generate a new image based on them!**
+    
+    **Perfect for:**
+    - Combining multiple character references into one scene
+    - Creating composite images from multiple sources
+    - Generating images with multiple character/object references
+    - Style transfer from multiple reference images
+    
+    **Form Data:**
+    - `reference_images`: Multiple reference image files (max 14, required)
+    - `prompt`: Description of the image to generate (required)
+    - `aspect_ratio`: Output aspect ratio (optional, default: 16:9)
+    - `resolution`: Output resolution (optional, default: 2K)
+    - `use_google_search`: Enable Google Search for context (optional, default: false)
+    - `model`: Gemini model to use (optional, default: gemini-2.5-flash-image)
+    
+    **Example using Postman:**
+    1. Select POST method
+    2. Set URL: http://localhost:8000/api/images/generate-from-references
+    3. Set Authorization: Bearer Token
+    4. Go to Body → form-data
+    5. Add key "reference_images" (type: File) → Select multiple reference images (up to 14)
+    6. Add key "prompt" (type: Text) → "Create a scene with all these characters standing together"
+    7. Add key "aspect_ratio" (type: Text) → "16:9"
+    8. Add key "resolution" (type: Text) → "2K"
+    9. Click Send
+    
+    **Prompt Examples:**
+    - "Create a scene with all these characters standing together in a park"
+    - "Combine these character styles into a single character design"
+    - "Generate a group photo with all these characters"
+    - "Create a composite image using elements from all reference images"
+    - "Design a character that combines features from all these references"
+    
+    **Important Notes:**
+    - Maximum 14 reference images allowed
+    - All reference images will be used to inform the generation
+    - The prompt should describe how to combine/use the references
+    """
+    import os
+    import tempfile
+    from datetime import datetime
+    from PIL import Image
+    
+    # Validate number of images
+    if len(reference_images) > 14:
+        return {
+            "success": False,
+            "error": f"Maximum 14 reference images allowed, received {len(reference_images)}",
+            "total_images": len(reference_images)
+        }
+    
+    if len(reference_images) < 1:
+        return {
+            "success": False,
+            "error": "At least 1 reference image is required",
+            "total_images": 0
+        }
+    
+    # Validate file types
+    allowed_types = ["image/png", "image/jpeg", "image/jpg", "image/webp"]
+    for img in reference_images:
+        if img.content_type not in allowed_types:
+            return {
+                "success": False,
+                "error": f"Invalid file type for {img.filename}: {img.content_type}",
+                "total_images": len(reference_images)
+            }
+    
+    # Save uploaded files temporarily
+    temp_dir = tempfile.gettempdir()
+    temp_paths = []
+    loaded_images = []
+    
+    try:
+        # Load all reference images
+        print(f"📥 Loading {len(reference_images)} reference images...")
+        for idx, img_file in enumerate(reference_images, 1):
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
+            file_ext = os.path.splitext(img_file.filename)[1] or ".png"
+            temp_path = os.path.join(temp_dir, f"ref_{idx}_{timestamp}{file_ext}")
+            
+            with open(temp_path, "wb") as f:
+                content = await img_file.read()
+                f.write(content)
+            
+            temp_paths.append(temp_path)
+            
+            # Load as PIL Image
+            pil_image = Image.open(temp_path)
+            loaded_images.append(pil_image)
+            print(f"   ✅ Reference {idx}/{len(reference_images)}: {img_file.filename} ({pil_image.size})")
+        
+        # Generate image using the image editing service
+        print(f"\n🎨 Generating image from {len(loaded_images)} references...")
+        print(f"📝 Prompt: {prompt}")
+        print(f"📐 Aspect ratio: {aspect_ratio}")
+        print(f"🎥 Resolution: {resolution}")
+        
+        from app.services.image_edit_service import get_image_edit_service
+        
+        service = get_image_edit_service(model=model)
+        
+        # Use the client to generate with multiple references
+        from google.genai import types
+        
+        # Build config
+        config_params = {
+            'response_modalities': ['TEXT', 'IMAGE'],
+            'image_config': types.ImageConfig(
+                aspect_ratio=aspect_ratio,
+                image_size=resolution
+            )
+        }
+        
+        if use_google_search:
+            config_params['tools'] = [{"google_search": {}}]
+        
+        # Create contents with prompt first, then all reference images
+        contents = [prompt] + loaded_images
+        
+        print(f"🎨 Sending request with {len(loaded_images)} reference images...")
+        response = service.client.models.generate_content(
+            model=model,
+            contents=contents,
+            config=types.GenerateContentConfig(**config_params)
+        )
+        
+        # Extract generated image
+        generated_image = None
+        text_response = None
+        
+        for part in response.candidates[0].content.parts:
+            if part.text is not None:
+                text_response = part.text
+                print(f"📝 Text response: {text_response[:200]}...")
+            elif part.inline_data is not None:
+                from io import BytesIO
+                generated_image = Image.open(BytesIO(part.inline_data.data))
+                print(f"✅ Image generated: {generated_image.size}")
+                break
+        
+        if generated_image is None:
+            raise ValueError("No image generated in response")
+        
+        # Save generated image
+        output_dir = "generated_images"
+        os.makedirs(output_dir, exist_ok=True)
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        output_filename = f"multi_ref_{timestamp}.png"
+        output_path = os.path.join(output_dir, output_filename)
+        generated_image.save(output_path, "PNG")
+        print(f"💾 Generated image saved: {output_path}")
+        
+        # Clean up temp files
+        print(f"🧹 Cleaning up temporary files...")
+        for temp_path in temp_paths:
+            try:
+                os.remove(temp_path)
+            except:
+                pass
         
         return {
             "success": True,
-            "total_images": len(payload.image_paths),
-            "success_count": success_count,
-            "failed_count": failed_count,
-            "results": results,
-            "output_dir": payload.output_dir
+            "output_path": output_path,
+            "text_response": text_response,
+            "prompt": prompt,
+            "aspect_ratio": aspect_ratio,
+            "resolution": resolution,
+            "reference_images_count": len(reference_images),
+            "reference_images_used": [img.filename for img in reference_images],
+            "user_id": current_user.get("user_id")
+        }
+        
+    except Exception as e:
+        # Clean up temp files on error
+        for temp_path in temp_paths:
+            try:
+                os.remove(temp_path)
+            except:
+                pass
+        
+        return {
+            "success": False,
+            "error": str(e),
+            "prompt": prompt,
+            "total_images": len(reference_images)
+        }
+
+
+# ---------- VIDEO CLIP GENERATION FROM FRAMES ----------
+
+@router.post("/videos/generate-clip-from-frames")
+async def generate_video_clip_from_frames_route(
+    first_frame: UploadFile = File(..., description="First frame image (required)"),
+    prompt: str = Form(..., description="Video prompt describing the action/scene"),
+    last_frame: Optional[UploadFile] = File(None, description="Last frame image (optional)"),
+    duration: Optional[int] = Form(8, description="Video duration in seconds (default: 8)"),
+    resolution: Optional[str] = Form("720p", description="Video resolution (default: 720p)"),
+    aspect_ratio: Optional[str] = Form("9:16", description="Aspect ratio (default: 9:16)"),
+    reference_image_urls: Optional[str] = Form(None, description="Comma-separated reference image URLs for character consistency"),
+    use_frames_as_references: Optional[bool] = Form(False, description="Use frames as reference images for character consistency"),
+    current_user: dict = Depends(get_current_active_user)
+) -> dict:
+    """
+    🎬 Generate a video clip from uploaded frame images.
+    
+    **Upload first frame (required) and optionally last frame to generate a video clip!**
+    
+    **Perfect for:**
+    - Creating video clips from keyframes
+    - Animating between two poses
+    - Generating character animations with specific start/end frames
+    
+    **Form Data:**
+    - `first_frame`: First frame image file (required)
+    - `prompt`: Description of the video action/scene (required)
+    - `last_frame`: Last frame image file (optional)
+    - `duration`: Video duration in seconds (optional, default: 8)
+    - `resolution`: Video resolution (optional, default: 720p)
+    - `aspect_ratio`: Aspect ratio (optional, default: 9:16)
+    - `reference_image_urls`: Comma-separated URLs of reference images for character consistency (optional)
+    - `use_frames_as_references`: Use frames as reference images instead of keyframes (optional, default: false)
+    
+    **Example using Postman:**
+    1. Select POST method
+    2. Set URL: http://localhost:8000/api/videos/generate-clip-from-frames
+    3. Set Authorization: Bearer Token
+    4. Go to Body → form-data
+    5. Add key "first_frame" (type: File) → Select first frame image
+    6. Add key "prompt" (type: Text) → "Character walks from left to right"
+    7. Add key "last_frame" (type: File) → Select last frame image (optional)
+    8. Add key "duration" (type: Text) → "8"
+    9. Add key "aspect_ratio" (type: Text) → "9:16"
+    10. Click Send
+    
+    **Prompt Examples:**
+    - "Character walks from left to right across the room"
+    - "Character jumps up and lands in a hero pose"
+    - "Character waves hello and smiles at the camera"
+    - "Camera zooms in on character's face showing emotion"
+    - "Character transforms from normal to superhero form"
+    """
+    import os
+    import tempfile
+    from datetime import datetime
+    from app.services import genai_service
+    
+    # Validate file types
+    allowed_types = ["image/png", "image/jpeg", "image/jpg", "image/webp"]
+    
+    if first_frame.content_type not in allowed_types:
+        return {
+            "success": False,
+            "error": f"Invalid file type for first_frame: {first_frame.content_type}"
+        }
+    
+    if last_frame and last_frame.content_type not in allowed_types:
+        return {
+            "success": False,
+            "error": f"Invalid file type for last_frame: {last_frame.content_type}"
+        }
+    
+    # Save uploaded files temporarily
+    temp_dir = tempfile.gettempdir()
+    temp_paths = []
+    
+    try:
+        # Save first frame
+        print(f"📥 Uploading first frame: {first_frame.filename}")
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
+        first_ext = os.path.splitext(first_frame.filename)[1] or ".png"
+        first_temp_path = os.path.join(temp_dir, f"first_frame_{timestamp}{first_ext}")
+        
+        with open(first_temp_path, "wb") as f:
+            content = await first_frame.read()
+            f.write(content)
+        
+        temp_paths.append(first_temp_path)
+        print(f"✅ First frame uploaded: {first_temp_path}")
+        
+        # Save last frame if provided
+        last_temp_path = None
+        if last_frame:
+            print(f"📥 Uploading last frame: {last_frame.filename}")
+            last_ext = os.path.splitext(last_frame.filename)[1] or ".png"
+            last_temp_path = os.path.join(temp_dir, f"last_frame_{timestamp}{last_ext}")
+            
+            with open(last_temp_path, "wb") as f:
+                content = await last_frame.read()
+                f.write(content)
+            
+            temp_paths.append(last_temp_path)
+            print(f"✅ Last frame uploaded: {last_temp_path}")
+        
+        # Parse reference image URLs if provided
+        ref_urls = None
+        if reference_image_urls:
+            ref_urls = [url.strip() for url in reference_image_urls.split(",") if url.strip()]
+            print(f"🎨 Using {len(ref_urls)} reference images for character consistency")
+        
+        # Generate video using genai_service
+        print(f"🎬 Generating video clip...")
+        print(f"📝 Prompt: {prompt}")
+        print(f"⏱️  Duration: {duration}s")
+        print(f"📐 Aspect ratio: {aspect_ratio}")
+        print(f"🎥 Resolution: {resolution}")
+        
+        video_urls = genai_service.generate_video_with_keyframes(
+            prompt=prompt,
+            first_frame=first_temp_path,
+            last_frame=last_temp_path,
+            duration=duration,
+            resolution=resolution,
+            aspect_ratio=aspect_ratio,
+            reference_image_urls=ref_urls,
+            use_frames_as_references=use_frames_as_references
+        )
+        
+        # Clean up temp files
+        print(f"🧹 Cleaning up temporary files...")
+        for temp_path in temp_paths:
+            try:
+                os.remove(temp_path)
+            except:
+                pass
+        
+        return {
+            "success": True,
+            "video_urls": video_urls,
+            "prompt": prompt,
+            "duration": duration,
+            "aspect_ratio": aspect_ratio,
+            "resolution": resolution,
+            "keyframes_used": {
+                "first_frame": True,
+                "last_frame": last_frame is not None
+            },
+            "reference_images_count": len(ref_urls) if ref_urls else 0,
+            "use_frames_as_references": use_frames_as_references,
+            "user_id": current_user.get("user_id")
+        }
+        
+    except Exception as e:
+        # Clean up temp files on error
+        for temp_path in temp_paths:
+            try:
+                os.remove(temp_path)
+            except:
+                pass
+        
+        return {
+            "success": False,
+            "error": str(e),
+            "prompt": prompt
+        }
+
+
+
+@router.post("/videos/generate-clip-from-descriptions")
+async def generate_video_clip_from_descriptions_route(
+    first_frame_description: str = Form(..., description="Description of the first frame"),
+    video_prompt: str = Form(..., description="Video prompt describing the action/scene"),
+    last_frame_description: Optional[str] = Form(None, description="Description of the last frame (optional)"),
+    character_image_urls: Optional[str] = Form(None, description="Comma-separated character reference image URLs"),
+    character_names: Optional[str] = Form(None, description="Comma-separated character names (e.g., 'Floof,Poof')"),
+    character_subjects: Optional[str] = Form(None, description="Pipe-separated character descriptions (e.g., 'fluffy pink creature|small blue robot')"),
+    style: Optional[str] = Form("cute character animation", description="Visual style for frames"),
+    duration: Optional[int] = Form(8, description="Video duration in seconds (default: 8)"),
+    resolution: Optional[str] = Form("720p", description="Video resolution (default: 720p)"),
+    aspect_ratio: Optional[str] = Form("9:16", description="Aspect ratio (default: 9:16)"),
+    image_model: Optional[str] = Form("gemini-2.5-flash-image", description="Image generation model"),
+    use_frames_as_references: Optional[bool] = Form(False, description="Use frames as reference images for character consistency"),
+    current_user: dict = Depends(get_current_active_user)
+) -> dict:
+    """
+    🎬 Generate a video clip from text descriptions of frames.
+    
+    **Describe the first and last frames, and the system will generate them and create a video!**
+    
+    **Perfect for:**
+    - Creating videos from text descriptions only
+    - Generating character animations without existing images
+    - Quick video prototyping with text prompts
+    
+    **Form Data:**
+    - `first_frame_description`: Description of the starting frame (required)
+    - `video_prompt`: Description of the video action/scene (required)
+    - `last_frame_description`: Description of the ending frame (optional)
+    - `character_image_urls`: Comma-separated character reference URLs (optional)
+    - `character_names`: Comma-separated character names (optional)
+    - `character_subjects`: Pipe-separated character descriptions (optional)
+    - `style`: Visual style (optional, default: "cute character animation")
+    - `duration`: Video duration in seconds (optional, default: 8)
+    - `resolution`: Video resolution (optional, default: 720p)
+    - `aspect_ratio`: Aspect ratio (optional, default: 9:16)
+    - `image_model`: Image generation model (optional, default: gemini-2.5-flash-image)
+    - `use_frames_as_references`: Use generated frames as references (optional, default: false)
+    
+    **Example using Postman:**
+    1. Select POST method
+    2. Set URL: http://localhost:8000/api/videos/generate-clip-from-descriptions
+    3. Set Authorization: Bearer Token
+    4. Go to Body → form-data
+    5. Add key "first_frame_description" (Text) → "Character standing on the left side of the room, looking right"
+    6. Add key "video_prompt" (Text) → "Character walks from left to right across the room"
+    7. Add key "last_frame_description" (Text) → "Character standing on the right side of the room, looking left"
+    8. Add key "character_image_urls" (Text) → "https://example.com/character.png"
+    9. Add key "style" (Text) → "cute character animation"
+    10. Add key "duration" (Text) → "8"
+    11. Click Send
+    
+    **Frame Description Examples:**
+    - First: "Character standing at the door, hand on doorknob, looking excited"
+    - Last: "Character inside the room, arms spread wide, big smile"
+    
+    **Video Prompt Examples:**
+    - "Character opens the door and walks into the room with excitement"
+    - "Character jumps from the ground and lands on a platform"
+    - "Character waves goodbye and walks away into the sunset"
+    """
+    import os
+    import tempfile
+    import requests
+    from datetime import datetime
+    from PIL import Image
+    from io import BytesIO
+    from app.services import genai_service
+    from app.services.imagen_service import generate_first_frame_with_imagen, generate_last_frame_with_imagen
+    
+    temp_paths = []
+    
+    try:
+        print(f"🎨 Generating frames from descriptions...")
+        print(f"📝 First frame: {first_frame_description[:100]}...")
+        if last_frame_description:
+            print(f"📝 Last frame: {last_frame_description[:100]}...")
+        
+        # Parse character information
+        char_urls = None
+        char_names = None
+        char_subjects = None
+        
+        if character_image_urls:
+            char_urls = [url.strip() for url in character_image_urls.split(",") if url.strip()]
+            print(f"👥 Using {len(char_urls)} character reference(s)")
+        
+        if character_names:
+            char_names = [name.strip() for name in character_names.split(",") if name.strip()]
+            print(f"📋 Character names: {char_names}")
+        
+        if character_subjects:
+            char_subjects = [subj.strip() for subj in character_subjects.split("|") if subj.strip()]
+            print(f"📋 Character subjects: {[s[:50] + '...' if len(s) > 50 else s for s in char_subjects]}")
+        
+        # Generate first frame using Imagen
+        print(f"\n🎨 Step 1: Generating first frame with Imagen...")
+        temp_dir = tempfile.gettempdir()
+        output_dir = os.path.join(temp_dir, f"frames_{datetime.now().strftime('%Y%m%d_%H%M%S')}")
+        os.makedirs(output_dir, exist_ok=True)
+        
+        first_frame_image, first_frame_path = generate_first_frame_with_imagen(
+            character_image_url=char_urls[0] if char_urls and len(char_urls) == 1 else None,
+            character_image_urls=char_urls if char_urls and len(char_urls) > 1 else None,
+            frame_description=first_frame_description,
+            aspect_ratio=aspect_ratio,
+            output_dir=output_dir,
+            image_model=image_model,
+            character_names=char_names,
+            character_subjects=char_subjects,
+            style=style
+        )
+        temp_paths.append(first_frame_path)
+        print(f"✅ First frame generated: {first_frame_path}")
+        
+        # Generate last frame if description provided
+        last_frame_path = None
+        if last_frame_description:
+            print(f"\n🎨 Step 2: Generating last frame with Imagen...")
+            last_frame_image, last_frame_path = generate_last_frame_with_imagen(
+                character_image_url=char_urls[0] if char_urls and len(char_urls) == 1 else None,
+                character_image_urls=char_urls if char_urls and len(char_urls) > 1 else None,
+                first_frame_path=first_frame_path,
+                last_frame_description=last_frame_description,
+                aspect_ratio=aspect_ratio,
+                output_dir=output_dir,
+                image_model=image_model,
+                character_names=char_names,
+                character_subjects=char_subjects,
+                style=style
+            )
+            temp_paths.append(last_frame_path)
+            print(f"✅ Last frame generated: {last_frame_path}")
+        
+        # Generate video using the generated frames
+        print(f"\n🎬 Step 3: Generating video from frames...")
+        print(f"📝 Video prompt: {video_prompt}")
+        print(f"⏱️  Duration: {duration}s")
+        print(f"📐 Aspect ratio: {aspect_ratio}")
+        print(f"🎥 Resolution: {resolution}")
+        
+        video_urls = genai_service.generate_video_with_keyframes(
+            prompt=video_prompt,
+            first_frame=first_frame_path,
+            last_frame=last_frame_path,
+            duration=duration,
+            resolution=resolution,
+            aspect_ratio=aspect_ratio,
+            reference_image_urls=char_urls,
+            use_frames_as_references=use_frames_as_references
+        )
+        
+        # Clean up temp files
+        print(f"\n🧹 Cleaning up temporary files...")
+        for temp_path in temp_paths:
+            try:
+                os.remove(temp_path)
+            except:
+                pass
+        
+        # Clean up temp directory
+        try:
+            os.rmdir(output_dir)
+        except:
+            pass
+        
+        return {
+            "success": True,
+            "video_urls": video_urls,
+            "first_frame_description": first_frame_description,
+            "last_frame_description": last_frame_description,
+            "video_prompt": video_prompt,
+            "duration": duration,
+            "aspect_ratio": aspect_ratio,
+            "resolution": resolution,
+            "style": style,
+            "frames_generated": {
+                "first_frame": True,
+                "last_frame": last_frame_description is not None
+            },
+            "character_references_count": len(char_urls) if char_urls else 0,
+            "use_frames_as_references": use_frames_as_references,
+            "user_id": current_user.get("user_id")
+        }
+        
+    except Exception as e:
+        # Clean up temp files on error
+        for temp_path in temp_paths:
+            try:
+                os.remove(temp_path)
+            except:
+                pass
+        
+        return {
+            "success": False,
+            "error": str(e),
+            "first_frame_description": first_frame_description,
+            "video_prompt": video_prompt
+        }
+
+
+
+@router.post("/videos/generate-from-prompt-with-references")
+async def generate_video_from_prompt_with_references_route(
+    prompt: str = Form(..., description="Video prompt describing the scene/action"),
+    reference_image_urls: str = Form(..., description="Comma-separated reference image URLs for character consistency"),
+    duration: Optional[int] = Form(8, description="Video duration in seconds (default: 8)"),
+    resolution: Optional[str] = Form("720p", description="Video resolution (default: 720p)"),
+    aspect_ratio: Optional[str] = Form("9:16", description="Aspect ratio (default: 9:16)"),
+    current_user: dict = Depends(get_current_active_user)
+) -> dict:
+    """
+    🎬 Generate a video from a text prompt with reference images for character consistency.
+    
+    **Generate videos with character consistency using reference images!**
+    
+    **Perfect for:**
+    - Generating videos with specific characters
+    - Maintaining character consistency across videos
+    - Creating videos with custom character references
+    - Character-based video generation
+    
+    **Form Data:**
+    - `prompt`: Description of the video scene/action (required)
+    - `reference_image_urls`: Comma-separated reference image URLs (required)
+    - `duration`: Video duration in seconds (optional, default: 8)
+    - `resolution`: Video resolution (optional, default: 720p)
+    - `aspect_ratio`: Aspect ratio (optional, default: 9:16)
+    
+    **Example using Postman:**
+    1. Select POST method
+    2. Set URL: http://localhost:8000/api/videos/generate-from-prompt-with-references
+    3. Set Authorization: Bearer Token
+    4. Go to Body → form-data
+    5. Add key "prompt" (Text) → "Character walking across a sunny room"
+    6. Add key "reference_image_urls" (Text) → "https://example.com/char1.png,https://example.com/char2.png"
+    7. Add key "duration" (Text) → "8"
+    8. Add key "aspect_ratio" (Text) → "9:16"
+    9. Click Send
+    
+    **Prompt Examples:**
+    - "Character walking across a sunny room, looking at the camera"
+    - "Character dancing in a futuristic city at night"
+    - "Character jumping over obstacles in a colorful landscape"
+    - "Character waving hello and smiling"
+    """
+    from app.services import genai_service
+    
+    try:
+        print(f"🎬 Generating video from prompt with reference images...")
+        print(f"📝 Prompt: {prompt}")
+        print(f"⏱️  Duration: {duration}s")
+        print(f"📐 Aspect ratio: {aspect_ratio}")
+        print(f"🎥 Resolution: {resolution}")
+        
+        # Parse reference image URLs
+        ref_urls = [url.strip() for url in reference_image_urls.split(",") if url.strip()]
+        print(f"🎨 Using {len(ref_urls)} reference images for character consistency")
+        
+        # Generate video using genai_service
+        video_urls = genai_service.generate_video_with_keyframes(
+            prompt=prompt,
+            first_frame=None,
+            last_frame=None,
+            duration=duration,
+            resolution=resolution,
+            aspect_ratio=aspect_ratio,
+            reference_image_urls=ref_urls,
+            use_frames_as_references=False
+        )
+        
+        return {
+            "success": True,
+            "video_urls": video_urls,
+            "prompt": prompt,
+            "duration": duration,
+            "aspect_ratio": aspect_ratio,
+            "resolution": resolution,
+            "reference_images_count": len(ref_urls),
+            "reference_image_urls": ref_urls,
+            "user_id": current_user.get("user_id")
         }
         
     except Exception as e:
         return {
             "success": False,
             "error": str(e),
-            "total_images": len(payload.image_paths)
+            "prompt": prompt
+        }
+
+
+@router.post("/videos/generate-from-prompt")
+async def generate_video_from_prompt_route(
+    prompt: str = Form(..., description="Video prompt describing the scene/action"),
+    duration: Optional[int] = Form(8, description="Video duration in seconds (default: 8)"),
+    resolution: Optional[str] = Form("720p", description="Video resolution (default: 720p)"),
+    aspect_ratio: Optional[str] = Form("9:16", description="Aspect ratio (default: 9:16)"),
+    current_user: dict = Depends(get_current_active_user)
+) -> dict:
+    """
+    🎬 Generate a video from just a text prompt (no reference images).
+    
+    **The simplest way to generate videos - just describe what you want!**
+    
+    **Perfect for:**
+    - Quick video generation from text only
+    - Creating videos without any reference images
+    - Rapid prototyping and experimentation
+    - Pure text-to-video generation
+    
+    **Form Data:**
+    - `prompt`: Description of the video scene/action (required)
+    - `duration`: Video duration in seconds (optional, default: 8)
+    - `resolution`: Video resolution (optional, default: 720p)
+    - `aspect_ratio`: Aspect ratio (optional, default: 9:16)
+    
+    **Example using Postman:**
+    1. Select POST method
+    2. Set URL: http://localhost:8000/api/videos/generate-from-prompt
+    3. Set Authorization: Bearer Token
+    4. Go to Body → form-data
+    5. Add key "prompt" (Text) → "A cute cat walking across a sunny room"
+    6. Add key "duration" (Text) → "8"
+    7. Add key "aspect_ratio" (Text) → "9:16"
+    8. Click Send
+    
+    **Prompt Examples:**
+    - "A cute cat walking across a sunny room, looking at the camera"
+    - "A robot dancing in a futuristic city at night"
+    - "A person jumping over obstacles in a colorful landscape"
+    - "Time-lapse of a flower blooming in a garden"
+    - "A spaceship flying through an asteroid field"
+    - "A chef cooking in a modern kitchen, preparing a meal"
+    """
+    from app.services import genai_service
+    
+    try:
+        print(f"🎬 Generating video from prompt (no references)...")
+        print(f"📝 Prompt: {prompt}")
+        print(f"⏱️  Duration: {duration}s")
+        print(f"📐 Aspect ratio: {aspect_ratio}")
+        print(f"🎥 Resolution: {resolution}")
+        
+        # Generate video using genai_service WITHOUT reference images
+        video_urls = genai_service.generate_video_with_keyframes(
+            prompt=prompt,
+            first_frame=None,
+            last_frame=None,
+            duration=duration,
+            resolution=resolution,
+            aspect_ratio=aspect_ratio,
+            reference_image_urls=None,
+            use_frames_as_references=False
+        )
+        
+        return {
+            "success": True,
+            "video_urls": video_urls,
+            "prompt": prompt,
+            "duration": duration,
+            "aspect_ratio": aspect_ratio,
+            "resolution": resolution,
+            "reference_images_count": len(ref_urls) if ref_urls else 0,
+            "user_id": current_user.get("user_id")
+        }
+        
+    except Exception as e:
+        return {
+            "success": False,
+            "error": str(e),
+            "prompt": prompt
         }

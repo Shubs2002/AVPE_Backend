@@ -188,7 +188,7 @@ def generate_video_from_payload(payload: dict):
     # Note: generate_audio and sample_count are not supported in GenerateVideosConfig
 
     def _is_transient_service_error(exc_or_obj) -> bool:
-        """Check for transient service errors (503 / UNAVAILABLE / OVERLOADED) and RAI filter errors."""
+        """Check for transient service errors (503 / UNAVAILABLE / OVERLOADED / INTERNAL / RATE / QUOTA) and RAI filter errors."""
         try:
             text = str(exc_or_obj).lower()
             # Check for various transient error indicators
@@ -199,7 +199,13 @@ def generate_video_from_payload(payload: dict):
                 "overloaded",  # Code 14
                 "'code': 14",  # Explicit code 14 check
                 "currently overloaded",
+                "'code': 13",  # Internal server error - retryable
+                "internal server issue",
+                "internal server error",
+                "please try again",
                 "please try again later",
+                "rate",  # Rate limit errors
+                "quota",  # Quota exceeded errors
                 # RAI (Responsible AI) filter errors - treat as retryable
                 "rai_media_filtered",
                 "rai filter",

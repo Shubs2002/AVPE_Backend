@@ -8,5 +8,5 @@ __pycache__
 generated_*
 *.md
 *.googleusercontent.com.json
-
+styled_images
 !README.md
